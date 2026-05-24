@@ -1,0 +1,303 @@
+import React, { useState } from 'react';
+
+interface AddNewTabProps {
+  onSave: (type: 'personnel' | 'case' | 'monitor' | 'printer', data: any) => Promise<boolean>;
+}
+
+export default function AddNewTab({ onSave }: AddNewTabProps) {
+  const [activeType, setActiveType] = useState<'personnel' | 'case' | 'monitor' | 'printer'>('personnel');
+
+  // Personnel fields
+  const [pName, setPName] = useState('');
+  const [pCode, setPCode] = useState('');
+  const [pTitle, setPTitle] = useState('');
+  const [pDept, setPDept] = useState('');
+  const [pLoc, setPLoc] = useState('');
+
+  // Case fields
+  const [cCode, setCCode] = useState('');
+  const [cMobo, setCMobo] = useState('');
+  const [cCpu, setCCpu] = useState('');
+  const [cVga, setCVga] = useState('');
+  const [cHdd1, setCHdd1] = useState('');
+  const [cHdd2, setCHdd2] = useState('');
+  const [cRamType, setCRamType] = useState('DDR4');
+  const [cRamQty, setCRamQty] = useState('8GB');
+
+  // Monitor fields
+  const [mCode, setMCode] = useState('');
+  const [mModel, setMModel] = useState('');
+
+  // Printer fields
+  const [prCode, setPrCode] = useState('');
+  const [prModel, setPrModel] = useState('');
+
+  const handleResetForm = () => {
+    setPName(''); setPCode(''); setPTitle(''); setPDept(''); setPLoc('');
+    setCCode(''); setCMobo(''); setCCpu(''); setCVga(''); setCHdd1(''); setCHdd2(''); setCRamType('DDR4'); setCRamQty('8GB');
+    setMCode(''); setMModel('');
+    setPrCode(''); setPrModel('');
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    let data: any = {};
+
+    if (activeType === 'personnel') {
+      if (!pName.trim() || !pCode.trim()) {
+        alert('وارد کردن نام کامل و کد پرسنلی الزامی است.');
+        return;
+      }
+      data = { name: pName, code: pCode, title: pTitle, department: pDept, location: pLoc };
+    } else if (activeType === 'case') {
+      if (!cCode.trim()) {
+        alert('وارد کردن کد کیس (اموال) الزامی است.');
+        return;
+      }
+      data = {
+        code: cCode,
+        motherboard: cMobo,
+        cpu: cCpu,
+        vga: cVga,
+        hdd1: cHdd1,
+        hdd2: cHdd2,
+        ramType: cRamType,
+        ramQty: cRamQty
+      };
+    } else if (activeType === 'monitor') {
+      if (!mCode.trim() || !mModel.trim()) {
+        alert('کد مانیتور و نام مدل مانیتور الزامی هستند.');
+        return;
+      }
+      data = { code: mCode, model: mModel };
+    } else if (activeType === 'printer') {
+      if (!prCode.trim() || !prModel.trim()) {
+        alert('کد چاپگر و نام مدل چاپگر الزامی هستند.');
+        return;
+      }
+      data = { code: prCode, model: prModel };
+    }
+
+    const success = await onSave(activeType, data);
+    if (success) {
+      alert('اطلاعات با موفقیت ذخیره گردید.');
+      handleResetForm();
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm max-w-2xl mx-auto space-y-6">
+      
+      <div className="border-b border-slate-100 pb-3">
+        <h3 className="text-base md:text-lg font-bold text-slate-800">➕ ثبت و الحاق سخت‌افزار یا پرسنل جدید</h3>
+        <p className="text-xs text-slate-500 mt-0.5">زیرشاخه مدنظر خود را مشخص نموده و فرم مشخصات آن را تکمیل کنید</p>
+      </div>
+
+      {/* Select active type */}
+      <div className="grid grid-cols-4 gap-2">
+        {(['personnel', 'case', 'monitor', 'printer'] as const).map((type) => (
+          <button
+            key={type}
+            type="button"
+            onClick={() => { setActiveType(type); }}
+            className={`p-2.5 rounded-lg text-xs md:text-sm font-bold transition flex flex-col items-center gap-1 cursor-pointer ${
+              activeType === type 
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10' 
+                : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            {type === 'personnel' && <span>👥 پرسنل جدید</span>}
+            {type === 'case' && <span>🖥️ کیس کامپیوتر</span>}
+            {type === 'monitor' && <span>📺 مانیتور جدید</span>}
+            {type === 'printer' && <span>🖨️ پرینتر جدید</span>}
+          </button>
+        ))}
+      </div>
+
+      <form onSubmit={handleFormSubmit} className="space-y-4">
+        
+        {/* Render Form 1: Personnel Add */}
+        {activeType === 'personnel' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs md:text-sm">
+            <div className="space-y-1.5 md:col-span-2">
+              <label className="font-semibold text-slate-700">نام و نام خانوادگی کامل:</label>
+              <input 
+                type="text" required value={pName} onChange={(e) => setPName(e.target.value)}
+                placeholder="مثال: محمد علیزاده"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">کد پرسنلی اختصاصی:</label>
+              <input 
+                type="text" required value={pCode} onChange={(e) => setPCode(e.target.value)}
+                placeholder="مثال: 1024"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">سمت شغلی:</label>
+              <input 
+                type="text" value={pTitle} onChange={(e) => setPTitle(e.target.value)}
+                placeholder="مثال: مهندس ناظر مکانیک"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">واحد سازمانی مربوطه:</label>
+              <input 
+                type="text" value={pDept} onChange={(e) => setPDept(e.target.value)}
+                placeholder="مثال: واحد متریال کالا"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">موقعیت استقرار دفتری در کارگاه:</label>
+              <input 
+                type="text" value={pLoc} onChange={(e) => setPLoc(e.target.value)}
+                placeholder="مثال: کانکس کنترل مواد"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Render Form 2: Case Add */}
+        {activeType === 'case' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs md:text-sm animate-fade-in">
+            <div className="space-y-1.5 md:col-span-2">
+              <label className="font-semibold text-slate-700">کد کیس (شماره برچسب اموال کارگاهی):</label>
+              <input 
+                type="text" required value={cCode} onChange={(e) => setCCode(e.target.value)}
+                placeholder="مثال: C-250"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">مدل مادربورد (Motherboard):</label>
+              <input 
+                type="text" value={cMobo} onChange={(e) => setCMobo(e.target.value)}
+                placeholder="مثال: ASUS PRIME H610M-R"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">مدل پردازنده (CPU):</label>
+              <input 
+                type="text" value={cCpu} onChange={(e) => setCCpu(e.target.value)}
+                placeholder="مثال: Intel Core i5-12400"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">مشخصات کارت گرافیک (VGA):</label>
+              <input 
+                type="text" value={cVga} onChange={(e) => setCVga(e.target.value)}
+                placeholder="مثال: Desktop UHD Intel 730"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">رم RAM (نسل و سرعت):</label>
+              <select 
+                value={cRamType} onChange={(e) => setCRamType(e.target.value)}
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              >
+                <option value="DDR3">DDR3</option>
+                <option value="DDR4">DDR4</option>
+                <option value="DDR5">DDR5</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">حافظه رم (RAM Qty):</label>
+              <input 
+                type="text" value={cRamQty} onChange={(e) => setCRamQty(e.target.value)}
+                placeholder="مثال: 16GB"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">حافظه اول (SSD کتبی مخزن):</label>
+              <input 
+                type="text" value={cHdd1} onChange={(e) => setCHdd1(e.target.value)}
+                placeholder="مثال: SSD 512GB Lexar"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">هارد دوم (ذخیره‌سازی HDD):</label>
+              <input 
+                type="text" value={cHdd2} onChange={(e) => setCHdd2(e.target.value)}
+                placeholder="مثال: HDD 1TB WD Blue"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Render Form 3: Monitor Add */}
+        {activeType === 'monitor' && (
+          <div className="grid grid-cols-1 gap-4 text-xs md:text-sm animate-fade-in">
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">کد مانیتور (اموال کارگاه):</label>
+              <input 
+                type="text" required value={mCode} onChange={(e) => setMCode(e.target.value)}
+                placeholder="مثال: M-350"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">مدل و مشخصات فنی مانیتور:</label>
+              <input 
+                type="text" required value={mModel} onChange={(e) => setMModel(e.target.value)}
+                placeholder="مثال: LG 22-Inch Full-HD LCD"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Render Form 4: Printer Add */}
+        {activeType === 'printer' && (
+          <div className="grid grid-cols-1 gap-4 text-xs md:text-sm animate-fade-in">
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">کد پرینتر (اموال اختصاصی چاپ):</label>
+              <input 
+                type="text" required value={prCode} onChange={(e) => setPrCode(e.target.value)}
+                placeholder="مثال: P-420"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">سازنده و مدل دقیق چاپگر:</label>
+              <input 
+                type="text" required value={prModel} onChange={(e) => setPrModel(e.target.value)}
+                placeholder="مثال: HP LaserJet Pro M402d"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="pt-4 border-t border-slate-100 flex gap-3">
+          <button
+            type="submit"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold p-3 rounded-lg text-xs md:text-sm shadow-md transition cursor-pointer text-center"
+          >
+            💾 ثبت و افزودن به لیست کارگاه
+          </button>
+          <button
+            type="button"
+            onClick={handleResetForm}
+            className="bg-slate-100 hover:bg-slate-200 text-slate-600 p-3 rounded-lg text-xs md:text-sm transition cursor-pointer"
+          >
+            پاک کردن تمایل فرم
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  );
+}

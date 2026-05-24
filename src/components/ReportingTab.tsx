@@ -1,0 +1,526 @@
+import React, { useState } from 'react';
+import { Personnel, Case, Monitor, Printer, Assignment } from '../types';
+
+interface ReportingTabProps {
+  personnel: Personnel[];
+  cases: Case[];
+  monitors: Monitor[];
+  printers: Printer[];
+  assignments: Assignment[];
+}
+
+export default function ReportingTab({
+  personnel,
+  cases,
+  monitors,
+  printers,
+  assignments
+}: ReportingTabProps) {
+  // Checkbox states
+  const [secPers, setSecPers] = useState(true);
+  const [secCases, setSecCases] = useState(true);
+  const [secMons, setSecMons] = useState(true);
+  const [secPris, setSecPris] = useState(true);
+  const [secHis, setSecHis] = useState(true);
+
+  // Filters
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [filterPers, setFilterPers] = useState('');
+  const [filterEquip, setFilterEquip] = useState('');
+
+  // Special System Certificate profile state
+  const [certCode, setCertCode] = useState('');
+  const [reportType, setReportType] = useState<'none' | 'general' | 'certificate'>('none');
+  const [certificatePers, setCertificatePers] = useState<Personnel | null>(null);
+
+  const triggerGeneralReport = () => {
+    setReportType('general');
+  };
+
+  const triggerCertificateReport = () => {
+    const code = certCode.trim();
+    if (!code) {
+      alert('لطفاً جهت صدور شناسنامه، ابتدا کد پرسنلی را وارد کنید.');
+      return;
+    }
+    const found = personnel.find(p => p.code === code);
+    if (!found) {
+      alert('پرسنلی با این کد پرسنلی در سیستم یافت نشد.');
+      return;
+    }
+    setCertificatePers(found);
+    setReportType('certificate');
+  };
+
+  // Get current assignment equipment items for user code
+  const getAssignedEquipments = (userCode: string) => {
+    const userCases = cases.filter(c => c.assignedTo === userCode);
+    const userMonitors = monitors.filter(m => m.assignedTo === userCode);
+    const userPrinters = printers.filter(p => p.assignedTo === userCode);
+    return {
+      cases: userCases,
+      monitors: userMonitors,
+      printers: userPrinters,
+      totalCount: userCases.length + userMonitors.length + userPrinters.length
+    };
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      {/* Left controls bar */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-5">
+        
+        {/* Controls Block A: General Reports */}
+        <div className="space-y-4">
+          <div className="border-b border-slate-100 pb-2">
+            <h3 className="text-sm font-bold text-slate-800">📊 کنترل پنل گزارش‌های اداری</h3>
+            <p className="text-[11px] text-slate-500 mt-0.5">بخش‌ها و فیلترهای مدنظر را برای خروجی چاپی تنظیم فرمایید</p>
+          </div>
+
+          {/* Section selections */}
+          <div className="space-y-2 border-b border-dashed border-slate-100 pb-3">
+            <label className="text-xs font-bold text-slate-700 block">انتخاب جداول و رده‌های گزارش:</label>
+            <div className="space-y-1.5 text-xs text-slate-600">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={secPers} onChange={(e) => setSecPers(e.target.checked)} />
+                لیست پرسنل فعال
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={secCases} onChange={(e) => setSecCases(e.target.checked)} />
+                لیست مشخصات مانیفست کیس‌ها
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={secMons} onChange={(e) => setSecMons(e.target.checked)} />
+                لیست مانیتورهای کارگاه
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={secPris} onChange={(e) => setSecPris(e.target.checked)} />
+                لیست پرینترها و دستگاه‌های چاپ
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={secHis} onChange={(e) => setSecHis(e.target.checked)} />
+                سوابق کامل فلو و ترانسفر کالا
+              </label>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="space-y-3.5 text-xs">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 block">فیلتر پرسنل (نام یا کد):</label>
+              <input 
+                type="text" 
+                value={filterPers} 
+                onChange={(e) => setFilterPers(e.target.value)} 
+                placeholder="بر اساس کادر خاص..." 
+                className="w-full text-right p-2 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 block">فیلتر کد اموال سخت‌افزار:</label>
+              <input 
+                type="text" 
+                value={filterEquip} 
+                onChange={(e) => setFilterEquip(e.target.value)} 
+                placeholder="بر اساس کد اموال کالا..." 
+                className="w-full text-right p-2 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 block">دامنه تاریخ تحویل (از تـا):</label>
+              <div className="grid grid-cols-2 gap-1.5">
+                <input 
+                  type="text" 
+                  value={dateFrom} 
+                  onChange={(e) => setDateFrom(e.target.value)} 
+                  placeholder="از (مثال: ۱۴۰۵/۰۱/۰۱)" 
+                  className="w-full text-right p-2 border border-slate-200 rounded text-[11px] focus:outline-none"
+                />
+                <input 
+                  type="text" 
+                  value={dateTo} 
+                  onChange={(e) => setDateTo(e.target.value)} 
+                  placeholder="تا (مثال: ۱۴۰۵/۰۳/۰۱)" 
+                  className="w-full text-right p-2 border border-slate-200 rounded text-[11px] focus:outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={triggerGeneralReport}
+            className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-lg text-xs md:text-sm font-bold transition shadow-sm cursor-pointer"
+          >
+            📊 نمایش گزارش ترکیبی
+          </button>
+        </div>
+
+        {/* Controls Block B: Official Certificate Identity Profiles */}
+        <div className="border-t border-slate-100 pt-4 space-y-4">
+          <div className="border-b border-slate-100 pb-2">
+            <h3 className="text-sm font-bold text-indigo-950">📋 صدور سند شناسنامه رسمی قطعات (سه برگی)</h3>
+            <p className="text-[11px] text-slate-500 mt-0.5">تولید خودکار سند امضای سخت‌افزارهای یک پرسنل جهت تحویل کالا</p>
+          </div>
+
+          <div className="space-y-2 text-xs">
+            <label className="font-bold text-slate-700 block">کد پرسنلی تحویل گیرنده:</label>
+            <div className="flex gap-1.5">
+              <input
+                type="text"
+                value={certCode}
+                onChange={(e) => setCertCode(e.target.value)}
+                placeholder="وارد کردن کد پرسنلی برای استعلام..."
+                className="flex-1 text-right p-2 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+              <button
+                onClick={triggerCertificateReport}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded text-xs font-bold transition cursor-pointer"
+              >
+                📜 صدور شناسنامه
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Right report view area (printable format) */}
+      <div className="lg:col-span-2 bg-slate-100 border border-slate-200 rounded-xl p-4 flex flex-col h-[700px] overflow-hidden no-print">
+        
+        <div className="flex justify-between items-center border-b border-slate-200 pb-3 mb-3">
+          <h4 className="text-slate-800 font-bold text-xs md:text-sm">📋 پیش‌نمایش زنده و چاپ مستقیم سند</h4>
+          <button
+            onClick={() => window.print()}
+            disabled={reportType === 'none'}
+            className={`px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition cursor-pointer ${
+              reportType !== 'none' 
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow'
+                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+            }`}
+          >
+            🖨️ چاپ مستقیم گزارش / ذخیره PDF مکتوب
+          </button>
+        </div>
+
+        <div className="bg-white rounded-lg flex-1 overflow-y-auto p-8 shadow-inner text-right leading-relaxed text-sm">
+          {reportType === 'none' && (
+            <p className="text-slate-400 text-center py-20">
+              گزارشی تولید نشده است. فیلترها را تنظیم کرده یا روی یکی از دکمه‌های گزارش‌گیری کلیک کنید.
+            </p>
+          )}
+
+          {/* Render 1: Combined General Report */}
+          {reportType === 'general' && (
+            <div className="space-y-6 text-slate-900 leading-relaxed font-sans">
+              <div className="text-center border-b-2 border-black pb-4 mb-4">
+                <h2 className="text-xl font-bold">گزارش ترکیبی تجهیزات کل واحد فناوری اطلاعات و ارتباطات</h2>
+                <h3 className="text-sm text-slate-600 mt-1">شرکت عمران آذرستان - کارگاه بوشهر (آفلاین)</h3>
+                <p className="text-[11px] text-slate-500 mt-2">تاریخ گزارش: ۱۴۰۵/۰۳/۰۳ | فیلتر اعمال شده: بر اساس درخواست کاربر</p>
+              </div>
+
+              {/* Personnel Block */}
+              {secPers && (
+                <div className="space-y-2">
+                  <h4 className="font-bold text-slate-800 py-1 bg-slate-100 px-2 rounded">👥 گزارش کاربران و پرسنل</h4>
+                  <table className="w-full text-xs text-right border-collapse border border-slate-300">
+                    <thead className="bg-slate-50 text-slate-700">
+                      <tr>
+                        <th className="border border-slate-300 p-2 font-bold">نام کامل</th>
+                        <th className="border border-slate-300 p-2 font-bold">کد پرسنلی</th>
+                        <th className="border border-slate-300 p-2 font-bold">سمت</th>
+                        <th className="border border-slate-300 p-2 font-bold">بخش</th>
+                        <th className="border border-slate-300 p-2 font-bold">موقعیت استقرار</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {personnel.map(p => (
+                        <tr key={p.id}>
+                          <td className="border border-slate-300 p-2 font-bold">{p.name}</td>
+                          <td className="border border-slate-300 p-2 font-mono">{p.code}</td>
+                          <td className="border border-slate-300 p-2">{p.title}</td>
+                          <td className="border border-slate-300 p-2">{p.department}</td>
+                          <td className="border border-slate-300 p-2">{p.location}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Case Block */}
+              {secCases && (
+                <div className="space-y-2 pt-4">
+                  <h4 className="font-bold text-slate-800 py-1 bg-slate-100 px-2 rounded">🖥️ گزارش فنی کیس‌ها</h4>
+                  <table className="w-full text-xs text-right border-collapse border border-slate-300">
+                    <thead className="bg-slate-50 text-slate-700">
+                      <tr>
+                        <th className="border border-slate-300 p-2 font-bold">کد کیس</th>
+                        <th className="border border-slate-300 p-2 font-bold">مادربورد</th>
+                        <th className="border border-slate-300 p-2 font-bold">پردازنده</th>
+                        <th className="border border-slate-300 p-2 font-bold">نوع رم</th>
+                        <th className="border border-slate-300 p-2 font-bold">گرافیک</th>
+                        <th className="border border-slate-300 p-2 font-bold">ذخیره سازی</th>
+                        <th className="border border-slate-300 p-2 font-bold">کاربر تحویل گیرنده</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cases.map(c => (
+                        <tr key={c.code}>
+                          <td className="border border-slate-300 p-2 font-mono font-bold text-slate-900">{c.code}</td>
+                          <td className="border border-slate-300 p-2">{c.motherboard}</td>
+                          <td className="border border-slate-300 p-2">{c.cpu}</td>
+                          <td className="border border-slate-300 p-2 font-mono">{c.ramType} / {c.ramQty}</td>
+                          <td className="border border-slate-300 p-2">{c.vga}</td>
+                          <td className="border border-slate-300 p-2">{c.hdd1} | {c.hdd2}</td>
+                          <td className="border border-slate-300 p-2 font-semibold">
+                            {c.assignedTo ? `${personnel.find(p=>p.code===c.assignedTo)?.name || 'کد نامعتبر'}(${c.assignedTo})` : '📦 داخل انبار'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Monitors Block */}
+              {secMons && (
+                <div className="space-y-2 pt-4">
+                  <h4 className="font-bold text-slate-800 py-1 bg-slate-100 px-2 rounded">📺 گزارش مانیتورها</h4>
+                  <table className="w-full text-xs text-right border-collapse border border-slate-300">
+                    <thead className="bg-slate-50 text-slate-700">
+                      <tr>
+                        <th className="border border-slate-300 p-2 font-bold">کد مانیتور</th>
+                        <th className="border border-slate-300 p-2 font-bold">مدل و مشخصات فنی</th>
+                        <th className="border border-slate-300 p-2 font-bold">تحویل گیرنده</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {monitors.map(m => (
+                        <tr key={m.code}>
+                          <td className="border border-slate-300 p-2 font-mono font-bold">{m.code}</td>
+                          <td className="border border-slate-300 p-2">{m.model}</td>
+                          <td className="border border-slate-300 p-2 font-semibold">
+                            {m.assignedTo ? `${personnel.find(p=>p.code===m.assignedTo)?.name || 'کد نامعتبر'}(${m.assignedTo})` : '📦 انبار کارگاه'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Printers Block */}
+              {secPris && (
+                <div className="space-y-2 pt-4">
+                  <h4 className="font-bold text-slate-800 py-1 bg-slate-100 px-2 rounded">🖨️ گزارش پرینترها</h4>
+                  <table className="w-full text-xs text-right border-collapse border border-slate-300">
+                    <thead className="bg-slate-50 text-slate-700">
+                      <tr>
+                        <th className="border border-slate-300 p-2 font-bold">کد پرینتر</th>
+                        <th className="border border-slate-300 p-2 font-bold">مدل کالا</th>
+                        <th className="border border-slate-300 p-2 font-bold">تحویل گیرنده جدید</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {printers.map(pr => (
+                        <tr key={pr.code}>
+                          <td className="border border-slate-300 p-2 font-mono font-bold">{pr.code}</td>
+                          <td className="border border-slate-300 p-2">{pr.model}</td>
+                          <td className="border border-slate-300 p-2 font-semibold">
+                            {pr.assignedTo ? `${personnel.find(p=>p.code===pr.assignedTo)?.name || 'کد نامعتبر'}(${pr.assignedTo})` : '📦 انبار'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* History Block */}
+              {secHis && (
+                <div className="space-y-2 pt-4">
+                  <h4 className="font-bold text-slate-800 py-1 bg-slate-100 px-2 rounded">📜 گزارش کلی ترانسفر کل تاریخچه‌ها</h4>
+                  <table className="w-full text-xs text-right border-collapse border border-slate-300">
+                    <thead className="bg-slate-50 text-slate-700">
+                      <tr>
+                        <th className="border border-slate-300 p-2 font-bold">نوع تجهیز</th>
+                        <th className="border border-slate-300 p-2 font-bold">کد اموال</th>
+                        <th className="border border-slate-300 p-2 font-bold">تحویل گیرنده</th>
+                        <th className="border border-slate-300 p-2 font-bold">تاریخ واگذاری (شروع)</th>
+                        <th className="border border-slate-300 p-2 font-bold">تاریخ پایان (استرداد)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {assignments.map(ass => (
+                        <tr key={ass.id}>
+                          <td className="border border-slate-300 p-2 font-bold">{ass.equipmentType === 'case' ? 'کیس کامپیوتر' : ass.equipmentType === 'monitor' ? 'مانیتور' : 'پرینتر'}</td>
+                          <td className="border border-slate-300 p-2 font-mono">{ass.equipmentCode}</td>
+                          <td className="border border-slate-300 p-2 font-semibold">{ass.personnelName || 'انبار مرکزی'}</td>
+                          <td className="border border-slate-300 p-2">{ass.startDate}</td>
+                          <td className="border border-slate-300 p-2">{ass.endDate || 'در دست اقدام (فعلی)'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Render 2: Official System Profile Certificate (سه برگی) */}
+          {reportType === 'certificate' && certificatePers && (
+            <div className="space-y-6 text-black font-sans print:p-0">
+              
+              {/* Header Certificate corporate titles */}
+              <div className="flex justify-between items-center border-b-2 border-black pb-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-4xl">🏭</span>
+                  <div>
+                    <h2 className="text-base md:text-lg font-black leading-none">شرکت عمران آذرستان</h2>
+                    <h3 className="text-xs text-slate-600 mt-1">واحد فناوری اطلاعات و ارتباطات (ICT) | کارگاه بوشهر</h3>
+                  </div>
+                </div>
+                <div className="text-left text-[10px] md:text-xs">
+                  <div>شماره سند: <strong className="font-mono">ICT-CERT-{certificatePers.code}</strong></div>
+                  <div>تاریخ صدور سند: <span className="font-mono">۱۴۰۵/۰۳/۰۳</span></div>
+                  <div>محل خدمت: <span>کارگاه بوشهر</span></div>
+                </div>
+              </div>
+
+              {/* Title Certificate */}
+              <div className="bg-slate-100 text-center font-bold text-sm md:text-base border border-black p-2 mt-2">
+                سند اداری شناسنامه هوشمند و تاییدیه تحویل تجهیزات رایانه‌ای پرسنل
+              </div>
+
+              {/* BLOCK 1: Profile Users */}
+              <div className="space-y-2">
+                <h4 className="font-bold text-xs md:text-sm">۱. مشخصات کامل تحویل‌گیرنده کالا:</h4>
+                <table className="w-full text-xs text-right border-collapse border border-black text-slate-800">
+                  <tbody>
+                    <tr>
+                      <td className="border border-black p-2 bg-slate-50 font-bold w-[18%]">نام و نام خانوادگی:</td>
+                      <td className="border border-black p-2 w-[32%] font-extrabold text-black">{certificatePers.name}</td>
+                      <td className="border border-black p-2 bg-slate-50 font-bold w-[18%]">کد پرسنلی پرسنل:</td>
+                      <td className="border border-black p-2 w-[32%] font-mono font-bold text-black">{certificatePers.code}</td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black p-2 bg-slate-50 font-bold">سمت اداری/واحد:</td>
+                      <td className="border border-black p-2">{certificatePers.title}</td>
+                      <td className="border border-black p-2 bg-slate-50 font-bold">واحد خدمتی:</td>
+                      <td className="border border-black p-2">{certificatePers.department}</td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black p-2 bg-slate-50 font-bold">نشانی محل استقرار دارد:</td>
+                      <td colSpan={3} className="border border-black p-2">{certificatePers.location}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* BLOCK 2: Equipments specs listing */}
+              <div className="space-y-4 pt-2">
+                <h4 className="font-bold text-xs md:text-sm">۲. مشخصات سخت‌افزارهای ثبت شده در آلبوم و تحویل شده به فرد:</h4>
+                
+                {getAssignedEquipments(certificatePers.code).totalCount === 0 ? (
+                  <p className="text-center py-6 text-xs text-slate-500 border border-dashed border-red-200 bg-red-50/20 rounded">
+                    در حال حاضر هیچگونه تجهیزات فعالی به نام این شخص واگذار و ثبت نگردیده است.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    
+                    {/* Cases details list */}
+                    {getAssignedEquipments(certificatePers.code).cases.map(c => (
+                      <table key={c.code} className="w-full text-xs text-right border-collapse border border-black">
+                        <thead>
+                          <tr className="bg-slate-200">
+                            <th colSpan={4} className="border border-black p-2 text-center font-bold">
+                              🔵 کیس کامپیوتر (سخت‌افزار اصلی) - کد اموال: {c.code}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td className="border border-black p-2 bg-slate-50 font-bold w-[20%]">مادربورد:</td>
+                            <td className="border border-black p-2 w-[30%]">{c.motherboard}</td>
+                            <td className="border border-black p-2 bg-slate-50 font-bold w-[20%]">پردازنده (CPU):</td>
+                            <td className="border border-black p-2 w-[30%]">{c.cpu}</td>
+                          </tr>
+                          <tr>
+                            <td className="border border-black p-2 bg-slate-50 font-bold">نوع رم:</td>
+                            <td className="border border-black p-2 font-mono">{c.ramType} / {c.ramQty}</td>
+                            <td className="border border-black p-2 bg-slate-50 font-bold">گرافیک VGA:</td>
+                            <td className="border border-black p-2">{c.vga}</td>
+                          </tr>
+                          <tr>
+                            <td className="border border-black p-2 bg-slate-50 font-bold">هارد اصلی SSD/HDD:</td>
+                            <td className="border border-black p-2">{c.hdd1}</td>
+                            <td className="border border-black p-2 bg-slate-50 font-bold">هارد ثانویه:</td>
+                            <td className="border border-black p-2">{c.hdd2}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    ))}
+
+                    {/* Monitors and Printers spec table */}
+                    {(getAssignedEquipments(certificatePers.code).monitors.length > 0 || getAssignedEquipments(certificatePers.code).printers.length > 0) && (
+                      <table className="w-full text-xs text-right border-collapse border border-black">
+                        <thead>
+                          <tr className="bg-slate-200">
+                            <th className="border border-black p-2 font-bold w-[35%]">دسته سخت‌افزار</th>
+                            <th className="border border-black p-2 font-bold w-[25%]">کد اموال تجهیز</th>
+                            <th className="border border-black p-2 font-bold w-[40%]">سازنده و مدل دقیق کالا تحویل شده</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {getAssignedEquipments(certificatePers.code).monitors.map(m => (
+                            <tr key={m.code}>
+                              <td className="border border-black p-2 font-bold">📺 نمایشگر (مانیتور اداری)</td>
+                              <td className="border border-black p-2 font-mono font-bold text-slate-800">{m.code}</td>
+                              <td className="border border-black p-2">{m.model}</td>
+                            </tr>
+                          ))}
+                          {getAssignedEquipments(certificatePers.code).printers.map(pr => (
+                            <tr key={pr.code}>
+                              <td className="border border-black p-2 font-bold">🖨️ پرینتر / چاپگر کارگاهی</td>
+                              <td className="border border-black p-2 font-mono font-bold text-slate-800">{pr.code}</td>
+                              <td className="border border-black p-2">{pr.model}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* THREE SIGNATURE BOXES */}
+              <div className="pt-8 grid grid-cols-3 gap-4 text-center text-xs">
+                <div className="border border-dashed border-black p-3 rounded min-h-[100px] flex flex-col justify-between">
+                  <span className="font-bold text-black border-b border-dashed border-slate-300 pb-1">امضا تحویل گیرنده (استفاده‌کننده):</span>
+                  <span className="text-[10px] text-slate-500">{certificatePers.name}</span>
+                </div>
+                <div className="border border-dashed border-black p-3 rounded min-h-[100px] flex flex-col justify-between">
+                  <span className="font-bold text-black border-b border-dashed border-slate-300 pb-1">واحد انبار کارگاه بوشهر:</span>
+                  <span className="text-[10px] text-slate-500">امضا و تایید صدور فیزیکی</span>
+                </div>
+                <div className="border border-dashed border-black p-3 rounded min-h-[100px] flex flex-col justify-between">
+                  <span className="font-bold text-black border-b border-dashed border-slate-300 pb-1">واحد فناوری اطلاعات (ICT):</span>
+                  <span className="text-[10px] text-slate-500">امضا و ثبت در سامانه شناسنامه</span>
+                </div>
+              </div>
+
+              {/* Legal Footer Info */}
+              <div className="pt-6 border-t border-black text-center text-[10px] text-slate-500">
+                سامانه هوشمند صدور شناسنامه تجهیزات کارگاهی شرکت عمران آذرستان سال ۱۴۰۵ | واحد فناوری اطلاعات و ارتباطات
+              </div>
+
+            </div>
+          )}
+        </div>
+      </div>
+
+    </div>
+  );
+}

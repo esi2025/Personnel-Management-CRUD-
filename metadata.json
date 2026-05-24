@@ -1,0 +1,6 @@
+{
+  "name": "IT Equipment Tracking",
+  "description": "سامانه مدیریت و شناسنامه تجهیزات واحد فناوری اطلاعات و ارتباطات شرکت عمران آذرستان - کارگاه بوشهر",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
