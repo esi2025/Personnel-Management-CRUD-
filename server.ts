@@ -16,6 +16,9 @@ function initializeDatabase() {
   const casesFile = path.join(DATA_DIR, "cases.json");
   const monitorsFile = path.join(DATA_DIR, "monitors.json");
   const printersFile = path.join(DATA_DIR, "printers.json");
+  const miceFile = path.join(DATA_DIR, "mice.json");
+  const keyboardsFile = path.join(DATA_DIR, "keyboards.json");
+  const partsCatalogFile = path.join(DATA_DIR, "parts_catalog.json");
   const assignmentsFile = path.join(DATA_DIR, "assignments.json");
 
   if (!fs.existsSync(personnelFile)) {
@@ -141,6 +144,57 @@ function initializeDatabase() {
     ];
     fs.writeFileSync(assignmentsFile, JSON.stringify(demoAssignments, null, 2), "utf-8");
   }
+
+  if (!fs.existsSync(miceFile)) {
+    const demoMice = [
+      {
+        code: "MOU-501",
+        model: "A4Tech OP-620D Wired Mouse",
+        assignedTo: "1001"
+      },
+      {
+        code: "MOU-502",
+        model: "Logitech M170 Wireless Mouse",
+        assignedTo: "1002"
+      }
+    ];
+    fs.writeFileSync(miceFile, JSON.stringify(demoMice, null, 2), "utf-8");
+  }
+
+  if (!fs.existsSync(keyboardsFile)) {
+    const demoKeyboards = [
+      {
+        code: "KB-601",
+        model: "A4Tech KR-83 Wired Keyboard",
+        assignedTo: "1001"
+      },
+      {
+        code: "KB-602",
+        model: "Logitech K120 USB Keyboard",
+        assignedTo: null
+      }
+    ];
+    fs.writeFileSync(keyboardsFile, JSON.stringify(demoKeyboards, null, 2), "utf-8");
+  }
+
+  if (!fs.existsSync(partsCatalogFile)) {
+    const demoCatalog = [
+      { id: "pc1", category: "cpu", name: "Intel Core i5-12400", description: "6 Cores, 12 Threads, 2.5 GHz Base, LGA1700" },
+      { id: "pc2", category: "cpu", name: "Intel Core i7-13700", description: "16 Cores, 24 Threads, 2.1 GHz Base, LGA1700" },
+      { id: "pc3", category: "motherboard", name: "ASUS PRIME H610M-R", description: "Intel Socket LGA1700, DDR4 Support, Micro-ATX" },
+      { id: "pc4", category: "vga", name: "Desktop Intel UHD Graphics 730", description: "Integrated CPU Graphics" },
+      { id: "pc5", category: "vga", name: "NVIDIA GeForce RTX 3050 8GB", description: "Dedicated GDDR6 Graphics Card" },
+      { id: "pc6", category: "ramType", name: "DDR4", description: "DDR4 Desktop Memory SDRAM" },
+      { id: "pc7", category: "ramType", name: "DDR5", description: "DDR5 Next-Gen High Speed Memory" },
+      { id: "pc8", category: "monitorBrand", name: "LG 22MP400 (22 Inch)", description: "22-Inch Full HD (1920x1080) IPS Monitor" },
+      { id: "pc9", category: "monitorBrand", name: "Samsung LF24T350 (24 Inch)", description: "24-Inch Full HD IPS 75Hz Bezel-less Monitor" },
+      { id: "pc10", category: "printerBrand", name: "HP LaserJet Pro M402dn", description: "Monochrome Laser Printer, Auto Duplex" },
+      { id: "pc11", category: "printerBrand", name: "Canon LBP6030w", description: "Compact Wireless Monochrome Laser Printer" },
+      { id: "pc12", category: "printerFeature", name: "سه کاره (پرینت / کپی / اسکن)", description: "Multi-Function Monochrome Laser printer" },
+      { id: "pc13", category: "printerFeature", name: "تک کاره (پرینت فقط)", description: "Single-Function Dedicated Print Unit" }
+    ];
+    fs.writeFileSync(partsCatalogFile, JSON.stringify(demoCatalog, null, 2), "utf-8");
+  }
 }
 
 // Read database helper
@@ -181,6 +235,9 @@ async function startServer() {
       cases: readDb("cases.json"),
       monitors: readDb("monitors.json"),
       printers: readDb("printers.json"),
+      mice: readDb("mice.json"),
+      keyboards: readDb("keyboards.json"),
+      partsCatalog: readDb("parts_catalog.json"),
       assignments: readDb("assignments.json"),
     });
   });
@@ -248,6 +305,20 @@ async function startServer() {
               if (pr.assignedTo === oldPersCode) pr.assignedTo = trimmedCode;
             });
             writeDb("printers.json", printers);
+
+            // Mice
+            const mice = readDb("mice.json");
+            mice.forEach((m) => {
+              if (m.assignedTo === oldPersCode) m.assignedTo = trimmedCode;
+            });
+            writeDb("mice.json", mice);
+
+            // Keyboards
+            const keyboards = readDb("keyboards.json");
+            keyboards.forEach((k) => {
+              if (k.assignedTo === oldPersCode) k.assignedTo = trimmedCode;
+            });
+            writeDb("keyboards.json", keyboards);
 
             // History
             const assignments = readDb("assignments.json");
@@ -352,6 +423,80 @@ async function startServer() {
       return res.json({ success: true, item });
     }
 
+    if (type === "mouse") {
+      const mice = readDb("mice.json");
+      const lookupCode = isEdit ? oldCode : trimmedCode;
+
+      const codeExists = mice.some((m) => m.code === trimmedCode && (!isEdit || m.code !== oldCode));
+      if (codeExists) {
+        return res.status(400).json({ error: "کد ماوس تکراری است." });
+      }
+
+      const item = {
+        code: trimmedCode,
+        model: fields.model?.trim() || "سایر",
+        assignedTo: fields.assignedTo || null,
+      };
+
+      if (isEdit) {
+        const idx = mice.findIndex((m) => m.code === lookupCode);
+        if (idx !== -1) mice[idx] = item;
+      } else {
+        mice.push(item);
+      }
+
+      writeDb("mice.json", mice);
+      return res.json({ success: true, item });
+    }
+
+    if (type === "keyboard") {
+      const keyboards = readDb("keyboards.json");
+      const lookupCode = isEdit ? oldCode : trimmedCode;
+
+      const codeExists = keyboards.some((k) => k.code === trimmedCode && (!isEdit || k.code !== oldCode));
+      if (codeExists) {
+        return res.status(400).json({ error: "کد کیبورد تکراری است." });
+      }
+
+      const item = {
+        code: trimmedCode,
+        model: fields.model?.trim() || "سایر",
+        assignedTo: fields.assignedTo || null,
+      };
+
+      if (isEdit) {
+        const idx = keyboards.findIndex((k) => k.code === lookupCode);
+        if (idx !== -1) keyboards[idx] = item;
+      } else {
+        keyboards.push(item);
+      }
+
+      writeDb("keyboards.json", keyboards);
+      return res.json({ success: true, item });
+    }
+
+    if (type === "catalog") {
+      const catalog = readDb("parts_catalog.json");
+      const itemId = isEdit ? id : `pc_${Date.now()}`;
+
+      const item = {
+        id: itemId,
+        category: fields.category,
+        name: fields.name?.trim(),
+        description: fields.description?.trim() || "",
+      };
+
+      if (isEdit) {
+        const idx = catalog.findIndex((c) => c.id === itemId);
+        if (idx !== -1) catalog[idx] = item;
+      } else {
+        catalog.push(item);
+      }
+
+      writeDb("parts_catalog.json", catalog);
+      return res.json({ success: true, item });
+    }
+
     return res.status(400).json({ error: "نوع آیتم نامعتبر است." });
   });
 
@@ -397,6 +542,20 @@ async function startServer() {
           if (pr.assignedTo === codeToClear) pr.assignedTo = null;
         });
         writeDb("printers.json", printers);
+
+        // Mice
+        const mice = readDb("mice.json");
+        mice.forEach((m) => {
+          if (m.assignedTo === codeToClear) m.assignedTo = null;
+        });
+        writeDb("mice.json", mice);
+
+        // Keyboards
+        const keyboards = readDb("keyboards.json");
+        keyboards.forEach((k) => {
+          if (k.assignedTo === codeToClear) k.assignedTo = null;
+        });
+        writeDb("keyboards.json", keyboards);
 
         // Assignment History close
         const assignments = readDb("assignments.json");
@@ -468,6 +627,55 @@ async function startServer() {
       return res.json({ success: true });
     }
 
+    if (type === "mouse") {
+      const mice = readDb("mice.json");
+      const idx = mice.findIndex((m) => m.code === id);
+      if (idx === -1) return res.status(404).json({ error: "ماوس یافت نشد." });
+
+      mice.splice(idx, 1);
+      writeDb("mice.json", mice);
+
+      const assignments = readDb("assignments.json");
+      assignments.forEach((ass) => {
+        if (ass.equipmentCode === id && ass.equipmentType === "mouse" && ass.endDate === null) {
+          ass.endDate = dateStr;
+        }
+      });
+      writeDb("assignments.json", assignments);
+
+      return res.json({ success: true });
+    }
+
+    if (type === "keyboard") {
+      const keyboards = readDb("keyboards.json");
+      const idx = keyboards.findIndex((k) => k.code === id);
+      if (idx === -1) return res.status(404).json({ error: "کیبورد یافت نشد." });
+
+      keyboards.splice(idx, 1);
+      writeDb("keyboards.json", keyboards);
+
+      const assignments = readDb("assignments.json");
+      assignments.forEach((ass) => {
+        if (ass.equipmentCode === id && ass.equipmentType === "keyboard" && ass.endDate === null) {
+          ass.endDate = dateStr;
+        }
+      });
+      writeDb("assignments.json", assignments);
+
+      return res.json({ success: true });
+    }
+
+    if (type === "catalog") {
+      const catalog = readDb("parts_catalog.json");
+      const idx = catalog.findIndex((c) => c.id === id);
+      if (idx === -1) return res.status(404).json({ error: "قطعه مرجع یافت نشد." });
+
+      catalog.splice(idx, 1);
+      writeDb("parts_catalog.json", catalog);
+
+      return res.json({ success: true });
+    }
+
     return res.status(400).json({ error: "نوع آیتم نامعتبر است." });
   });
 
@@ -481,7 +689,7 @@ async function startServer() {
     }
 
     // 1. Locate Equipment
-    let equipType: "case" | "monitor" | "printer" | null = null;
+    let equipType: "case" | "monitor" | "printer" | "mouse" | "keyboard" | null = null;
     let equipItem: any = null;
 
     const cases = readDb("cases.json");
@@ -506,6 +714,24 @@ async function startServer() {
       if (prIdx !== -1) {
         equipType = "printer";
         equipItem = printers[prIdx];
+      }
+    }
+
+    if (!equipItem) {
+      const mice = readDb("mice.json");
+      const mIdx = mice.findIndex((m) => m.code === equipmentCode);
+      if (mIdx !== -1) {
+        equipType = "mouse";
+        equipItem = mice[mIdx];
+      }
+    }
+
+    if (!equipItem) {
+      const keyboards = readDb("keyboards.json");
+      const kIdx = keyboards.findIndex((k) => k.code === equipmentCode);
+      if (kIdx !== -1) {
+        equipType = "keyboard";
+        equipItem = keyboards[kIdx];
       }
     }
 
@@ -552,6 +778,16 @@ async function startServer() {
       const idx = printers.findIndex((pr) => pr.code === equipmentCode);
       printers[idx] = equipItem;
       writeDb("printers.json", printers);
+    } else if (equipType === "mouse") {
+      const mice = readDb("mice.json");
+      const idx = mice.findIndex((m) => m.code === equipmentCode);
+      mice[idx] = equipItem;
+      writeDb("mice.json", mice);
+    } else if (equipType === "keyboard") {
+      const keyboards = readDb("keyboards.json");
+      const idx = keyboards.findIndex((k) => k.code === equipmentCode);
+      keyboards[idx] = equipItem;
+      writeDb("keyboards.json", keyboards);
     }
 
     // History log mapping
@@ -608,12 +844,22 @@ async function startServer() {
       return res.status(400).json({ error: "فایل پشتیبان نامعتبر است." });
     }
 
-    const validKeys = ["personnel", "cases", "monitors", "printers", "assignments"];
+    const keysMap: { [key: string]: string } = {
+      personnel: "personnel.json",
+      cases: "cases.json",
+      monitors: "monitors.json",
+      printers: "printers.json",
+      mice: "mice.json",
+      keyboards: "keyboards.json",
+      partsCatalog: "parts_catalog.json",
+      parts_catalog: "parts_catalog.json",
+      assignments: "assignments.json"
+    };
     let restoredCount = 0;
 
-    validKeys.forEach((key) => {
+    Object.keys(keysMap).forEach((key) => {
       if (Array.isArray(data[key])) {
-        writeDb(`${key}.json`, data[key]);
+        writeDb(keysMap[key], data[key]);
         restoredCount++;
       }
     });

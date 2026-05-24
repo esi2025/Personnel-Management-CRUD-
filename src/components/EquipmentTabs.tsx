@@ -1,5 +1,5 @@
 import React from 'react';
-import { Case, Monitor, Printer, Personnel } from '../types';
+import { Case, Monitor, Printer, Personnel, Mouse, Keyboard } from '../types';
 
 interface CasesSubTabProps {
   cases: Case[];
@@ -292,6 +292,204 @@ export function PrintersSubTab({
                           </button>
                           <button 
                             onClick={() => onTransfer(pr.code)}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-xs transition font-semibold cursor-pointer"
+                          >
+                            🔄 جابجایی
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface MiceSubTabProps {
+  mice: Mouse[];
+  personnel: Personnel[];
+  onEdit: (m: Mouse) => void;
+  onDelete: (code: string) => void;
+  onTransfer: (code: string) => void;
+  onTabChange: (tabId: string) => void;
+}
+
+export function MiceSubTab({
+  mice = [],
+  personnel,
+  onEdit,
+  onDelete,
+  onTransfer,
+  onTabChange
+}: MiceSubTabProps) {
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <h3 className="text-lg font-bold text-slate-800">🖱️ لیست ماوس‌ها</h3>
+        <button 
+          onClick={() => onTabChange('add-new-tab')}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer"
+        >
+          ➕ ثبت ماوس جدید
+        </button>
+      </div>
+
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-right border-collapse text-xs md:text-sm">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200 text-slate-700">
+                <th className="p-3.5 font-bold">کد ماوس (اموال)</th>
+                <th className="p-3.5 font-bold">مدل و برند</th>
+                <th className="p-3.5 font-bold">کاربر تحویل گیرنده</th>
+                <th className="p-3.5 text-center font-bold">عملیات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {mice.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="p-8 text-center text-slate-400">
+                    ماوسی در سیستم ثبت نگردیده است.
+                  </td>
+                </tr>
+              ) : (
+                mice.map((m) => {
+                  const owner = personnel.find(p => p.code === m.assignedTo);
+                  return (
+                    <tr key={m.code} className="border-b border-slate-100 hover:bg-slate-50/50 transition">
+                      <td className="p-3.5 font-mono font-bold text-slate-900">{m.code}</td>
+                      <td className="p-3.5 text-slate-600">{m.model}</td>
+                      <td className="p-3.5">
+                        {owner ? (
+                          <span className="bg-pink-50 border border-pink-200 text-pink-800 px-2.5 py-1 rounded-full text-xs font-semibold">
+                            👥 {owner.name} ({owner.code})
+                          </span>
+                        ) : (
+                          <span className="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full text-xs">
+                            📦 مستقر در انبار کارگاه
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-3.5 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button 
+                            onClick={() => onEdit(m)}
+                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded text-xs transition cursor-pointer"
+                          >
+                            ✏️ ویرایش
+                          </button>
+                          <button 
+                            onClick={() => onDelete(m.code)}
+                            className="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs transition cursor-pointer"
+                          >
+                            🗑️ حذف
+                          </button>
+                          <button 
+                            onClick={() => onTransfer(m.code)}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-xs transition font-semibold cursor-pointer"
+                          >
+                            🔄 جابجایی
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface KeyboardsSubTabProps {
+  keyboards: Keyboard[];
+  personnel: Personnel[];
+  onEdit: (k: Keyboard) => void;
+  onDelete: (code: string) => void;
+  onTransfer: (code: string) => void;
+  onTabChange: (tabId: string) => void;
+}
+
+export function KeyboardsSubTab({
+  keyboards = [],
+  personnel,
+  onEdit,
+  onDelete,
+  onTransfer,
+  onTabChange
+}: KeyboardsSubTabProps) {
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <h3 className="text-lg font-bold text-slate-800">⌨️ لیست کیبوردها</h3>
+        <button 
+          onClick={() => onTabChange('add-new-tab')}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer"
+        >
+          ➕ ثبت کیبورد جدید
+        </button>
+      </div>
+
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-right border-collapse text-xs md:text-sm">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200 text-slate-700">
+                <th className="p-3.5 font-bold">کد کیبورد (اموال)</th>
+                <th className="p-3.5 font-bold">مدل و برند</th>
+                <th className="p-3.5 font-bold">کاربر تحویل گیرنده</th>
+                <th className="p-3.5 text-center font-bold">عملیات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {keyboards.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="p-8 text-center text-slate-400">
+                    کیبوردی در سیستم ثبت نگردیده است.
+                  </td>
+                </tr>
+              ) : (
+                keyboards.map((k) => {
+                  const owner = personnel.find(p => p.code === k.assignedTo);
+                  return (
+                    <tr key={k.code} className="border-b border-slate-100 hover:bg-slate-50/50 transition">
+                      <td className="p-3.5 font-mono font-bold text-slate-900">{k.code}</td>
+                      <td className="p-3.5 text-slate-600">{k.model}</td>
+                      <td className="p-3.5">
+                        {owner ? (
+                          <span className="bg-purple-50 border border-purple-200 text-purple-800 px-2.5 py-1 rounded-full text-xs font-semibold">
+                            👥 {owner.name} ({owner.code})
+                          </span>
+                        ) : (
+                          <span className="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full text-xs">
+                            📦 مستقر در انبار کارگاه
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-3.5 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button 
+                            onClick={() => onEdit(k)}
+                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded text-xs transition cursor-pointer"
+                          >
+                            ✏️ ویرایش
+                          </button>
+                          <button 
+                            onClick={() => onDelete(k.code)}
+                            className="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs transition cursor-pointer"
+                          >
+                            🗑️ حذف
+                          </button>
+                          <button 
+                            onClick={() => onTransfer(k.code)}
                             className="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-xs transition font-semibold cursor-pointer"
                           >
                             🔄 جابجایی

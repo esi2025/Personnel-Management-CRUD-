@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 
 interface AddNewTabProps {
-  onSave: (type: 'personnel' | 'case' | 'monitor' | 'printer', data: any) => Promise<boolean>;
+  onSave: (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard', data: any) => Promise<boolean>;
 }
 
 export default function AddNewTab({ onSave }: AddNewTabProps) {
-  const [activeType, setActiveType] = useState<'personnel' | 'case' | 'monitor' | 'printer'>('personnel');
+  const [activeType, setActiveType] = useState<'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard'>('personnel');
 
   // Personnel fields
   const [pName, setPName] = useState('');
@@ -32,11 +32,21 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
   const [prCode, setPrCode] = useState('');
   const [prModel, setPrModel] = useState('');
 
+  // Mouse fields
+  const [mouCode, setMouCode] = useState('');
+  const [mouModel, setMouModel] = useState('');
+
+  // Keyboard fields
+  const [kbCode, setKbCode] = useState('');
+  const [kbModel, setKbModel] = useState('');
+
   const handleResetForm = () => {
     setPName(''); setPCode(''); setPTitle(''); setPDept(''); setPLoc('');
     setCCode(''); setCMobo(''); setCCpu(''); setCVga(''); setCHdd1(''); setCHdd2(''); setCRamType('DDR4'); setCRamQty('8GB');
     setMCode(''); setMModel('');
     setPrCode(''); setPrModel('');
+    setMouCode(''); setMouModel('');
+    setKbCode(''); setKbModel('');
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -77,6 +87,18 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
         return;
       }
       data = { code: prCode, model: prModel };
+    } else if (activeType === 'mouse') {
+      if (!mouCode.trim() || !mouModel.trim()) {
+        alert('کد ماوس و نام مدل ماوس الزامی هستند.');
+        return;
+      }
+      data = { code: mouCode, model: mouModel };
+    } else if (activeType === 'keyboard') {
+      if (!kbCode.trim() || !kbModel.trim()) {
+        alert('کد کیبورد و نام مدل کیبورد الزامی هستند.');
+        return;
+      }
+      data = { code: kbCode, model: kbModel };
     }
 
     const success = await onSave(activeType, data);
@@ -95,22 +117,24 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
       </div>
 
       {/* Select active type */}
-      <div className="grid grid-cols-4 gap-2">
-        {(['personnel', 'case', 'monitor', 'printer'] as const).map((type) => (
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        {(['personnel', 'case', 'monitor', 'printer', 'mouse', 'keyboard'] as const).map((type) => (
           <button
             key={type}
             type="button"
             onClick={() => { setActiveType(type); }}
-            className={`p-2.5 rounded-lg text-xs md:text-sm font-bold transition flex flex-col items-center gap-1 cursor-pointer ${
+            className={`p-2.5 rounded-lg text-xs font-bold transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
               activeType === type 
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10' 
                 : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100'
             }`}
           >
-            {type === 'personnel' && <span>👥 پرسنل جدید</span>}
-            {type === 'case' && <span>🖥️ کیس کامپیوتر</span>}
-            {type === 'monitor' && <span>📺 مانیتور جدید</span>}
-            {type === 'printer' && <span>🖨️ پرینتر جدید</span>}
+            {type === 'personnel' && <span>👥 پرسنل</span>}
+            {type === 'case' && <span>🖥️ کیس</span>}
+            {type === 'monitor' && <span>📺 مانیتور</span>}
+            {type === 'printer' && <span>🖨️ پرینتر</span>}
+            {type === 'mouse' && <span>🖱️ ماوس</span>}
+            {type === 'keyboard' && <span>⌨️ کیبورد</span>}
           </button>
         ))}
       </div>
@@ -274,6 +298,50 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
               <input 
                 type="text" required value={prModel} onChange={(e) => setPrModel(e.target.value)}
                 placeholder="مثال: HP LaserJet Pro M402d"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Render Form 5: Mouse Add */}
+        {activeType === 'mouse' && (
+          <div className="grid grid-cols-1 gap-4 text-xs md:text-sm animate-fade-in">
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">کد ماوس (برچسب اموال):</label>
+              <input 
+                type="text" required value={mouCode} onChange={(e) => setMouCode(e.target.value)}
+                placeholder="مثال: MOU-101"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">مدل و برند ماوس:</label>
+              <input 
+                type="text" required value={mouModel} onChange={(e) => setMouModel(e.target.value)}
+                placeholder="مثال: Logitech M170 Wireless"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Render Form 6: Keyboard Add */}
+        {activeType === 'keyboard' && (
+          <div className="grid grid-cols-1 gap-4 text-xs md:text-sm animate-fade-in">
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">کد کیبورد (برچسب اموال):</label>
+              <input 
+                type="text" required value={kbCode} onChange={(e) => setKbCode(e.target.value)}
+                placeholder="مثال: KEY-201"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">مدل و برند کیبورد:</label>
+              <input 
+                type="text" required value={kbModel} onChange={(e) => setKbModel(e.target.value)}
+                placeholder="مثال: A4Tech KR-83 USB"
                 className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
               />
             </div>

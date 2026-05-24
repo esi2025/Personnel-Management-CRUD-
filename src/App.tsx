@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import PersonnelTab from './components/PersonnelTab';
-import { CasesSubTab, MonitorsSubTab, PrintersSubTab } from './components/EquipmentTabs';
+import { CasesSubTab, MonitorsSubTab, PrintersSubTab, MiceSubTab, KeyboardsSubTab } from './components/EquipmentTabs';
+import PartsCatalogTab from './components/PartsCatalogTab';
 import TransferTab from './components/TransferTab';
 import HistoryTab from './components/HistoryTab';
 import ReportingTab from './components/ReportingTab';
 import BackupTab from './components/BackupTab';
 import AddNewTab from './components/AddNewTab';
 import EditModal from './components/EditModal';
-import { Personnel, Case, Monitor, Printer, Assignment } from './types';
+import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard, CatalogItem } from './types';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('personnel-tab');
@@ -20,6 +21,9 @@ export default function App() {
   const [cases, setCases] = useState<Case[]>([]);
   const [monitors, setMonitors] = useState<Monitor[]>([]);
   const [printers, setPrinters] = useState<Printer[]>([]);
+  const [mice, setMice] = useState<Mouse[]>([]);
+  const [keyboards, setKeyboards] = useState<Keyboard[]>([]);
+  const [partsCatalog, setPartsCatalog] = useState<CatalogItem[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
 
   // Search filter
@@ -27,7 +31,7 @@ export default function App() {
 
   // Editing state
   const [editItem, setEditItem] = useState<any>(null);
-  const [editType, setEditType] = useState<'personnel' | 'case' | 'monitor' | 'printer' | null>(null);
+  const [editType, setEditType] = useState<'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'catalog' | null>(null);
 
   // Transfer prefill
   const [prefilledEquipCode, setPrefilledEquipCode] = useState('');
@@ -44,6 +48,9 @@ export default function App() {
       setCases(data.cases || []);
       setMonitors(data.monitors || []);
       setPrinters(data.printers || []);
+      setMice(data.mice || []);
+      setKeyboards(data.keyboards || []);
+      setPartsCatalog(data.partsCatalog || []);
       setAssignments(data.assignments || []);
     } catch (err: any) {
       console.error(err);
@@ -58,7 +65,7 @@ export default function App() {
   }, []);
 
   // Save/Edit entity
-  const handleSaveItem = async (type: 'personnel' | 'case' | 'monitor' | 'printer', data: any) => {
+  const handleSaveItem = async (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'catalog', data: any) => {
     try {
       const res = await fetch('/api/save', {
         method: 'POST',
@@ -81,7 +88,7 @@ export default function App() {
   };
 
   // Delete entity
-  const handleDeleteItem = async (type: 'personnel' | 'case' | 'monitor' | 'printer', id: string) => {
+  const handleDeleteItem = async (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'catalog', id: string) => {
     const confirmationMsg = type === 'personnel' 
       ? 'آیا از حذف این پرسنل اطمینان دارید؟ تمامی تجهیزات تحت تصرف وی آزاد شده و به انبار پروژه بازگردانده می‌شوند.'
       : 'آیا از حذف این سخت‌افزار از سامانه اطمینان کامل دارید؟';
@@ -153,7 +160,7 @@ export default function App() {
 
   const handleTriggerTransfer = (code: string) => {
     // Check if it's a personnel code or equipment code
-    const isEquip = cases.some(c=>c.code===code) || monitors.some(m=>m.code===code) || printers.some(p=>p.code===code);
+    const isEquip = cases.some(c=>c.code===code) || monitors.some(m=>m.code===code) || printers.some(p=>p.code===code) || mice.some(m=>m.code===code) || keyboards.some(k=>k.code===code);
     if (isEquip) {
       setPrefilledEquipCode(code);
       setPrefilledPersCode('');
@@ -164,7 +171,7 @@ export default function App() {
     setActiveTab('transfer-tab');
   };
 
-  const handleEditTrigger = (item: any, type: 'personnel' | 'case' | 'monitor' | 'printer') => {
+  const handleEditTrigger = (item: any, type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'catalog') => {
     setEditItem(item);
     setEditType(type);
   };
@@ -212,6 +219,26 @@ export default function App() {
     );
   };
 
+  const getFilteredMice = () => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return mice;
+    return mice.filter(m => 
+      m.code.toLowerCase().includes(q) || 
+      m.model.toLowerCase().includes(q) || 
+      (m.assignedTo && m.assignedTo.includes(q))
+    );
+  };
+
+  const getFilteredKeyboards = () => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return keyboards;
+    return keyboards.filter(k => 
+      k.code.toLowerCase().includes(q) || 
+      k.model.toLowerCase().includes(q) || 
+      (k.assignedTo && k.assignedTo.includes(q))
+    );
+  };
+
   return (
     <div className="min-h-screen flex flex-col p-4 md:p-8 font-sans max-w-7xl mx-auto" dir="rtl">
       
@@ -237,6 +264,8 @@ export default function App() {
           <span className="bg-slate-100 px-2.5 py-1 rounded">🖥️ کیس: {cases.length}</span>
           <span className="bg-slate-100 px-2.5 py-1 rounded">📺 مانیتور: {monitors.length}</span>
           <span className="bg-slate-100 px-2.5 py-1 rounded">🖨️ چاپگر: {printers.length}</span>
+          <span className="bg-slate-100 px-2.5 py-1 rounded">🖱️ ماوس: {mice.length}</span>
+          <span className="bg-slate-100 px-2.5 py-1 rounded">⌨️ کیبورد: {keyboards.length}</span>
         </div>
       </div>
 
@@ -247,10 +276,13 @@ export default function App() {
           { id: 'cases-tab', label: '🖥️ کیس‌های کارگاه' },
           { id: 'monitors-tab', label: '📺 مانیتورها' },
           { id: 'printers-tab', label: '🖨️ پرینترها' },
+          { id: 'mice-tab', label: '🖱️ ماوس‌ها' },
+          { id: 'keyboards-tab', label: '⌨️ کیبوردها' },
+          { id: 'catalog-tab', label: '🛠️ قطعات مرجع' },
           { id: 'transfer-tab', label: '🔄 جابجایی هوشمند' },
           { id: 'history-tab', label: '📜 تاریخچه لجستیک' },
-          { id: 'reports-tab', label: '📋 گزارش و شناسنامه سیستم' },
-          { id: 'backup-tab', label: '⚙️ پشتیبان‌گیری و سورس PHP' },
+          { id: 'reports-tab', label: '📋 گزارش و شناسنامه' },
+          { id: 'backup-tab', label: '⚙️ پشتیبان‌گیری و سورس' },
           { id: 'add-new-tab', label: '➕ ثبت جدید' }
         ].map((tab) => (
           <button
@@ -291,6 +323,8 @@ export default function App() {
               cases={cases}
               monitors={monitors}
               printers={printers}
+              mice={mice}
+              keyboards={keyboards}
               onEdit={(p) => handleEditTrigger(p, 'personnel')}
               onDelete={(id) => handleDeleteItem('personnel', id)}
               onShowCertificate={handleTriggerCertificate}
@@ -332,11 +366,43 @@ export default function App() {
             />
           )}
 
+          {activeTab === 'mice-tab' && (
+            <MiceSubTab 
+              mice={getFilteredMice()} 
+              personnel={personnel}
+              onEdit={(m) => handleEditTrigger(m, 'mouse')}
+              onDelete={(code) => handleDeleteItem('mouse', code)}
+              onTransfer={handleTriggerTransfer}
+              onTabChange={setActiveTab}
+            />
+          )}
+
+          {activeTab === 'keyboards-tab' && (
+            <KeyboardsSubTab 
+              keyboards={getFilteredKeyboards()} 
+              personnel={personnel}
+              onEdit={(k) => handleEditTrigger(k, 'keyboard')}
+              onDelete={(code) => handleDeleteItem('keyboard', code)}
+              onTransfer={handleTriggerTransfer}
+              onTabChange={setActiveTab}
+            />
+          )}
+
+          {activeTab === 'catalog-tab' && (
+            <PartsCatalogTab 
+              catalog={partsCatalog}
+              onSave={handleSaveItem}
+              onDelete={handleDeleteItem}
+            />
+          )}
+
           {activeTab === 'transfer-tab' && (
             <TransferTab 
               cases={cases}
               monitors={monitors}
               printers={printers}
+              mice={mice}
+              keyboards={keyboards}
               personnel={personnel}
               onTransfer={handleTransferItem}
               prefilledEquipmentCode={prefilledEquipCode}
@@ -354,6 +420,8 @@ export default function App() {
               cases={cases}
               monitors={monitors}
               printers={printers}
+              mice={mice}
+              keyboards={keyboards}
               assignments={assignments}
             />
           )}

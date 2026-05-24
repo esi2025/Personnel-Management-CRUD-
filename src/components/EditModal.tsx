@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 
 interface EditModalProps {
   item: any;
-  type: 'personnel' | 'case' | 'monitor' | 'printer' | null;
+  type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | null;
   onClose: () => void;
-  onSave: (type: 'personnel' | 'case' | 'monitor' | 'printer', data: any) => Promise<boolean>;
+  onSave: (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard', data: any) => Promise<boolean>;
 }
 
 export default function EditModal({ item, type, onClose, onSave }: EditModalProps) {
@@ -27,7 +27,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
   const [cRamType, setCRamType] = useState('DDR4');
   const [cRamQty, setCRamQty] = useState('8GB');
 
-  // Monitor/Printer states
+  // Monitor/Printer/Mouse/Keyboard states
   const [equipCode, setEquipCode] = useState('');
   const [equipModel, setEquipModel] = useState('');
 
@@ -48,7 +48,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
       setCHdd2(item.hdd2 || '');
       setCRamType(item.ramType || 'DDR4');
       setCRamQty(item.ramQty || '8GB');
-    } else if (type === 'monitor' || type === 'printer') {
+    } else if (type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard') {
       setEquipCode(item.code || '');
       setEquipModel(item.model || '');
     }
@@ -77,7 +77,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
       data.ramType = cRamType;
       data.ramQty = cRamQty;
       data.assignedTo = item.assignedTo;
-    } else if (type === 'monitor' || type === 'printer') {
+    } else if (type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard') {
       data.code = equipCode;
       data.oldCode = item.code;
       data.model = equipModel;
@@ -97,7 +97,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
         {/* Title */}
         <div className="p-4 bg-slate-900 text-white flex justify-between items-center">
           <h3 className="font-bold text-sm md:text-base">
-            ✏️ ویرایش مشخصات {type === 'personnel' ? 'پرسنل' : type === 'case' ? 'کیس کامپیوتر' : type === 'monitor' ? 'مانیتور' : 'پرینتر'}
+            ✏️ ویرایش مشخصات {type === 'personnel' ? 'پرسنل' : type === 'case' ? 'کیس کامپیوتر' : type === 'monitor' ? 'مانیتور' : type === 'printer' ? 'پرینتر' : type === 'mouse' ? 'ماوس' : 'کیبورد'}
           </h3>
           <button 
             type="button" 
@@ -216,7 +216,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
             </div>
           )}
 
-          {(type === 'monitor' || type === 'printer') && (
+          {(type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard') && (
             <div className="space-y-4 text-xs md:text-sm">
               <div className="space-y-1">
                 <label className="font-bold text-slate-700">کد اموال تجهیز:</label>

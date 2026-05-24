@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Logo from './Logo';
 
 export default function Header() {
   const [time, setTime] = useState('');
@@ -16,7 +17,7 @@ export default function Header() {
   return (
     <header className="bg-slate-900 border-b-4 border-blue-600 text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
       <div className="flex items-center gap-4">
-        <span className="text-5xl">🏭</span>
+        <Logo size="h-16" />
         <div>
           <h1 className="text-2xl font-black tracking-tight">شرکت عمران آذرستان</h1>
           <h2 className="text-sm font-medium text-slate-300">واحد فناوری اطلاعات و ارتباطات (ICT) | کارگاه بوشهر</h2>

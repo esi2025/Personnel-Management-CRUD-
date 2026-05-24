@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { Personnel, Case, Monitor, Printer, Assignment } from '../types';
+import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard } from '../types';
+import Logo from './Logo';
 
 interface ReportingTabProps {
   personnel: Personnel[];
   cases: Case[];
   monitors: Monitor[];
   printers: Printer[];
+  mice?: Mouse[];
+  keyboards?: Keyboard[];
   assignments: Assignment[];
 }
 
@@ -14,6 +17,8 @@ export default function ReportingTab({
   cases,
   monitors,
   printers,
+  mice = [],
+  keyboards = [],
   assignments
 }: ReportingTabProps) {
   // Checkbox states
@@ -58,11 +63,15 @@ export default function ReportingTab({
     const userCases = cases.filter(c => c.assignedTo === userCode);
     const userMonitors = monitors.filter(m => m.assignedTo === userCode);
     const userPrinters = printers.filter(p => p.assignedTo === userCode);
+    const userMice = (mice || []).filter(m => m.assignedTo === userCode);
+    const userKeyboards = (keyboards || []).filter(k => k.assignedTo === userCode);
     return {
       cases: userCases,
       monitors: userMonitors,
       printers: userPrinters,
-      totalCount: userCases.length + userMonitors.length + userPrinters.length
+      mice: userMice,
+      keyboards: userKeyboards,
+      totalCount: userCases.length + userMonitors.length + userPrinters.length + userMice.length + userKeyboards.length
     };
   };
 
@@ -376,7 +385,7 @@ export default function ReportingTab({
               {/* Header Certificate corporate titles */}
               <div className="flex justify-between items-center border-b-2 border-black pb-4">
                 <div className="flex items-center gap-3">
-                  <span className="text-4xl">🏭</span>
+                  <Logo size="h-12" />
                   <div>
                     <h2 className="text-base md:text-lg font-black leading-none">شرکت عمران آذرستان</h2>
                     <h3 className="text-xs text-slate-600 mt-1">واحد فناوری اطلاعات و ارتباطات (ICT) | کارگاه بوشهر</h3>
@@ -464,12 +473,15 @@ export default function ReportingTab({
                     ))}
 
                     {/* Monitors and Printers spec table */}
-                    {(getAssignedEquipments(certificatePers.code).monitors.length > 0 || getAssignedEquipments(certificatePers.code).printers.length > 0) && (
+                    {(getAssignedEquipments(certificatePers.code).monitors.length > 0 || 
+                      getAssignedEquipments(certificatePers.code).printers.length > 0 ||
+                      getAssignedEquipments(certificatePers.code).mice.length > 0 ||
+                      getAssignedEquipments(certificatePers.code).keyboards.length > 0) && (
                       <table className="w-full text-xs text-right border-collapse border border-black">
                         <thead>
                           <tr className="bg-slate-200">
                             <th className="border border-black p-2 font-bold w-[35%]">دسته سخت‌افزار</th>
-                            <th className="border border-black p-2 font-bold w-[25%]">کد اموال تجهیز</th>
+                            <th className="border border-black p-2 font-bold w-[25%] font-mono">کد اموال و ردیاب</th>
                             <th className="border border-black p-2 font-bold w-[40%]">سازنده و مدل دقیق کالا تحویل شده</th>
                           </tr>
                         </thead>
@@ -486,6 +498,20 @@ export default function ReportingTab({
                               <td className="border border-black p-2 font-bold">🖨️ پرینتر / چاپگر کارگاهی</td>
                               <td className="border border-black p-2 font-mono font-bold text-slate-800">{pr.code}</td>
                               <td className="border border-black p-2">{pr.model}</td>
+                            </tr>
+                          ))}
+                          {getAssignedEquipments(certificatePers.code).mice.map(m => (
+                            <tr key={m.code}>
+                              <td className="border border-black p-2 font-bold">🖱️ ماوس (پرونده پرسنلی)</td>
+                              <td className="border border-black p-2 font-mono font-bold text-slate-800">{m.code}</td>
+                              <td className="border border-black p-2">{m.model}</td>
+                            </tr>
+                          ))}
+                          {getAssignedEquipments(certificatePers.code).keyboards.map(k => (
+                            <tr key={k.code}>
+                              <td className="border border-black p-2 font-bold">⌨️ کیبورد (پرونده پرسنلی)</td>
+                              <td className="border border-black p-2 font-mono font-bold text-slate-800">{k.code}</td>
+                              <td className="border border-black p-2">{k.model}</td>
                             </tr>
                           ))}
                         </tbody>

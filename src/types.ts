@@ -21,7 +21,7 @@ export interface Case {
 
 export interface Monitor {
   code: string; // کد مانیتور (unique)
-  model: string; // مدل
+  model: string; // مدل (شامل مارک و سایز)
   assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
 }
 
@@ -31,13 +31,32 @@ export interface Printer {
   assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
 }
 
+export interface Mouse {
+  code: string; // کد ماوس (unique)
+  model: string; // مدل/برند
+  assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
+}
+
+export interface Keyboard {
+  code: string; // کد کیبورد (unique)
+  model: string; // مدل/برند
+  assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
+}
+
+export interface CatalogItem {
+  id: string;
+  category: 'cpu' | 'motherboard' | 'vga' | 'ramType' | 'monitorBrand' | 'printerBrand' | 'printerFeature';
+  name: string; // نام قطعه / برند / مدل دقیق
+  description: string; // توضیحات، ویژگی‌ها یا سایز
+}
+
 export interface Assignment {
   id: string; // شناسه تاریخچه
   equipmentCode: string; // کد تجهیز
-  equipmentType: 'case' | 'monitor' | 'printer'; // نوع تجهیز
+  equipmentType: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard'; // نوع تجهیز
   personnelCode: string | null; // کد پرسنلی (یا null برای خروج به انبار)
   personnelName: string | null; // نام پرسنل
-  startDate: string; // تاریخ شروع (خورشیدی یا میلادی - ما خورشیدی کنونی را استفاده می‌کنیم)
+  startDate: string; // تاریخ شروع (خورشیدی)
   endDate: string | null; // تاریخ پایان یا null (به عنوان فعلی)
 }
 
@@ -46,5 +65,9 @@ export interface BackupData {
   cases: Case[];
   monitors: Monitor[];
   printers: Printer[];
+  mice?: Mouse[];
+  keyboards?: Keyboard[];
+  partsCatalog?: CatalogItem[];
   assignments: Assignment[];
 }
+

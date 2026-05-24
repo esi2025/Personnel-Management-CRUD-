@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Case, Monitor, Printer, Personnel } from '../types';
+import { Case, Monitor, Printer, Personnel, Mouse, Keyboard } from '../types';
 
 interface TransferTabProps {
   cases: Case[];
   monitors: Monitor[];
   printers: Printer[];
+  mice?: Mouse[];
+  keyboards?: Keyboard[];
   personnel: Personnel[];
   onTransfer: (equipmentCode: string, targetPersonnelCode: string | null) => Promise<void>;
   prefilledEquipmentCode?: string;
@@ -15,6 +17,8 @@ export default function TransferTab({
   cases,
   monitors,
   printers,
+  mice = [],
+  keyboards = [],
   personnel,
   onTransfer,
   prefilledEquipmentCode = '',
@@ -25,7 +29,7 @@ export default function TransferTab({
 
   const [matchedEquip, setMatchedEquip] = useState<{
     code: string;
-    type: 'case' | 'monitor' | 'printer';
+    type: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard';
     info: string;
     owner: string | null;
   } | null>(null);
@@ -82,8 +86,32 @@ export default function TransferTab({
       return;
     }
 
+    // 4. Check Mice
+    const foundMouse = mice.find(m => m.code.toUpperCase() === code);
+    if (foundMouse) {
+      setMatchedEquip({
+        code: foundMouse.code,
+        type: 'mouse',
+        info: foundMouse.model,
+        owner: foundMouse.assignedTo
+      });
+      return;
+    }
+
+    // 5. Check Keyboards
+    const foundKeyboard = keyboards.find(k => k.code.toUpperCase() === code);
+    if (foundKeyboard) {
+      setMatchedEquip({
+        code: foundKeyboard.code,
+        type: 'keyboard',
+        info: foundKeyboard.model,
+        owner: foundKeyboard.assignedTo
+      });
+      return;
+    }
+
     setMatchedEquip(null);
-  }, [equipCode, cases, monitors, printers]);
+  }, [equipCode, cases, monitors, printers, mice, keyboards]);
 
   // Handle Personnel live look up
   useEffect(() => {
@@ -162,13 +190,13 @@ export default function TransferTab({
           {/* Step 1: Equipment */}
           <div className="space-y-2">
             <label className="text-xs md:text-sm font-semibold text-slate-700 block">
-              کد اموال تجهیز اصلی (کیس، مانیتور یا چاپگر):
+              کد اموال تجهیز اصلی (کیس، مانیتور، چاپگر، ماوس یا کیبورد):
             </label>
             <input 
               type="text"
               value={equipCode}
               onChange={(e) => setEquipCode(e.target.value)}
-              placeholder="مثال: C-201, M-301, P-401..."
+              placeholder="مثال: C-201, M-301, P-401, MOU-101, KEY-201..."
               className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:border-blue-500 focus:outline-none"
             />
           </div>
@@ -181,7 +209,9 @@ export default function TransferTab({
               </div>
               <div className="grid grid-cols-2 gap-2 text-slate-600">
                 <div>کد اموال: <span className="font-mono font-bold text-slate-900">{matchedEquip.code}</span></div>
-                <div>نوع دسته: <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold">{matchedEquip.type === 'case' ? 'کیس کامپیوتر' : matchedEquip.type === 'monitor' ? 'نمایشگر' : 'چاپگر'}</span></div>
+                <div>نوع دسته: <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold">
+                  {matchedEquip.type === 'case' ? 'کیس کامپیوتر' : matchedEquip.type === 'monitor' ? 'نمایشگر' : matchedEquip.type === 'printer' ? 'چاپگر' : matchedEquip.type === 'mouse' ? 'ماوس' : 'کیبورد'}
+                </span></div>
                 <div className="col-span-2">مشخصات/مدل: <span className="text-slate-900 font-medium">{matchedEquip.info}</span></div>
                 <div className="col-span-2 border-t border-slate-200/50 pt-2">
                   تحویل گیرنده کنونی: {getOwnerDetails(matchedEquip.owner)}

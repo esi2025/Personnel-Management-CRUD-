@@ -1,11 +1,13 @@
 import React from 'react';
-import { Personnel, Case, Monitor, Printer } from '../types';
+import { Personnel, Case, Monitor, Printer, Mouse, Keyboard } from '../types';
 
 interface PersonnelTabProps {
   personnel: Personnel[];
   cases: Case[];
   monitors: Monitor[];
   printers: Printer[];
+  mice?: Mouse[];
+  keyboards?: Keyboard[];
   onEdit: (p: Personnel) => void;
   onDelete: (id: string) => void;
   onShowCertificate: (code: string) => void;
@@ -18,6 +20,8 @@ export default function PersonnelTab({
   cases,
   monitors,
   printers,
+  mice = [],
+  keyboards = [],
   onEdit,
   onDelete,
   onShowCertificate,
@@ -29,11 +33,15 @@ export default function PersonnelTab({
     const userCases = cases.filter(c => c.assignedTo === code);
     const userMonitors = monitors.filter(m => m.assignedTo === code);
     const userPrinters = printers.filter(p => p.assignedTo === code);
+    const userMice = (mice || []).filter(m => m.assignedTo === code);
+    const userKeyboards = (keyboards || []).filter(k => k.assignedTo === code);
     return {
       cases: userCases,
       monitors: userMonitors,
       printers: userPrinters,
-      total: userCases.length + userMonitors.length + userPrinters.length
+      mice: userMice,
+      keyboards: userKeyboards,
+      total: userCases.length + userMonitors.length + userPrinters.length + userMice.length + userKeyboards.length
     };
   };
 
@@ -107,6 +115,24 @@ export default function PersonnelTab({
                               title={pr.model}
                             >
                               🖨️ پرینتر: {pr.code}
+                            </span>
+                          ))}
+                          {assigns.mice.map(m => (
+                            <span 
+                              key={m.code} 
+                              className="bg-pink-50 border border-pink-200 text-pink-700 px-2 py-0.5 rounded text-[11px] font-medium"
+                              title={m.model}
+                            >
+                              🖱️ ماوس: {m.code}
+                            </span>
+                          ))}
+                          {assigns.keyboards.map(k => (
+                            <span 
+                              key={k.code} 
+                              className="bg-purple-50 border border-purple-200 text-purple-700 px-2 py-0.5 rounded text-[11px] font-medium"
+                              title={k.model}
+                            >
+                              ⌨️ کیبورد: {k.code}
                             </span>
                           ))}
                           {assigns.total === 0 && (
