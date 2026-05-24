@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard } from '../types';
 import Logo from './Logo';
+import EquipmentPieChart from './EquipmentPieChart';
 
 interface ReportingTabProps {
   personnel: Personnel[];
@@ -10,6 +11,7 @@ interface ReportingTabProps {
   mice?: Mouse[];
   keyboards?: Keyboard[];
   assignments: Assignment[];
+  prefilledPersonnelCode?: string;
 }
 
 export default function ReportingTab({
@@ -19,7 +21,8 @@ export default function ReportingTab({
   printers,
   mice = [],
   keyboards = [],
-  assignments
+  assignments,
+  prefilledPersonnelCode
 }: ReportingTabProps) {
   // Checkbox states
   const [secPers, setSecPers] = useState(true);
@@ -38,6 +41,18 @@ export default function ReportingTab({
   const [certCode, setCertCode] = useState('');
   const [reportType, setReportType] = useState<'none' | 'general' | 'certificate'>('none');
   const [certificatePers, setCertificatePers] = useState<Personnel | null>(null);
+
+  // Auto-fill and generate report when a prefilled personnel code is passed
+  useEffect(() => {
+    if (prefilledPersonnelCode) {
+      setCertCode(prefilledPersonnelCode);
+      const found = personnel.find(p => p.code === prefilledPersonnelCode);
+      if (found) {
+        setCertificatePers(found);
+        setReportType('certificate');
+      }
+    }
+  }, [prefilledPersonnelCode, personnel]);
 
   const triggerGeneralReport = () => {
     setReportType('general');
@@ -193,6 +208,13 @@ export default function ReportingTab({
           </div>
         </div>
 
+        {/* Controls Block C: Interactive Stats */}
+        <EquipmentPieChart 
+          casesCount={cases.length} 
+          monitorsCount={monitors.length} 
+          printersCount={printers.length} 
+        />
+
       </div>
 
       {/* Right report view area (printable format) */}
@@ -237,7 +259,29 @@ export default function ReportingTab({
               <div className="text-center border-b-2 border-black pb-4 mb-4">
                 <h2 className="text-xl font-bold">گزارش ترکیبی تجهیزات کل واحد فناوری اطلاعات و ارتباطات</h2>
                 <h3 className="text-sm text-slate-600 mt-1">شرکت عمران آذرستان - کارگاه بوشهر (آفلاین)</h3>
-                <p className="text-[11px] text-slate-500 mt-2">تاریخ گزارش: ۱۴۰۵/۰۳/۰۳ | فیلتر اعمال شده: بر اساس درخواست کاربر</p>
+                <p className="text-[11px] text-slate-500 mt-2 pb-2">تاریخ گزارش: ۱۴۰۵/۰۳/۰۳ | فیلتر اعمال شده: بر اساس درخواست کاربر</p>
+                
+                {/* Print & Screen Distribution stats */}
+                <div className="grid grid-cols-3 gap-3 text-right mt-3 text-xs font-sans">
+                  <div className="border border-slate-200 rounded p-2.5 bg-slate-50">
+                    <div className="text-slate-500 font-medium mb-1 text-[11px]">کیس‌های کارگاهی / اداری</div>
+                    <div className="font-bold text-[#84141A] text-xs">
+                      {cases.length} عدد ({cases.length + monitors.length + printers.length > 0 ? Math.round((cases.length / (cases.length + monitors.length + printers.length)) * 100) : 0}٪)
+                    </div>
+                  </div>
+                  <div className="border border-slate-200 rounded p-2.5 bg-slate-50">
+                    <div className="text-slate-500 font-medium mb-1 text-[11px]">دستگاه‌های مانیتور</div>
+                    <div className="font-bold text-blue-600 text-xs">
+                      {monitors.length} عدد ({cases.length + monitors.length + printers.length > 0 ? Math.round((monitors.length / (cases.length + monitors.length + printers.length)) * 100) : 0}٪)
+                    </div>
+                  </div>
+                  <div className="border border-slate-200 rounded p-2.5 bg-slate-50">
+                    <div className="text-slate-500 font-medium mb-1 text-[11px]">پرینتر و ملزومات چاپ</div>
+                    <div className="font-bold text-emerald-600 text-xs">
+                      {printers.length} عدد ({cases.length + monitors.length + printers.length > 0 ? Math.round((printers.length / (cases.length + monitors.length + printers.length)) * 100) : 0}٪)
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Personnel Block */}

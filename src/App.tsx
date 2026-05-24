@@ -423,6 +423,7 @@ export default function App() {
               mice={mice}
               keyboards={keyboards}
               assignments={assignments}
+              prefilledPersonnelCode={prefilledPersCode}
             />
           )}
 
