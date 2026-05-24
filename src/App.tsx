@@ -240,7 +240,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col p-4 md:p-8 font-sans max-w-7xl mx-auto" dir="rtl">
+    <div className="min-h-screen flex flex-col p-4 md:p-8 font-sans max-w-7xl mx-auto print:p-0 print:max-w-none" dir="rtl">
       
       {/* 1. System Header component */}
       <Header />

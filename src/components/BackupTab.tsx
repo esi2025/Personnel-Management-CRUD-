@@ -56,7 +56,7 @@ export default function BackupTab({ onRestore, onReload }: BackupTabProps) {
 
   // CSV Excel template downloader
   const handleDownloadTemplate = () => {
-    let csv = '\xEF\xBB\xBF'; // UTF-8 BOM
+    let csv = '\uFEFF'; // Correct UTF-8 BOM in JS
     // Header
     csv += 'نام پرسنل,کد پرسنلی,سمت شغلی,واحد خدمتی,محل استقرار,کد کیس,مادربرد,سی پی یو CPU,کارت گرافیک VGA,هارد اصلی SSD,هارد ثانویه HDD,نوع رم,حجم رم,کد مانیتور ۱,مدل مانیتور ۱,کد مانیتور ۲,مدل مانیتور ۲,کد پرینتر ۱,مدل پرینتر ۱,کد پرینتر ۲,مدل پرینتر ۲\n';
     // Sample Row

@@ -15,7 +15,7 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="bg-slate-900 border-b-4 border-blue-600 text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+    <header className="no-print bg-slate-900 border-b-4 border-blue-600 text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
       <div className="flex items-center gap-4">
         <Logo size="h-16" />
         <div>

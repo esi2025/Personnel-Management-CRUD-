@@ -24,7 +24,7 @@ export default function HistoryTab({ assignments }: HistoryTabProps) {
   });
 
   const exportCSV = () => {
-    let csv = '\xEF\xBB\xBF'; // UTF-8 BOM representation
+    let csv = '\uFEFF'; // Correct UTF-8 BOM representation inside JS
     csv += 'نوع سخت افزار,کد اموال سخت افزار,تحویل گیرنده ردیف,کد پرسنلی,تاریخ تحویل,تاریخ استرداد/عودت,وضعیت\r\n';
 
     filtered.forEach(ass => {

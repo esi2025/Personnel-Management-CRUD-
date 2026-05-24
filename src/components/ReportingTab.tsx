@@ -79,7 +79,7 @@ export default function ReportingTab({
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       
       {/* Left controls bar */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-5">
+      <div className="no-print bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-5">
         
         {/* Controls Block A: General Reports */}
         <div className="space-y-4">
@@ -196,9 +196,9 @@ export default function ReportingTab({
       </div>
 
       {/* Right report view area (printable format) */}
-      <div className="lg:col-span-2 bg-slate-100 border border-slate-200 rounded-xl p-4 flex flex-col h-[700px] overflow-hidden no-print">
+      <div className="lg:col-span-2 print:col-span-3 bg-slate-100 border border-slate-200 rounded-xl p-4 flex flex-col h-[700px] overflow-hidden print:h-auto print:overflow-visible print:bg-white print:border-none print:p-0">
         
-        <div className="flex justify-between items-center border-b border-slate-200 pb-3 mb-3">
+        <div className="no-print flex justify-between items-center border-b border-slate-200 pb-3 mb-3">
           <h4 className="text-slate-800 font-bold text-xs md:text-sm">📋 پیش‌نمایش زنده و چاپ مستقیم سند</h4>
           <button
             onClick={() => window.print()}
@@ -213,7 +213,18 @@ export default function ReportingTab({
           </button>
         </div>
 
-        <div className="bg-white rounded-lg flex-1 overflow-y-auto p-8 shadow-inner text-right leading-relaxed text-sm">
+        {/* Informational guide banner regarding browser iframe permissions for printing */}
+        <div className="no-print bg-amber-50 border border-amber-200 text-amber-800 text-[11px] md:text-xs rounded-lg p-3 text-right leading-relaxed flex gap-2.5 items-start mb-4">
+          <span className="text-base leading-none">💡</span>
+          <div>
+            <p className="font-bold mb-0.5">راهنمای چاپ مستقیم در سند:</p>
+            <p className="text-slate-600">
+              چنانچه با کلیک بر روی دکمه فوق واکنشی از چاپگر سیستم مشاهده نمی‌کنید، به دلیل محدودیت‌های امنیتی پیش‌نمایش در محیط ویرایشگر (Iframe) است. لطفاً دکمه آبی‌رنگ <strong className="text-blue-800">«Open in new tab»</strong> را در منوی بالایی صفحه فشار داده تا سیستم در تب مستقل مرورگر شما اجرا شود و دکمه چاپگر فوری فعال گردد.
+            </p>
+          </div>
+        </div>
+
+        <div className="printable-document bg-white rounded-lg flex-1 overflow-y-auto p-8 shadow-inner text-right leading-relaxed text-sm print:overflow-visible print:h-auto print:p-0 print:shadow-none">
           {reportType === 'none' && (
             <p className="text-slate-400 text-center py-20">
               گزارشی تولید نشده است. فیلترها را تنظیم کرده یا روی یکی از دکمه‌های گزارش‌گیری کلیک کنید.

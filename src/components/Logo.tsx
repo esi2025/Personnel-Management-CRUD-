@@ -17,33 +17,33 @@ export default function Logo({ className = '', size = 'h-12' }: LogoProps) {
         key="omran-azarestan-logo-svg"
       >
         {/* Burgundy Background Rectangle */}
-        <rect width="160" height="190" rx="14" fill="#611C23" />
+        <rect width="160" height="190" rx="14" fill="#84141A" />
         
-        {/* Outer White Arch */}
+        {/* Outer White Arch (Geometric Precision SVG Arc) */}
         <path
-          d="M 23 150 
-             C 23 105, 30 50, 80 40 
-             C 100 36, 115 42, 125 55
-             C 134 65, 137 80, 137 92
+          d="M 23 150
+             L 23 92
+             A 57 57 0 0 1 137 92
              L 137 150
-             C 137 156, 128 156, 126 150
-             L 126 95
-             C 126 80, 122 68, 114 60
-             C 106 52, 95 48, 80 50
-             C 45 54, 38 100, 38 150
-             C 38 156, 23 156, 23 150 Z"
+             L 122 150
+             L 122 92
+             A 42 42 0 0 0 38 92
+             L 38 150
+             Z"
           fill="#FFFFFF"
         />
 
-        {/* Inner White Arch/Gateway */}
+        {/* Inner White Arch/Gateway (Geometric Precision Concentric Arc) */}
         <path
           d="M 52 150
-             C 52 110, 60 75, 80 75
-             C 100 75, 108 110, 108 150
-             C 108 156, 96 156, 96 150
-             C 96 115, 91 88, 80 88
-             C 69 88, 64 115, 64 150
-             C 64 156, 52 156, 52 150 Z"
+             L 52 92
+             A 28 28 0 0 1 108 92
+             L 108 150
+             L 93 150
+             L 93 92
+             A 13 13 0 0 0 67 92
+             L 67 150
+             Z"
           fill="#FFFFFF"
         />
       </svg>

@@ -1448,7 +1448,7 @@ function exportTableToCSV(tableId, filename) {
     let csvContent = "";
     
     // Add UTF-8 BOM representation for proper Microsoft Excel RTL alignment
-    csvContent += "\xEF\xBB\xBF";
+    csvContent += "\uFEFF";
 
     const rows = table.querySelectorAll("tr");
     
