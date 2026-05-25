@@ -9,6 +9,7 @@ import ReportingTab from './components/ReportingTab';
 import BackupTab from './components/BackupTab';
 import AddNewTab from './components/AddNewTab';
 import EditModal from './components/EditModal';
+import QRCodeModal from './components/QRCodeModal';
 import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard, CatalogItem } from './types';
 
 export default function App() {
@@ -36,6 +37,19 @@ export default function App() {
   // Transfer prefill
   const [prefilledEquipCode, setPrefilledEquipCode] = useState('');
   const [prefilledPersCode, setPrefilledPersCode] = useState('');
+
+  // QR Code Modal State
+  const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [qrCode, setQrCode] = useState('');
+  const [qrType, setQrType] = useState<'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard'>('case');
+  const [qrData, setQrData] = useState<any>(null);
+
+  const handleShowQR = (code: string, type: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard', data: any) => {
+    setQrCode(code);
+    setQrType(type);
+    setQrData(data);
+    setQrModalOpen(true);
+  };
 
   // Fetch all databases from Express server imitation
   const loadDatabase = async () => {
@@ -341,6 +355,7 @@ export default function App() {
               onDelete={(code) => handleDeleteItem('case', code)}
               onTransfer={handleTriggerTransfer}
               onTabChange={setActiveTab}
+              onShowQR={handleShowQR}
             />
           )}
 
@@ -352,6 +367,7 @@ export default function App() {
               onDelete={(code) => handleDeleteItem('monitor', code)}
               onTransfer={handleTriggerTransfer}
               onTabChange={setActiveTab}
+              onShowQR={handleShowQR}
             />
           )}
 
@@ -363,6 +379,7 @@ export default function App() {
               onDelete={(code) => handleDeleteItem('printer', code)}
               onTransfer={handleTriggerTransfer}
               onTabChange={setActiveTab}
+              onShowQR={handleShowQR}
             />
           )}
 
@@ -374,6 +391,7 @@ export default function App() {
               onDelete={(code) => handleDeleteItem('mouse', code)}
               onTransfer={handleTriggerTransfer}
               onTabChange={setActiveTab}
+              onShowQR={handleShowQR}
             />
           )}
 
@@ -385,6 +403,7 @@ export default function App() {
               onDelete={(code) => handleDeleteItem('keyboard', code)}
               onTransfer={handleTriggerTransfer}
               onTabChange={setActiveTab}
+              onShowQR={handleShowQR}
             />
           )}
 
@@ -449,6 +468,16 @@ export default function App() {
           onSave={handleSaveItem}
         />
       )}
+
+      {/* QR Code Modal for Equipment scanning */}
+      <QRCodeModal 
+        isOpen={qrModalOpen} 
+        onClose={() => setQrModalOpen(false)} 
+        equipmentCode={qrCode} 
+        equipmentType={qrType} 
+        equipmentData={qrData} 
+        personnel={personnel}
+      />
 
       {/* 7. Corporate footer (hides in print) */}
       <footer className="no-print mt-12 bg-slate-900 border-t border-slate-800 text-slate-500 py-6 text-center text-xs space-y-2 rounded-xl">

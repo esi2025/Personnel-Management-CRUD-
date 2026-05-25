@@ -8,6 +8,7 @@ interface CasesSubTabProps {
   onDelete: (code: string) => void;
   onTransfer: (code: string) => void;
   onTabChange: (tabId: string) => void;
+  onShowQR: (code: string, type: 'case', data: Case) => void;
 }
 
 export function CasesSubTab({
@@ -16,7 +17,8 @@ export function CasesSubTab({
   onEdit,
   onDelete,
   onTransfer,
-  onTabChange
+  onTabChange,
+  onShowQR
 }: CasesSubTabProps) {
   return (
     <div className="space-y-4">
@@ -56,8 +58,18 @@ export function CasesSubTab({
                 cases.map((c) => {
                   const owner = personnel.find(p => p.code === c.assignedTo);
                   return (
-                    <tr key={c.code} className="border-b border-slate-100 hover:bg-slate-50/50 transition">
-                      <td className="p-3.5 font-mono font-bold text-slate-900">{c.code}</td>
+                    <tr 
+                      key={c.code} 
+                      className="border-b border-slate-100 hover:bg-slate-50/80 transition cursor-pointer group"
+                      onClick={() => onShowQR(c.code, 'case', c)}
+                      title="کلیک روی سطر جهت مشاهده و چاپ برچسب بارکد اموال"
+                    >
+                      <td className="p-3.5 font-mono font-bold text-slate-900 flex items-center gap-1.5">
+                        <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none font-sans">
+                          📸 QR
+                        </span>
+                        <span>{c.code}</span>
+                      </td>
                       <td className="p-3.5 text-slate-600">{c.motherboard}</td>
                       <td className="p-3.5 text-slate-600">{c.cpu}</td>
                       <td className="p-3.5">
@@ -78,7 +90,7 @@ export function CasesSubTab({
                           </span>
                         )}
                       </td>
-                      <td className="p-3.5">
+                      <td className="p-3.5" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-1.5">
                           <button 
                             onClick={() => onEdit(c)}
@@ -119,6 +131,7 @@ interface MonitorsSubTabProps {
   onDelete: (code: string) => void;
   onTransfer: (code: string) => void;
   onTabChange: (tabId: string) => void;
+  onShowQR: (code: string, type: 'monitor', data: Monitor) => void;
 }
 
 export function MonitorsSubTab({
@@ -127,7 +140,8 @@ export function MonitorsSubTab({
   onEdit,
   onDelete,
   onTransfer,
-  onTabChange
+  onTabChange,
+  onShowQR
 }: MonitorsSubTabProps) {
   return (
     <div className="space-y-4">
@@ -163,8 +177,18 @@ export function MonitorsSubTab({
                 monitors.map((m) => {
                   const owner = personnel.find(p => p.code === m.assignedTo);
                   return (
-                    <tr key={m.code} className="border-b border-slate-100 hover:bg-slate-50/50 transition">
-                      <td className="p-3.5 font-mono font-bold text-slate-900">{m.code}</td>
+                    <tr 
+                      key={m.code} 
+                      className="border-b border-slate-100 hover:bg-slate-50/80 transition cursor-pointer group"
+                      onClick={() => onShowQR(m.code, 'monitor', m)}
+                      title="کلیک روی سطر جهت مشاهده و چاپ برچسب بارکد اموال"
+                    >
+                      <td className="p-3.5 font-mono font-bold text-slate-900 flex items-center gap-1.5">
+                        <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none font-sans">
+                          📸 QR
+                        </span>
+                        <span>{m.code}</span>
+                      </td>
                       <td className="p-3.5 text-slate-600">{m.model}</td>
                       <td className="p-3.5">
                         {owner ? (
@@ -177,7 +201,7 @@ export function MonitorsSubTab({
                           </span>
                         )}
                       </td>
-                      <td className="p-3.5 text-center">
+                      <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-1.5">
                           <button 
                             onClick={() => onEdit(m)}
@@ -218,6 +242,7 @@ interface PrintersSubTabProps {
   onDelete: (code: string) => void;
   onTransfer: (code: string) => void;
   onTabChange: (tabId: string) => void;
+  onShowQR: (code: string, type: 'printer', data: Printer) => void;
 }
 
 export function PrintersSubTab({
@@ -226,7 +251,8 @@ export function PrintersSubTab({
   onEdit,
   onDelete,
   onTransfer,
-  onTabChange
+  onTabChange,
+  onShowQR
 }: PrintersSubTabProps) {
   return (
     <div className="space-y-4">
@@ -262,8 +288,18 @@ export function PrintersSubTab({
                 printers.map((pr) => {
                   const owner = personnel.find(p => p.code === pr.assignedTo);
                   return (
-                    <tr key={pr.code} className="border-b border-slate-100 hover:bg-slate-50/50 transition">
-                      <td className="p-3.5 font-mono font-bold text-slate-900">{pr.code}</td>
+                    <tr 
+                      key={pr.code} 
+                      className="border-b border-slate-100 hover:bg-slate-50/80 transition cursor-pointer group"
+                      onClick={() => onShowQR(pr.code, 'printer', pr)}
+                      title="کلیک روی سطر جهت مشاهده و چاپ برچسب بارکد اموال"
+                    >
+                      <td className="p-3.5 font-mono font-bold text-slate-900 flex items-center gap-1.5">
+                        <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none font-sans">
+                          📸 QR
+                        </span>
+                        <span>{pr.code}</span>
+                      </td>
                       <td className="p-3.5 text-slate-600">{pr.model}</td>
                       <td className="p-3.5">
                         {owner ? (
@@ -276,7 +312,7 @@ export function PrintersSubTab({
                           </span>
                         )}
                       </td>
-                      <td className="p-3.5 text-center">
+                      <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-1.5">
                           <button 
                             onClick={() => onEdit(pr)}
@@ -317,6 +353,7 @@ interface MiceSubTabProps {
   onDelete: (code: string) => void;
   onTransfer: (code: string) => void;
   onTabChange: (tabId: string) => void;
+  onShowQR: (code: string, type: 'mouse', data: Mouse) => void;
 }
 
 export function MiceSubTab({
@@ -325,7 +362,8 @@ export function MiceSubTab({
   onEdit,
   onDelete,
   onTransfer,
-  onTabChange
+  onTabChange,
+  onShowQR
 }: MiceSubTabProps) {
   return (
     <div className="space-y-4">
@@ -361,8 +399,18 @@ export function MiceSubTab({
                 mice.map((m) => {
                   const owner = personnel.find(p => p.code === m.assignedTo);
                   return (
-                    <tr key={m.code} className="border-b border-slate-100 hover:bg-slate-50/50 transition">
-                      <td className="p-3.5 font-mono font-bold text-slate-900">{m.code}</td>
+                    <tr 
+                      key={m.code} 
+                      className="border-b border-slate-100 hover:bg-slate-50/80 transition cursor-pointer group"
+                      onClick={() => onShowQR(m.code, 'mouse', m)}
+                      title="کلیک روی سطر جهت مشاهده و چاپ برچسب بارکد اموال"
+                    >
+                      <td className="p-3.5 font-mono font-bold text-slate-900 flex items-center gap-1.5">
+                        <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none font-sans">
+                          📸 QR
+                        </span>
+                        <span>{m.code}</span>
+                      </td>
                       <td className="p-3.5 text-slate-600">{m.model}</td>
                       <td className="p-3.5">
                         {owner ? (
@@ -375,7 +423,7 @@ export function MiceSubTab({
                           </span>
                         )}
                       </td>
-                      <td className="p-3.5 text-center">
+                      <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-1.5">
                           <button 
                             onClick={() => onEdit(m)}
@@ -416,6 +464,7 @@ interface KeyboardsSubTabProps {
   onDelete: (code: string) => void;
   onTransfer: (code: string) => void;
   onTabChange: (tabId: string) => void;
+  onShowQR: (code: string, type: 'keyboard', data: Keyboard) => void;
 }
 
 export function KeyboardsSubTab({
@@ -424,7 +473,8 @@ export function KeyboardsSubTab({
   onEdit,
   onDelete,
   onTransfer,
-  onTabChange
+  onTabChange,
+  onShowQR
 }: KeyboardsSubTabProps) {
   return (
     <div className="space-y-4">
@@ -460,8 +510,18 @@ export function KeyboardsSubTab({
                 keyboards.map((k) => {
                   const owner = personnel.find(p => p.code === k.assignedTo);
                   return (
-                    <tr key={k.code} className="border-b border-slate-100 hover:bg-slate-50/50 transition">
-                      <td className="p-3.5 font-mono font-bold text-slate-900">{k.code}</td>
+                    <tr 
+                      key={k.code} 
+                      className="border-b border-slate-100 hover:bg-slate-50/80 transition cursor-pointer group"
+                      onClick={() => onShowQR(k.code, 'keyboard', k)}
+                      title="کلیک روی سطر جهت مشاهده و چاپ برچسب بارکد اموال"
+                    >
+                      <td className="p-3.5 font-mono font-bold text-slate-900 flex items-center gap-1.5">
+                        <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none font-sans">
+                          📸 QR
+                        </span>
+                        <span>{k.code}</span>
+                      </td>
                       <td className="p-3.5 text-slate-600">{k.model}</td>
                       <td className="p-3.5">
                         {owner ? (
@@ -474,7 +534,7 @@ export function KeyboardsSubTab({
                           </span>
                         )}
                       </td>
-                      <td className="p-3.5 text-center">
+                      <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-1.5">
                           <button 
                             onClick={() => onEdit(k)}
