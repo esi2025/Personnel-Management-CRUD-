@@ -31,6 +31,9 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
   const [equipCode, setEquipCode] = useState('');
   const [equipModel, setEquipModel] = useState('');
 
+  // Status state
+  const [equipStatus, setEquipStatus] = useState<'working' | 'repair' | 'retired'>('working');
+
   // Sync inputs with item when mounted
   useEffect(() => {
     if (type === 'personnel') {
@@ -51,6 +54,10 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
     } else if (type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard') {
       setEquipCode(item.code || '');
       setEquipModel(item.model || '');
+    }
+
+    if (type && type !== 'personnel') {
+      setEquipStatus(item.status || 'working');
     }
   }, [item, type]);
 
@@ -77,11 +84,13 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
       data.ramType = cRamType;
       data.ramQty = cRamQty;
       data.assignedTo = item.assignedTo;
+      data.status = equipStatus;
     } else if (type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard') {
       data.code = equipCode;
       data.oldCode = item.code;
       data.model = equipModel;
       data.assignedTo = item.assignedTo;
+      data.status = equipStatus;
     }
 
     const ok = await onSave(type, data);
@@ -231,6 +240,42 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
                   type="text" required value={equipModel} onChange={(e) => setEquipModel(e.target.value)}
                   className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
                 />
+              </div>
+            </div>
+          )}
+
+          {/* Status Dropdown - Show for all types except personnel */}
+          {type !== 'personnel' && (
+            <div className="space-y-1.5 p-3 bg-blue-50/45 rounded-lg border border-blue-100/60 text-xs md:text-sm animate-fade-in">
+              <label className="font-semibold text-slate-800 flex items-center gap-1.5">
+                <span>🩺 وضعیت سلامت تغییر یافته:</span>
+              </label>
+              <div className="grid grid-cols-3 gap-2 mt-1">
+                {(['working', 'repair', 'retired'] as const).map((st) => (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => setEquipStatus(st)}
+                    className={`p-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer border ${
+                      equipStatus === st
+                        ? 'text-white font-black'
+                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                    style={
+                      equipStatus === st
+                        ? st === 'working'
+                          ? { backgroundColor: '#10b981', borderColor: '#10b981' }
+                          : st === 'repair'
+                          ? { backgroundColor: '#d97706', borderColor: '#d97706' }
+                          : { backgroundColor: '#dc2626', borderColor: '#dc2626' }
+                        : {}
+                    }
+                  >
+                    {st === 'working' && <span>🟢 سالم</span>}
+                    {st === 'repair' && <span>🟡 تعمیر</span>}
+                    {st === 'retired' && <span>🔴 اسقاط</span>}
+                  </button>
+                ))}
               </div>
             </div>
           )}

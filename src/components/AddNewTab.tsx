@@ -40,6 +40,9 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
   const [kbCode, setKbCode] = useState('');
   const [kbModel, setKbModel] = useState('');
 
+  // Equipment Status state
+  const [equipStatus, setEquipStatus] = useState<'working' | 'repair' | 'retired'>('working');
+
   const handleResetForm = () => {
     setPName(''); setPCode(''); setPTitle(''); setPDept(''); setPLoc('');
     setCCode(''); setCMobo(''); setCCpu(''); setCVga(''); setCHdd1(''); setCHdd2(''); setCRamType('DDR4'); setCRamQty('8GB');
@@ -47,6 +50,7 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
     setPrCode(''); setPrModel('');
     setMouCode(''); setMouModel('');
     setKbCode(''); setKbModel('');
+    setEquipStatus('working');
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -73,32 +77,33 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
         hdd1: cHdd1,
         hdd2: cHdd2,
         ramType: cRamType,
-        ramQty: cRamQty
+        ramQty: cRamQty,
+        status: equipStatus
       };
     } else if (activeType === 'monitor') {
       if (!mCode.trim() || !mModel.trim()) {
         alert('کد مانیتور و نام مدل مانیتور الزامی هستند.');
         return;
       }
-      data = { code: mCode, model: mModel };
+      data = { code: mCode, model: mModel, status: equipStatus };
     } else if (activeType === 'printer') {
       if (!prCode.trim() || !prModel.trim()) {
         alert('کد چاپگر و نام مدل چاپگر الزامی هستند.');
         return;
       }
-      data = { code: prCode, model: prModel };
+      data = { code: prCode, model: prModel, status: equipStatus };
     } else if (activeType === 'mouse') {
       if (!mouCode.trim() || !mouModel.trim()) {
         alert('کد ماوس و نام مدل ماوس الزامی هستند.');
         return;
       }
-      data = { code: mouCode, model: mouModel };
+      data = { code: mouCode, model: mouModel, status: equipStatus };
     } else if (activeType === 'keyboard') {
       if (!kbCode.trim() || !kbModel.trim()) {
         alert('کد کیبورد و نام مدل کیبورد الزامی هستند.');
         return;
       }
-      data = { code: kbCode, model: kbModel };
+      data = { code: kbCode, model: kbModel, status: equipStatus };
     }
 
     const success = await onSave(activeType, data);
@@ -344,6 +349,42 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
                 placeholder="مثال: A4Tech KR-83 USB"
                 className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
               />
+            </div>
+          </div>
+        )}
+
+        {/* Status Dropdown - Show for all types except personnel */}
+        {activeType !== 'personnel' && (
+          <div className="space-y-1.5 p-3 bg-blue-50/45 rounded-lg border border-blue-100/60 animate-fade-in text-xs md:text-sm">
+            <label className="font-semibold text-slate-800 flex items-center gap-1.5">
+              <span>🩺 وضعیت سلامت و کارکرد دستگاه:</span>
+            </label>
+            <div className="grid grid-cols-3 gap-2 mt-1">
+              {(['working', 'repair', 'retired'] as const).map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => setEquipStatus(st)}
+                  className={`p-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer border ${
+                    equipStatus === st
+                      ? 'text-white font-black'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                  style={
+                    equipStatus === st
+                      ? st === 'working'
+                        ? { backgroundColor: '#10b981', borderColor: '#10b981' }
+                        : st === 'repair'
+                        ? { backgroundColor: '#d97706', borderColor: '#d97706' }
+                        : { backgroundColor: '#dc2626', borderColor: '#dc2626' }
+                      : {}
+                  }
+                >
+                  {st === 'working' && <span>🟢 سالم</span>}
+                  {st === 'repair' && <span>🟡 نیاز به تعمیر</span>}
+                  {st === 'retired' && <span>🔴 اسقاط</span>}
+                </button>
+              ))}
             </div>
           </div>
         )}

@@ -36,9 +36,44 @@ export default function ReportingTab({
   const [dateTo, setDateTo] = useState('');
   const [filterPers, setFilterPers] = useState('');
   const [filterEquip, setFilterEquip] = useState('');
+  const [onlyNeedsRepair, setOnlyNeedsRepair] = useState(false);
 
   // Special System Certificate profile state
   const [certCode, setCertCode] = useState('');
+
+  // Filtering calculations based on user filters & Needs Repair flag
+  const filteredCases = cases.filter(c => {
+    if (onlyNeedsRepair && c.status !== 'repair') return false;
+    if (filterEquip.trim() && !c.code.toLowerCase().includes(filterEquip.toLowerCase().trim())) return false;
+    if (filterPers.trim() && c.assignedTo) {
+      const owner = personnel.find(p => p.code === c.assignedTo);
+      const query = filterPers.toLowerCase().trim();
+      if (owner && !owner.name.toLowerCase().includes(query) && !owner.code.toLowerCase().includes(query)) return false;
+    }
+    return true;
+  });
+
+  const filteredMonitors = monitors.filter(m => {
+    if (onlyNeedsRepair && m.status !== 'repair') return false;
+    if (filterEquip.trim() && !m.code.toLowerCase().includes(filterEquip.toLowerCase().trim())) return false;
+    if (filterPers.trim() && m.assignedTo) {
+      const owner = personnel.find(p => p.code === m.assignedTo);
+      const query = filterPers.toLowerCase().trim();
+      if (owner && !owner.name.toLowerCase().includes(query) && !owner.code.toLowerCase().includes(query)) return false;
+    }
+    return true;
+  });
+
+  const filteredPrinters = printers.filter(p => {
+    if (onlyNeedsRepair && p.status !== 'repair') return false;
+    if (filterEquip.trim() && !p.code.toLowerCase().includes(filterEquip.toLowerCase().trim())) return false;
+    if (filterPers.trim() && p.assignedTo) {
+      const owner = personnel.find(prs => prs.code === p.assignedTo);
+      const query = filterPers.toLowerCase().trim();
+      if (owner && !owner.name.toLowerCase().includes(query) && !owner.code.toLowerCase().includes(query)) return false;
+    }
+    return true;
+  });
   const [reportType, setReportType] = useState<'none' | 'general' | 'certificate'>('none');
   const [certificatePers, setCertificatePers] = useState<Personnel | null>(null);
 
@@ -171,6 +206,18 @@ export default function ReportingTab({
                 />
               </div>
             </div>
+
+            <div className="pt-1.5">
+              <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-700 bg-amber-50/50 hover:bg-amber-50 p-2 rounded border border-amber-200 shadow-xs transition select-none">
+                <input 
+                  type="checkbox" 
+                  checked={onlyNeedsRepair} 
+                  onChange={(e) => setOnlyNeedsRepair(e.target.checked)} 
+                  className="accent-amber-600 scale-105 cursor-pointer"
+                />
+                <span className="text-amber-800 text-xs font-bold">🛠️ فقط تجهیزات نیازمند تعمیر (Needs Repair)</span>
+              </label>
+            </div>
           </div>
 
           <button
@@ -266,19 +313,19 @@ export default function ReportingTab({
                   <div className="border border-slate-200 rounded p-2.5 bg-slate-50">
                     <div className="text-slate-500 font-medium mb-1 text-[11px]">کیس‌های کارگاهی / اداری</div>
                     <div className="font-bold text-[#84141A] text-xs">
-                      {cases.length} عدد ({cases.length + monitors.length + printers.length > 0 ? Math.round((cases.length / (cases.length + monitors.length + printers.length)) * 100) : 0}٪)
+                      {filteredCases.length} عدد ({filteredCases.length + filteredMonitors.length + filteredPrinters.length > 0 ? Math.round((filteredCases.length / (filteredCases.length + filteredMonitors.length + filteredPrinters.length)) * 100) : 0}٪)
                     </div>
                   </div>
                   <div className="border border-slate-200 rounded p-2.5 bg-slate-50">
                     <div className="text-slate-500 font-medium mb-1 text-[11px]">دستگاه‌های مانیتور</div>
                     <div className="font-bold text-blue-600 text-xs">
-                      {monitors.length} عدد ({cases.length + monitors.length + printers.length > 0 ? Math.round((monitors.length / (cases.length + monitors.length + printers.length)) * 100) : 0}٪)
+                      {filteredMonitors.length} عدد ({filteredCases.length + filteredMonitors.length + filteredPrinters.length > 0 ? Math.round((filteredMonitors.length / (filteredCases.length + filteredMonitors.length + filteredPrinters.length)) * 100) : 0}٪)
                     </div>
                   </div>
                   <div className="border border-slate-200 rounded p-2.5 bg-slate-50">
                     <div className="text-slate-500 font-medium mb-1 text-[11px]">پرینتر و ملزومات چاپ</div>
                     <div className="font-bold text-emerald-600 text-xs">
-                      {printers.length} عدد ({cases.length + monitors.length + printers.length > 0 ? Math.round((printers.length / (cases.length + monitors.length + printers.length)) * 100) : 0}٪)
+                      {filteredPrinters.length} عدد ({filteredCases.length + filteredMonitors.length + filteredPrinters.length > 0 ? Math.round((filteredPrinters.length / (filteredCases.length + filteredMonitors.length + filteredPrinters.length)) * 100) : 0}٪)
                     </div>
                   </div>
                 </div>
@@ -316,7 +363,10 @@ export default function ReportingTab({
               {/* Case Block */}
               {secCases && (
                 <div className="space-y-2 pt-4">
-                  <h4 className="font-bold text-slate-800 py-1 bg-slate-100 px-2 rounded">🖥️ گزارش فنی کیس‌ها</h4>
+                  <h4 className="font-bold text-slate-800 py-1 bg-slate-100 px-2 rounded flex justify-between items-center">
+                    <span>🖥️ گزارش فنی کیس‌ها</span>
+                    {onlyNeedsRepair && <span className="text-[10px] bg-amber-550 text-white px-2 py-0.5 rounded font-bold">فیلتر شده: نیاز به تعمیر</span>}
+                  </h4>
                   <table className="w-full text-xs text-right border-collapse border border-slate-300">
                     <thead className="bg-slate-50 text-slate-700">
                       <tr>
@@ -326,23 +376,33 @@ export default function ReportingTab({
                         <th className="border border-slate-300 p-2 font-bold">نوع رم</th>
                         <th className="border border-slate-300 p-2 font-bold">گرافیک</th>
                         <th className="border border-slate-300 p-2 font-bold">ذخیره سازی</th>
+                        <th className="border border-slate-300 p-2 font-bold">وضعیت سلامت</th>
                         <th className="border border-slate-300 p-2 font-bold">کاربر تحویل گیرنده</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {cases.map(c => (
-                        <tr key={c.code}>
-                          <td className="border border-slate-300 p-2 font-mono font-bold text-slate-900">{c.code}</td>
-                          <td className="border border-slate-300 p-2">{c.motherboard}</td>
-                          <td className="border border-slate-300 p-2">{c.cpu}</td>
-                          <td className="border border-slate-300 p-2 font-mono">{c.ramType} / {c.ramQty}</td>
-                          <td className="border border-slate-300 p-2">{c.vga}</td>
-                          <td className="border border-slate-300 p-2">{c.hdd1} | {c.hdd2}</td>
-                          <td className="border border-slate-300 p-2 font-semibold">
-                            {c.assignedTo ? `${personnel.find(p=>p.code===c.assignedTo)?.name || 'کد نامعتبر'}(${c.assignedTo})` : '📦 داخل انبار'}
-                          </td>
+                      {filteredCases.length === 0 ? (
+                        <tr>
+                          <td colSpan={8} className="border border-slate-300 p-4 text-center text-slate-400">موردی با این مشخصات یافت نشد.</td>
                         </tr>
-                      ))}
+                      ) : (
+                        filteredCases.map(c => (
+                          <tr key={c.code}>
+                            <td className="border border-slate-300 p-2 font-mono font-bold text-slate-900">{c.code}</td>
+                            <td className="border border-slate-300 p-2">{c.motherboard}</td>
+                            <td className="border border-slate-300 p-2">{c.cpu}</td>
+                            <td className="border border-slate-300 p-2 font-mono">{c.ramType} / {c.ramQty}</td>
+                            <td className="border border-slate-300 p-2">{c.vga}</td>
+                            <td className="border border-slate-300 p-2">{c.hdd1} | {c.hdd2}</td>
+                            <td className="border border-slate-300 p-2">
+                              {c.status === 'repair' ? '⚠️ نیاز به تعمیر' : c.status === 'retired' ? '❌ اسقاط شده' : '✅ سالم'}
+                            </td>
+                            <td className="border border-slate-300 p-2 font-semibold">
+                              {c.assignedTo ? `${personnel.find(p=>p.code===c.assignedTo)?.name || 'کد نامعتبر'}(${c.assignedTo})` : '📦 داخل انبار'}
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -351,25 +411,38 @@ export default function ReportingTab({
               {/* Monitors Block */}
               {secMons && (
                 <div className="space-y-2 pt-4">
-                  <h4 className="font-bold text-slate-800 py-1 bg-slate-100 px-2 rounded">📺 گزارش مانیتورها</h4>
-                  <table className="w-full text-xs text-right border-collapse border border-slate-300">
+                  <h4 className="font-bold text-slate-800 py-1 bg-slate-100 px-2 rounded flex justify-between items-center">
+                    <span>📺 گزارش مانیتورها</span>
+                    {onlyNeedsRepair && <span className="text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded font-bold">فیلتر شده: نیاز به تعمیر</span>}
+                  </h4>
+                  <table className="w-full text-xs text-right border-collapse border border-slate-300 font-sans">
                     <thead className="bg-slate-50 text-slate-700">
                       <tr>
                         <th className="border border-slate-300 p-2 font-bold">کد مانیتور</th>
                         <th className="border border-slate-300 p-2 font-bold">مدل و مشخصات فنی</th>
+                        <th className="border border-slate-300 p-2 font-bold">وضعیت سلامت</th>
                         <th className="border border-slate-300 p-2 font-bold">تحویل گیرنده</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {monitors.map(m => (
-                        <tr key={m.code}>
-                          <td className="border border-slate-300 p-2 font-mono font-bold">{m.code}</td>
-                          <td className="border border-slate-300 p-2">{m.model}</td>
-                          <td className="border border-slate-300 p-2 font-semibold">
-                            {m.assignedTo ? `${personnel.find(p=>p.code===m.assignedTo)?.name || 'کد نامعتبر'}(${m.assignedTo})` : '📦 انبار کارگاه'}
-                          </td>
+                      {filteredMonitors.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="border border-slate-300 p-4 text-center text-slate-400">موردی با این مشخصات یافت نشد.</td>
                         </tr>
-                      ))}
+                      ) : (
+                        filteredMonitors.map(m => (
+                          <tr key={m.code}>
+                            <td className="border border-slate-300 p-2 font-mono font-bold">{m.code}</td>
+                            <td className="border border-slate-300 p-2">{m.model}</td>
+                            <td className="border border-slate-300 p-2">
+                              {m.status === 'repair' ? '⚠️ نیاز به تعمیر' : m.status === 'retired' ? '❌ اسقاط شده' : '✅ سالم'}
+                            </td>
+                            <td className="border border-slate-300 p-2 font-semibold">
+                              {m.assignedTo ? `${personnel.find(p=>p.code===m.assignedTo)?.name || 'کد نامعتبر'}(${m.assignedTo})` : '📦 انبار کارگاه'}
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -378,25 +451,38 @@ export default function ReportingTab({
               {/* Printers Block */}
               {secPris && (
                 <div className="space-y-2 pt-4">
-                  <h4 className="font-bold text-slate-800 py-1 bg-slate-100 px-2 rounded">🖨️ گزارش پرینترها</h4>
-                  <table className="w-full text-xs text-right border-collapse border border-slate-300">
+                  <h4 className="font-bold text-slate-800 py-1 bg-slate-100 px-2 rounded flex justify-between items-center">
+                    <span>🖨️ گزارش پرینترها</span>
+                    {onlyNeedsRepair && <span className="text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded font-bold">فیلتر شده: نیاز به تعمیر</span>}
+                  </h4>
+                  <table className="w-full text-xs text-right border-collapse border border-slate-300 font-sans">
                     <thead className="bg-slate-50 text-slate-700">
                       <tr>
                         <th className="border border-slate-300 p-2 font-bold">کد پرینتر</th>
                         <th className="border border-slate-300 p-2 font-bold">مدل کالا</th>
+                        <th className="border border-slate-300 p-2 font-bold">وضعیت سلامت</th>
                         <th className="border border-slate-300 p-2 font-bold">تحویل گیرنده جدید</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {printers.map(pr => (
-                        <tr key={pr.code}>
-                          <td className="border border-slate-300 p-2 font-mono font-bold">{pr.code}</td>
-                          <td className="border border-slate-300 p-2">{pr.model}</td>
-                          <td className="border border-slate-300 p-2 font-semibold">
-                            {pr.assignedTo ? `${personnel.find(p=>p.code===pr.assignedTo)?.name || 'کد نامعتبر'}(${pr.assignedTo})` : '📦 انبار'}
-                          </td>
+                      {filteredPrinters.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="border border-slate-300 p-4 text-center text-slate-400">موردی با این مشخصات یافت نشد.</td>
                         </tr>
-                      ))}
+                      ) : (
+                        filteredPrinters.map(pr => (
+                          <tr key={pr.code}>
+                            <td className="border border-slate-300 p-2 font-mono font-bold">{pr.code}</td>
+                            <td className="border border-slate-300 p-2">{pr.model}</td>
+                            <td className="border border-slate-300 p-2">
+                              {pr.status === 'repair' ? '⚠️ نیاز به تعمیر' : pr.status === 'retired' ? '❌ اسقاط شده' : '✅ سالم'}
+                            </td>
+                            <td className="border border-slate-300 p-2 font-semibold">
+                              {pr.assignedTo ? `${personnel.find(p=>p.code===pr.assignedTo)?.name || 'کد نامعتبر'}(${pr.assignedTo})` : '📦 انبار'}
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>

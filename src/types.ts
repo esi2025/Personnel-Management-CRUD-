@@ -17,30 +17,35 @@ export interface Case {
   ramType: string; // نوع رم (e.g. DDR4)
   ramQty: string; // مقدار رم (e.g. 16GB)
   assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
+  status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
 }
 
 export interface Monitor {
   code: string; // کد مانیتور (unique)
   model: string; // مدل (شامل مارک و سایز)
   assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
+  status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
 }
 
 export interface Printer {
   code: string; // کد چاپگر (unique)
   model: string; // مدل
   assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
+  status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
 }
 
 export interface Mouse {
   code: string; // کد ماوس (unique)
   model: string; // مدل/برند
   assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
+  status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
 }
 
 export interface Keyboard {
   code: string; // کد کیبورد (unique)
   model: string; // مدل/برند
   assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
+  status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
 }
 
 export interface CatalogItem {

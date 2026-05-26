@@ -1,6 +1,35 @@
 import React from 'react';
 import { Case, Monitor, Printer, Personnel, Mouse, Keyboard } from '../types';
 
+export function StatusBadge({ status }: { status?: 'working' | 'repair' | 'retired' }) {
+  const currentStatus = status || 'working';
+  switch (currentStatus) {
+    case 'working':
+      return (
+        <span className="inline-flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-800 px-2 py-0.5 rounded text-[11px] font-bold shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          سالم
+        </span>
+      );
+    case 'repair':
+      return (
+        <span className="inline-flex items-center gap-1 bg-amber-50 border border-amber-200 text-amber-800 px-2 py-0.5 rounded text-[11px] font-bold shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+          نیاز به تعمیر
+        </span>
+      );
+    case 'retired':
+      return (
+        <span className="inline-flex items-center gap-1 bg-red-50 border border-red-200 text-red-800 px-2 py-0.5 rounded text-[11px] font-bold shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+          اسقاط شده
+        </span>
+      );
+    default:
+      return null;
+  }
+}
+
 interface CasesSubTabProps {
   cases: Case[];
   personnel: Personnel[];
@@ -43,6 +72,7 @@ export function CasesSubTab({
                 <th className="p-3.5 font-bold">رم (RAM)</th>
                 <th className="p-3.5 font-bold">کارت گرافیک</th>
                 <th className="p-3.5 font-bold">فضای هارد (HDD/SSD)</th>
+                <th className="p-3.5 font-bold">وضعیت سلامت</th>
                 <th className="p-3.5 font-bold">تحویل به</th>
                 <th className="p-3.5 text-center">عملیات</th>
               </tr>
@@ -50,7 +80,7 @@ export function CasesSubTab({
             <tbody>
               {cases.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-slate-400">
+                  <td colSpan={9} className="p-8 text-center text-slate-400">
                     کیسی در سامانه ثبت نگردیده است. نسبت به افزودن از تب ثبت جدید اقدام فرمایید.
                   </td>
                 </tr>
@@ -79,6 +109,9 @@ export function CasesSubTab({
                       </td>
                       <td className="p-3.5 text-slate-600">{c.vga}</td>
                       <td className="p-3.5 text-slate-500 font-mono text-[11px]">{c.hdd1} | {c.hdd2}</td>
+                      <td className="p-3.5">
+                        <StatusBadge status={c.status} />
+                      </td>
                       <td className="p-3.5">
                         {owner ? (
                           <span className="bg-blue-50 border border-blue-200 text-blue-800 px-2.5 py-1 rounded-full text-xs font-semibold">
@@ -162,6 +195,7 @@ export function MonitorsSubTab({
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-700">
                 <th className="p-3.5 font-bold">کد مانیتور (اموال)</th>
                 <th className="p-3.5 font-bold">نام مدل و مشخصات فنی</th>
+                <th className="p-3.5 font-bold">وضعیت سلامت</th>
                 <th className="p-3.5 font-bold">کاربر تحویل گیرنده</th>
                 <th className="p-3.5 text-center font-bold">عملیات</th>
               </tr>
@@ -169,7 +203,7 @@ export function MonitorsSubTab({
             <tbody>
               {monitors.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="p-8 text-center text-slate-400">
+                  <td colSpan={5} className="p-8 text-center text-slate-400">
                     مانیتوری در سامانه ثبت نگردیده است.
                   </td>
                 </tr>
@@ -190,6 +224,9 @@ export function MonitorsSubTab({
                         <span>{m.code}</span>
                       </td>
                       <td className="p-3.5 text-slate-600">{m.model}</td>
+                      <td className="p-3.5">
+                        <StatusBadge status={m.status} />
+                      </td>
                       <td className="p-3.5">
                         {owner ? (
                           <span className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-2.5 py-1 rounded-full text-xs font-semibold">
@@ -273,6 +310,7 @@ export function PrintersSubTab({
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-700">
                 <th className="p-3.5 font-bold">کد پرینتر (اموال)</th>
                 <th className="p-3.5 font-bold">مدل و سازنده</th>
+                <th className="p-3.5 font-bold">وضعیت سلامت</th>
                 <th className="p-3.5 font-bold">تحویل به کاربر کارگاه</th>
                 <th className="p-3.5 text-center font-bold">عملیات</th>
               </tr>
@@ -280,7 +318,7 @@ export function PrintersSubTab({
             <tbody>
               {printers.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="p-8 text-center text-slate-400">
+                  <td colSpan={5} className="p-8 text-center text-slate-400">
                     پرینتری در سیستم ثبت نگردیده است.
                   </td>
                 </tr>
@@ -301,6 +339,9 @@ export function PrintersSubTab({
                         <span>{pr.code}</span>
                       </td>
                       <td className="p-3.5 text-slate-600">{pr.model}</td>
+                      <td className="p-3.5">
+                        <StatusBadge status={pr.status} />
+                      </td>
                       <td className="p-3.5">
                         {owner ? (
                           <span className="bg-amber-50 border border-amber-200 text-amber-800 px-2.5 py-1 rounded-full text-xs font-semibold">
@@ -384,6 +425,7 @@ export function MiceSubTab({
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-700">
                 <th className="p-3.5 font-bold">کد ماوس (اموال)</th>
                 <th className="p-3.5 font-bold">مدل و برند</th>
+                <th className="p-3.5 font-bold">وضعیت سلامت</th>
                 <th className="p-3.5 font-bold">کاربر تحویل گیرنده</th>
                 <th className="p-3.5 text-center font-bold">عملیات</th>
               </tr>
@@ -391,7 +433,7 @@ export function MiceSubTab({
             <tbody>
               {mice.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="p-8 text-center text-slate-400">
+                  <td colSpan={5} className="p-8 text-center text-slate-400">
                     ماوسی در سیستم ثبت نگردیده است.
                   </td>
                 </tr>
@@ -412,6 +454,9 @@ export function MiceSubTab({
                         <span>{m.code}</span>
                       </td>
                       <td className="p-3.5 text-slate-600">{m.model}</td>
+                      <td className="p-3.5">
+                        <StatusBadge status={m.status} />
+                      </td>
                       <td className="p-3.5">
                         {owner ? (
                           <span className="bg-pink-50 border border-pink-200 text-pink-800 px-2.5 py-1 rounded-full text-xs font-semibold">
@@ -495,6 +540,7 @@ export function KeyboardsSubTab({
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-700">
                 <th className="p-3.5 font-bold">کد کیبورد (اموال)</th>
                 <th className="p-3.5 font-bold">مدل و برند</th>
+                <th className="p-3.5 font-bold">وضعیت سلامت</th>
                 <th className="p-3.5 font-bold">کاربر تحویل گیرنده</th>
                 <th className="p-3.5 text-center font-bold">عملیات</th>
               </tr>
@@ -502,7 +548,7 @@ export function KeyboardsSubTab({
             <tbody>
               {keyboards.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="p-8 text-center text-slate-400">
+                  <td colSpan={5} className="p-8 text-center text-slate-400">
                     کیبوردی در سیستم ثبت نگردیده است.
                   </td>
                 </tr>
@@ -523,6 +569,9 @@ export function KeyboardsSubTab({
                         <span>{k.code}</span>
                       </td>
                       <td className="p-3.5 text-slate-600">{k.model}</td>
+                      <td className="p-3.5">
+                        <StatusBadge status={k.status} />
+                      </td>
                       <td className="p-3.5">
                         {owner ? (
                           <span className="bg-purple-50 border border-purple-200 text-purple-800 px-2.5 py-1 rounded-full text-xs font-semibold">
