@@ -482,6 +482,11 @@ export default function App() {
       {/* 7. Corporate footer (hides in print) */}
       <footer className="no-print mt-12 bg-slate-900 border-t border-slate-800 text-slate-500 py-6 text-center text-xs space-y-2 rounded-xl">
         <div>سامانه هوشمند و آفلاین شناسنامه واحد ICT کارگاه بوشهر شرکت عمران آذرستان</div>
+        <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 text-[11px] text-slate-400">
+          <span>برنامه نویس: <span className="font-bold text-slate-300">مهدی اسماعیلی</span></span>
+          <span className="text-slate-700">|</span>
+          <span>نسخه برنامه: <span className="font-mono font-bold text-blue-400">v1.2.5</span></span>
+        </div>
         <div className="font-mono text-[10px] text-slate-600">
           تمامی حقوق محفوظ است © ۱۴۰۵ | پورت آفلاین بر پایه فایل‌های محلی JSON فاقد پایگاه‌داده خارجی
         </div>
