@@ -17,6 +17,22 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Theme states (persisted via localStorage)
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('theme');
+    return saved === 'dark';
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
+
   // Database States
   const [personnel, setPersonnel] = useState<Personnel[]>([]);
   const [cases, setCases] = useState<Case[]>([]);
@@ -257,7 +273,7 @@ export default function App() {
     <div className="min-h-screen flex flex-col p-4 md:p-8 font-sans max-w-7xl mx-auto print:p-0 print:max-w-none" dir="rtl">
       
       {/* 1. System Header component */}
-      <Header />
+      <Header isDark={darkMode} onToggleTheme={() => setDarkMode(!darkMode)} />
 
       {/* 2. Global search bar (hides in print mode) */}
       <div className="no-print bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 mb-6">

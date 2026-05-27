@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Logo from './Logo';
 
-export default function Header() {
+export default function Header({ isDark, onToggleTheme }: { isDark: boolean; onToggleTheme: () => void }) {
   const [time, setTime] = useState('');
   const [shamsiDate, setShamsiDate] = useState('');
 
@@ -43,9 +43,31 @@ export default function Header() {
       </div>
       
       <div className="text-left flex flex-col items-end gap-1.5 w-full md:w-auto">
-        <div className="bg-slate-800/80 px-4 py-2 rounded-lg text-sm font-medium text-slate-200 border border-slate-700/50 w-full md:w-auto text-center md:text-right">
-          تاریخ: <span className="text-blue-400 font-bold">{shamsiDate || '۱۴۰۵/۰۳/۰۵'}</span> | زمان: <span className="font-mono text-yellow-400">{time || '00:00'}</span>
+        <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full md:w-auto">
+          <button
+            onClick={onToggleTheme}
+            type="button"
+            className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 hover:text-white text-slate-200 border border-slate-700/60 px-3.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 cursor-pointer shadow-sm select-none"
+            title={isDark ? "تغییر به پوسته روز" : "تغییر به پوسته شب"}
+          >
+            {isDark ? (
+              <>
+                <span className="text-yellow-400 text-sm">☀️</span>
+                <span>پوسته روز (روشن)</span>
+              </>
+            ) : (
+              <>
+                <span className="text-indigo-400 text-sm">🌙</span>
+                <span>پوسته شب (تاریک)</span>
+              </>
+            )}
+          </button>
+          
+          <div className="bg-slate-800/80 px-4 py-2 rounded-lg text-sm font-medium text-slate-200 border border-slate-700/50 w-full md:w-auto text-center md:text-right">
+            تاریخ: <span className="text-blue-400 font-bold">{shamsiDate || '۱۴۰۵/۰۳/۰۵'}</span> | زمان: <span className="font-mono text-yellow-400">{time || '00:00'}</span>
+          </div>
         </div>
+        
         <div className="text-emerald-400 text-xs flex items-center gap-1.5 self-center md:self-end">
           <span className="animate-pulse">●</span> سامانه فعال و آفلاین (ذخیره اطلاعات روی فایل)
         </div>
