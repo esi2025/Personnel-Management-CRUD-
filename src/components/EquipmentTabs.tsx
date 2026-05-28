@@ -6,22 +6,22 @@ export function StatusBadge({ status }: { status?: 'working' | 'repair' | 'retir
   switch (currentStatus) {
     case 'working':
       return (
-        <span className="inline-flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-800 px-2 py-0.5 rounded text-[11px] font-bold shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+        <span className="inline-flex items-center gap-1.5 bg-emerald-100/80 border border-emerald-400 text-emerald-800 dark:bg-emerald-950/60 dark:border-emerald-600 dark:text-emerald-300 px-2.5 py-1 rounded-md text-[11px] font-black shrink-0 shadow-sm transition">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-xs" />
           سالم
         </span>
       );
     case 'repair':
       return (
-        <span className="inline-flex items-center gap-1 bg-amber-50 border border-amber-200 text-amber-800 px-2 py-0.5 rounded text-[11px] font-bold shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+        <span className="inline-flex items-center gap-1.5 bg-orange-100 border border-orange-500 text-orange-850 dark:bg-orange-950/60 dark:border-orange-500 dark:text-orange-300 px-2.5 py-1 rounded-md text-[11px] font-black shrink-0 shadow-sm animate-pulse transition">
+          <span className="w-2 h-2 rounded-full bg-orange-500 shadow-xs" />
           نیاز به تعمیر
         </span>
       );
     case 'retired':
       return (
-        <span className="inline-flex items-center gap-1 bg-red-50 border border-red-200 text-red-800 px-2 py-0.5 rounded text-[11px] font-bold shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+        <span className="inline-flex items-center gap-1.5 bg-red-100 border border-red-400 text-red-800 dark:bg-red-950/60 dark:border-red-600 dark:text-red-300 px-2.5 py-1 rounded-md text-[11px] font-black shrink-0 shadow-sm transition">
+          <span className="w-2 h-2 rounded-full bg-red-500 shadow-xs" />
           اسقاط شده
         </span>
       );
@@ -73,6 +73,7 @@ export function CasesSubTab({
                 <th className="p-3.5 font-bold">کارت گرافیک</th>
                 <th className="p-3.5 font-bold">فضای هارد (HDD/SSD)</th>
                 <th className="p-3.5 font-bold">وضعیت سلامت</th>
+                <th className="p-3.5 font-bold">توضیحات</th>
                 <th className="p-3.5 font-bold">تحویل به</th>
                 <th className="p-3.5 text-center">عملیات</th>
               </tr>
@@ -80,7 +81,7 @@ export function CasesSubTab({
             <tbody>
               {cases.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="p-8 text-center text-slate-400">
+                  <td colSpan={10} className="p-8 text-center text-slate-400">
                     کیسی در سامانه ثبت نگردیده است. نسبت به افزودن از تب ثبت جدید اقدام فرمایید.
                   </td>
                 </tr>
@@ -111,6 +112,9 @@ export function CasesSubTab({
                       <td className="p-3.5 text-slate-500 font-mono text-[11px]">{c.hdd1} | {c.hdd2}</td>
                       <td className="p-3.5">
                         <StatusBadge status={c.status} />
+                      </td>
+                      <td className="p-3.5 text-slate-500 max-w-[150px] truncate" title={c.description || undefined}>
+                        {c.description || '—'}
                       </td>
                       <td className="p-3.5">
                         {owner ? (
@@ -196,6 +200,7 @@ export function MonitorsSubTab({
                 <th className="p-3.5 font-bold">کد مانیتور (اموال)</th>
                 <th className="p-3.5 font-bold">نام مدل و مشخصات فنی</th>
                 <th className="p-3.5 font-bold">وضعیت سلامت</th>
+                <th className="p-3.5 font-bold">توضیحات</th>
                 <th className="p-3.5 font-bold">کاربر تحویل گیرنده</th>
                 <th className="p-3.5 text-center font-bold">عملیات</th>
               </tr>
@@ -203,7 +208,7 @@ export function MonitorsSubTab({
             <tbody>
               {monitors.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-slate-400">
+                  <td colSpan={6} className="p-8 text-center text-slate-400">
                     مانیتوری در سامانه ثبت نگردیده است.
                   </td>
                 </tr>
@@ -226,6 +231,9 @@ export function MonitorsSubTab({
                       <td className="p-3.5 text-slate-600">{m.model}</td>
                       <td className="p-3.5">
                         <StatusBadge status={m.status} />
+                      </td>
+                      <td className="p-3.5 text-slate-500 max-w-[150px] truncate" title={m.description || undefined}>
+                        {m.description || '—'}
                       </td>
                       <td className="p-3.5">
                         {owner ? (
@@ -311,6 +319,7 @@ export function PrintersSubTab({
                 <th className="p-3.5 font-bold">کد پرینتر (اموال)</th>
                 <th className="p-3.5 font-bold">مدل و سازنده</th>
                 <th className="p-3.5 font-bold">وضعیت سلامت</th>
+                <th className="p-3.5 font-bold">توضیحات</th>
                 <th className="p-3.5 font-bold">تحویل به کاربر کارگاه</th>
                 <th className="p-3.5 text-center font-bold">عملیات</th>
               </tr>
@@ -318,7 +327,7 @@ export function PrintersSubTab({
             <tbody>
               {printers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-slate-400">
+                  <td colSpan={6} className="p-8 text-center text-slate-400">
                     پرینتری در سیستم ثبت نگردیده است.
                   </td>
                 </tr>
@@ -341,6 +350,9 @@ export function PrintersSubTab({
                       <td className="p-3.5 text-slate-600">{pr.model}</td>
                       <td className="p-3.5">
                         <StatusBadge status={pr.status} />
+                      </td>
+                      <td className="p-3.5 text-slate-500 max-w-[150px] truncate" title={pr.description || undefined}>
+                        {pr.description || '—'}
                       </td>
                       <td className="p-3.5">
                         {owner ? (
@@ -426,6 +438,7 @@ export function MiceSubTab({
                 <th className="p-3.5 font-bold">کد ماوس (اموال)</th>
                 <th className="p-3.5 font-bold">مدل و برند</th>
                 <th className="p-3.5 font-bold">وضعیت سلامت</th>
+                <th className="p-3.5 font-bold">توضیحات</th>
                 <th className="p-3.5 font-bold">کاربر تحویل گیرنده</th>
                 <th className="p-3.5 text-center font-bold">عملیات</th>
               </tr>
@@ -433,7 +446,7 @@ export function MiceSubTab({
             <tbody>
               {mice.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-slate-400">
+                  <td colSpan={6} className="p-8 text-center text-slate-400">
                     ماوسی در سیستم ثبت نگردیده است.
                   </td>
                 </tr>
@@ -456,6 +469,9 @@ export function MiceSubTab({
                       <td className="p-3.5 text-slate-600">{m.model}</td>
                       <td className="p-3.5">
                         <StatusBadge status={m.status} />
+                      </td>
+                      <td className="p-3.5 text-slate-500 max-w-[150px] truncate" title={m.description || undefined}>
+                        {m.description || '—'}
                       </td>
                       <td className="p-3.5">
                         {owner ? (
@@ -541,6 +557,7 @@ export function KeyboardsSubTab({
                 <th className="p-3.5 font-bold">کد کیبورد (اموال)</th>
                 <th className="p-3.5 font-bold">مدل و برند</th>
                 <th className="p-3.5 font-bold">وضعیت سلامت</th>
+                <th className="p-3.5 font-bold">توضیحات</th>
                 <th className="p-3.5 font-bold">کاربر تحویل گیرنده</th>
                 <th className="p-3.5 text-center font-bold">عملیات</th>
               </tr>
@@ -548,7 +565,7 @@ export function KeyboardsSubTab({
             <tbody>
               {keyboards.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-slate-400">
+                  <td colSpan={6} className="p-8 text-center text-slate-400">
                     کیبوردی در سیستم ثبت نگردیده است.
                   </td>
                 </tr>
@@ -571,6 +588,9 @@ export function KeyboardsSubTab({
                       <td className="p-3.5 text-slate-600">{k.model}</td>
                       <td className="p-3.5">
                         <StatusBadge status={k.status} />
+                      </td>
+                      <td className="p-3.5 text-slate-500 max-w-[150px] truncate" title={k.description || undefined}>
+                        {k.description || '—'}
                       </td>
                       <td className="p-3.5">
                         {owner ? (

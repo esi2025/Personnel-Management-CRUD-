@@ -358,6 +358,8 @@ async function startServer() {
         ramType: fields.ramType?.trim() || "DDR4",
         ramQty: fields.ramQty?.trim() || "8GB",
         assignedTo: fields.assignedTo || null,
+        status: fields.status || "working",
+        description: fields.description?.trim() || "",
       };
 
       if (isEdit) {
@@ -384,6 +386,8 @@ async function startServer() {
         code: trimmedCode,
         model: fields.model?.trim() || "سایر",
         assignedTo: fields.assignedTo || null,
+        status: fields.status || "working",
+        description: fields.description?.trim() || "",
       };
 
       if (isEdit) {
@@ -410,6 +414,8 @@ async function startServer() {
         code: trimmedCode,
         model: fields.model?.trim() || "سایر",
         assignedTo: fields.assignedTo || null,
+        status: fields.status || "working",
+        description: fields.description?.trim() || "",
       };
 
       if (isEdit) {
@@ -436,6 +442,8 @@ async function startServer() {
         code: trimmedCode,
         model: fields.model?.trim() || "سایر",
         assignedTo: fields.assignedTo || null,
+        status: fields.status || "working",
+        description: fields.description?.trim() || "",
       };
 
       if (isEdit) {
@@ -462,6 +470,8 @@ async function startServer() {
         code: trimmedCode,
         model: fields.model?.trim() || "سایر",
         assignedTo: fields.assignedTo || null,
+        status: fields.status || "working",
+        description: fields.description?.trim() || "",
       };
 
       if (isEdit) {

@@ -524,18 +524,23 @@ export default function ReportingTab({
             <div className="space-y-6 text-black font-sans print:p-0">
               
               {/* Header Certificate corporate titles */}
-              <div className="flex justify-between items-center border-b-2 border-black pb-4">
-                <div className="flex items-center gap-3">
+              <div className="grid grid-cols-3 items-center border-b-2 border-black pb-4">
+                {/* Right side: Logo */}
+                <div className="flex justify-start">
                   <Logo size="h-12" />
-                  <div>
-                    <h2 className="text-base md:text-lg font-black leading-none">شرکت عمران آذرستان</h2>
-                    <h3 className="text-xs text-slate-600 mt-1">واحد فناوری اطلاعات و ارتباطات (ICT) | کارگاه بوشهر</h3>
-                  </div>
                 </div>
-                <div className="text-left text-[10px] md:text-xs">
+                
+                {/* Center: Corporate Titles (Centered) */}
+                <div className="text-center space-y-1">
+                  <h2 className="text-base md:text-lg font-black leading-tight text-black">شرکت عمران آذرستان</h2>
+                  <h3 className="text-xs text-slate-800 font-bold">واحد فناوری اطلاعات و ارتباطات (ICT)</h3>
+                </div>
+                
+                {/* Left side: Code & Document metadata */}
+                <div className="text-left text-[10px] md:text-xs space-y-1">
+                  <div>کد سند: <span dir="ltr" className="font-mono font-bold select-all">37-FO-IT-01-01</span></div>
                   <div>شماره سند: <strong className="font-mono">ICT-CERT-{certificatePers.code}</strong></div>
                   <div>تاریخ صدور سند: <span className="font-mono">۱۴۰۵/۰۳/۰۳</span></div>
-                  <div>محل خدمت: <span>کارگاه بوشهر</span></div>
                 </div>
               </div>
 

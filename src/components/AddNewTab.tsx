@@ -42,6 +42,7 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
 
   // Equipment Status state
   const [equipStatus, setEquipStatus] = useState<'working' | 'repair' | 'retired'>('working');
+  const [equipDesc, setEquipDesc] = useState('');
 
   const handleResetForm = () => {
     setPName(''); setPCode(''); setPTitle(''); setPDept(''); setPLoc('');
@@ -51,6 +52,7 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
     setMouCode(''); setMouModel('');
     setKbCode(''); setKbModel('');
     setEquipStatus('working');
+    setEquipDesc('');
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -78,32 +80,33 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
         hdd2: cHdd2,
         ramType: cRamType,
         ramQty: cRamQty,
-        status: equipStatus
+        status: equipStatus,
+        description: equipDesc
       };
     } else if (activeType === 'monitor') {
       if (!mCode.trim() || !mModel.trim()) {
         alert('کد مانیتور و نام مدل مانیتور الزامی هستند.');
         return;
       }
-      data = { code: mCode, model: mModel, status: equipStatus };
+      data = { code: mCode, model: mModel, status: equipStatus, description: equipDesc };
     } else if (activeType === 'printer') {
       if (!prCode.trim() || !prModel.trim()) {
         alert('کد چاپگر و نام مدل چاپگر الزامی هستند.');
         return;
       }
-      data = { code: prCode, model: prModel, status: equipStatus };
+      data = { code: prCode, model: prModel, status: equipStatus, description: equipDesc };
     } else if (activeType === 'mouse') {
       if (!mouCode.trim() || !mouModel.trim()) {
         alert('کد ماوس و نام مدل ماوس الزامی هستند.');
         return;
       }
-      data = { code: mouCode, model: mouModel, status: equipStatus };
+      data = { code: mouCode, model: mouModel, status: equipStatus, description: equipDesc };
     } else if (activeType === 'keyboard') {
       if (!kbCode.trim() || !kbModel.trim()) {
         alert('کد کیبورد و نام مدل کیبورد الزامی هستند.');
         return;
       }
-      data = { code: kbCode, model: kbModel, status: equipStatus };
+      data = { code: kbCode, model: kbModel, status: equipStatus, description: equipDesc };
     }
 
     const success = await onSave(activeType, data);
@@ -355,38 +358,53 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
 
         {/* Status Dropdown - Show for all types except personnel */}
         {activeType !== 'personnel' && (
-          <div className="space-y-1.5 p-3 bg-blue-50/45 rounded-lg border border-blue-100/60 animate-fade-in text-xs md:text-sm">
-            <label className="font-semibold text-slate-800 flex items-center gap-1.5">
-              <span>🩺 وضعیت سلامت و کارکرد دستگاه:</span>
-            </label>
-            <div className="grid grid-cols-3 gap-2 mt-1">
-              {(['working', 'repair', 'retired'] as const).map((st) => (
-                <button
-                  key={st}
-                  type="button"
-                  onClick={() => setEquipStatus(st)}
-                  className={`p-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer border ${
-                    equipStatus === st
-                      ? 'text-white font-black'
-                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                  }`}
-                  style={
-                    equipStatus === st
-                      ? st === 'working'
-                        ? { backgroundColor: '#10b981', borderColor: '#10b981' }
-                        : st === 'repair'
-                        ? { backgroundColor: '#d97706', borderColor: '#d97706' }
-                        : { backgroundColor: '#dc2626', borderColor: '#dc2626' }
-                      : {}
-                  }
-                >
-                  {st === 'working' && <span>🟢 سالم</span>}
-                  {st === 'repair' && <span>🟡 نیاز به تعمیر</span>}
-                  {st === 'retired' && <span>🔴 اسقاط</span>}
-                </button>
-              ))}
+          <>
+            <div className="space-y-1.5 p-3 bg-blue-50/45 rounded-lg border border-blue-100/60 animate-fade-in text-xs md:text-sm">
+              <label className="font-semibold text-slate-800 flex items-center gap-1.5">
+                <span>🩺 وضعیت سلامت و کارکرد دستگاه:</span>
+              </label>
+              <div className="grid grid-cols-3 gap-2 mt-1">
+                {(['working', 'repair', 'retired'] as const).map((st) => (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => setEquipStatus(st)}
+                    className={`p-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer border ${
+                      equipStatus === st
+                        ? 'text-white font-black'
+                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                    style={
+                      equipStatus === st
+                        ? st === 'working'
+                          ? { backgroundColor: '#10b981', borderColor: '#10b981' }
+                          : st === 'repair'
+                          ? { backgroundColor: '#d97706', borderColor: '#d97706' }
+                          : { backgroundColor: '#dc2626', borderColor: '#dc2626' }
+                        : {}
+                    }
+                  >
+                    {st === 'working' && <span>🟢 سالم</span>}
+                    {st === 'repair' && <span>🟡 نیاز به تعمیر</span>}
+                    {st === 'retired' && <span>🔴 اسقاط</span>}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+
+            <div className="space-y-1.5 p-3 bg-slate-50/50 dark:bg-slate-800/40 rounded-lg border border-slate-200 dark:border-slate-700/60 animate-fade-in text-xs md:text-sm">
+              <label className="font-semibold text-slate-800 dark:text-slate-200">
+                📝 توضیحات تکمیلی و ضمیمه:
+              </label>
+              <textarea
+                value={equipDesc}
+                onChange={(e) => setEquipDesc(e.target.value)}
+                placeholder="مثال: تخصیص مجدد داده شده، دارای ایراد جزئی در پورت‌ها، مشخصات فن یا هرگونه یادداشت دفتری دیگر..."
+                rows={3}
+                className="w-full text-right p-2.5 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none dark:bg-slate-900 dark:border-slate-700 dark:text-white"
+              />
+            </div>
+          </>
         )}
 
         <div className="pt-4 border-t border-slate-100 flex gap-3">

@@ -33,6 +33,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
 
   // Status state
   const [equipStatus, setEquipStatus] = useState<'working' | 'repair' | 'retired'>('working');
+  const [equipDesc, setEquipDesc] = useState('');
 
   // Sync inputs with item when mounted
   useEffect(() => {
@@ -58,6 +59,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
 
     if (type && type !== 'personnel') {
       setEquipStatus(item.status || 'working');
+      setEquipDesc(item.description || '');
     }
   }, [item, type]);
 
@@ -85,12 +87,14 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
       data.ramQty = cRamQty;
       data.assignedTo = item.assignedTo;
       data.status = equipStatus;
+      data.description = equipDesc;
     } else if (type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard') {
       data.code = equipCode;
       data.oldCode = item.code;
       data.model = equipModel;
       data.assignedTo = item.assignedTo;
       data.status = equipStatus;
+      data.description = equipDesc;
     }
 
     const ok = await onSave(type, data);
@@ -246,38 +250,53 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
 
           {/* Status Dropdown - Show for all types except personnel */}
           {type !== 'personnel' && (
-            <div className="space-y-1.5 p-3 bg-blue-50/45 rounded-lg border border-blue-100/60 text-xs md:text-sm animate-fade-in">
-              <label className="font-semibold text-slate-800 flex items-center gap-1.5">
-                <span>🩺 وضعیت سلامت تغییر یافته:</span>
-              </label>
-              <div className="grid grid-cols-3 gap-2 mt-1">
-                {(['working', 'repair', 'retired'] as const).map((st) => (
-                  <button
-                    key={st}
-                    type="button"
-                    onClick={() => setEquipStatus(st)}
-                    className={`p-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer border ${
-                      equipStatus === st
-                        ? 'text-white font-black'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                    }`}
-                    style={
-                      equipStatus === st
-                        ? st === 'working'
-                          ? { backgroundColor: '#10b981', borderColor: '#10b981' }
-                          : st === 'repair'
-                          ? { backgroundColor: '#d97706', borderColor: '#d97706' }
-                          : { backgroundColor: '#dc2626', borderColor: '#dc2626' }
-                        : {}
-                    }
-                  >
-                    {st === 'working' && <span>🟢 سالم</span>}
-                    {st === 'repair' && <span>🟡 تعمیر</span>}
-                    {st === 'retired' && <span>🔴 اسقاط</span>}
-                  </button>
-                ))}
+            <>
+              <div className="space-y-1.5 p-3 bg-blue-50/45 rounded-lg border border-blue-100/60 text-xs md:text-sm animate-fade-in">
+                <label className="font-semibold text-slate-800 flex items-center gap-1.5">
+                  <span>🩺 وضعیت سلامت تغییر یافته:</span>
+                </label>
+                <div className="grid grid-cols-3 gap-2 mt-1">
+                  {(['working', 'repair', 'retired'] as const).map((st) => (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => setEquipStatus(st)}
+                      className={`p-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer border ${
+                        equipStatus === st
+                          ? 'text-white font-black'
+                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                      }`}
+                      style={
+                        equipStatus === st
+                          ? st === 'working'
+                            ? { backgroundColor: '#10b981', borderColor: '#10b981' }
+                            : st === 'repair'
+                            ? { backgroundColor: '#d97706', borderColor: '#d97706' }
+                            : { backgroundColor: '#dc2626', borderColor: '#dc2626' }
+                          : {}
+                      }
+                    >
+                      {st === 'working' && <span>🟢 سالم</span>}
+                      {st === 'repair' && <span>🟡 تعمیر</span>}
+                      {st === 'retired' && <span>🔴 اسقاط</span>}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+
+              <div className="space-y-1.5 p-3 bg-slate-50/50 dark:bg-slate-800/40 rounded-lg border border-slate-200 dark:border-slate-700/60 text-xs md:text-sm animate-fade-in">
+                <label className="font-semibold text-slate-800 dark:text-slate-200">
+                  📝 توضیحات تکمیلی و ضمیمه:
+                </label>
+                <textarea
+                  value={equipDesc}
+                  onChange={(e) => setEquipDesc(e.target.value)}
+                  placeholder="مثال: تخصیص مجدد داده شده، دارای ایراد جزئی در پورت‌ها، مشخصات فن یا هرگونه یادداشت دفتری دیگر..."
+                  rows={3}
+                  className="w-full text-right p-2.5 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none dark:bg-slate-900 dark:border-slate-700 dark:text-white"
+                />
+              </div>
+            </>
           )}
 
           {/* Action Row */}

@@ -18,6 +18,7 @@ export interface Case {
   ramQty: string; // مقدار رم (e.g. 16GB)
   assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
   status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
+  description?: string; // توضیحات تکمیلی
 }
 
 export interface Monitor {
@@ -25,6 +26,7 @@ export interface Monitor {
   model: string; // مدل (شامل مارک و سایز)
   assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
   status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
+  description?: string; // توضیحات تکمیلی
 }
 
 export interface Printer {
@@ -32,6 +34,7 @@ export interface Printer {
   model: string; // مدل
   assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
   status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
+  description?: string; // توضیحات تکمیلی
 }
 
 export interface Mouse {
@@ -39,6 +42,7 @@ export interface Mouse {
   model: string; // مدل/برند
   assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
   status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
+  description?: string; // توضیحات تکمیلی
 }
 
 export interface Keyboard {
@@ -46,6 +50,7 @@ export interface Keyboard {
   model: string; // مدل/برند
   assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
   status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
+  description?: string; // توضیحات تکمیلی
 }
 
 export interface CatalogItem {
