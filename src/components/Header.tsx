@@ -35,7 +35,7 @@ export default function Header({ isDark, onToggleTheme }: { isDark: boolean; onT
         <Logo size="h-16" />
         <div>
           <h1 className="text-2xl font-black tracking-tight font-sans">شرکت عمران آذرستان</h1>
-          <h2 className="text-sm font-medium text-slate-300">واحد فناوری اطلاعات و ارتباطات (ICT) | کارگاه بوشهر</h2>
+          <h2 className="text-sm font-medium text-slate-300">واحد فناوری اطلاعات و ارتباطات (ICT) | مدیریت تجهیزات</h2>
           <span className="inline-block mt-2 bg-blue-900/40 border border-blue-500 text-blue-400 px-3 py-0.5 text-xs rounded-full">
             سامانه تحت وب مدیریت و شناسنامه هوشمند تجهیزات اداری و کارگاهی
           </span>

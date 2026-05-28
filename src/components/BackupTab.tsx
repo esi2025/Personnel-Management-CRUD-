@@ -99,7 +99,7 @@ export default function BackupTab({ onRestore, onReload }: BackupTabProps) {
           const pCode = cols[1];
           const pTitle = cols[2] || 'کارمند';
           const pDept = cols[3] || 'عمران';
-          const pLoc = cols[4] || 'کارگاه بوشهر';
+          const pLoc = cols[4] || 'دفتر پروژه';
 
           if (!pName || !pCode) continue;
 
@@ -259,7 +259,7 @@ export default function BackupTab({ onRestore, onReload }: BackupTabProps) {
       <div className="bg-slate-900 border-l-4 border-yellow-500 text-white rounded-xl p-6 shadow-md grid grid-cols-1 md:grid-cols-3 items-center gap-6">
         <div className="md:col-span-2 space-y-2">
           <div className="inline-block bg-yellow-500 text-slate-950 font-black text-[10px] px-2.5 py-0.5 rounded-full uppercase">
-            مخصوص کارگاه بوشهر - تحویل به مدیر پروژه
+            مخصوص پروژه - تحویل به مدیر پروژه
           </div>
           <h3 className="text-base md:text-lg font-bold">📦 دانلود پروژه سورس کامل و مستقل PHP به صورت ZIP</h3>
           <p className="text-xs text-slate-300">

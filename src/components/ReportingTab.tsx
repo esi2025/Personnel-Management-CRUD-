@@ -303,9 +303,10 @@ export default function ReportingTab({
           {/* Render 1: Combined General Report */}
           {reportType === 'general' && (
             <div className="space-y-6 text-slate-900 leading-relaxed font-sans">
-              <div className="text-center border-b-2 border-black pb-4 mb-4">
-                <h2 className="text-xl font-bold">گزارش ترکیبی تجهیزات کل واحد فناوری اطلاعات و ارتباطات</h2>
-                <h3 className="text-sm text-slate-600 mt-1">شرکت عمران آذرستان - کارگاه بوشهر (آفلاین)</h3>
+              <div className="text-center border-b-2 border-black pb-4 mb-4 space-y-1">
+                <h2 className="text-xl font-black text-black">شرکت عمران آذرستان</h2>
+                <h3 className="text-sm text-slate-800 font-bold">واحد فناوری اطلاعات و ارتباطات (ICT)</h3>
+                <h4 className="text-xs text-slate-600 font-medium">گزارش ترکیبی تجهیزات کل سامانه</h4>
                 <p className="text-[11px] text-slate-500 mt-2 pb-2">تاریخ گزارش: ۱۴۰۵/۰۳/۰۳ | فیلتر اعمال شده: بر اساس درخواست کاربر</p>
                 
                 {/* Print & Screen Distribution stats */}
@@ -674,7 +675,7 @@ export default function ReportingTab({
                   <span className="text-[10px] text-slate-500">{certificatePers.name}</span>
                 </div>
                 <div className="border border-dashed border-black p-3 rounded min-h-[100px] flex flex-col justify-between">
-                  <span className="font-bold text-black border-b border-dashed border-slate-300 pb-1">واحد انبار کارگاه بوشهر:</span>
+                  <span className="font-bold text-black border-b border-dashed border-slate-300 pb-1">واحد انبار پروژه:</span>
                   <span className="text-[10px] text-slate-500">امضا و تایید صدور فیزیکی</span>
                 </div>
                 <div className="border border-dashed border-black p-3 rounded min-h-[100px] flex flex-col justify-between">

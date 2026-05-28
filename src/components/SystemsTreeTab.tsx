@@ -39,7 +39,7 @@ const FIXED_DOC_CODE = "37-FO-IT-01-01";
 const initialTreeData: CustomTreeNode = {
   id: "root-azarestan",
   name: "Omran Azarestan",
-  persianName: "عمران آذرستان (دفتر مرکزی و کارگاه بوشهر)",
+  persianName: "شرکت عمران آذرستان",
   type: "root",
   dept: "root",
   docCode: FIXED_DOC_CODE,
@@ -138,7 +138,7 @@ const initialTreeData: CustomTreeNode = {
               dept: "IT",
               status: "active",
               docCode: FIXED_DOC_CODE,
-              description: "توزیع پهنای باند و وی‌لن‌بندی سیستم‌های دفتری بوشهر",
+              description: "توزیع پهنای باند و وی‌لن‌بندی سیستم‌های دفتری پروژه",
               ipAddress: "192.168.10.1",
               hardwareType: "Cisco Catalyst 3850 Series"
             },
@@ -339,7 +339,7 @@ const initialTreeData: CustomTreeNode = {
               dept: "Operations",
               status: "active",
               docCode: FIXED_DOC_CODE,
-              description: "بررسی نقشه‌های شاپ دراوینگ کارگاهی عمران بوشهر",
+              description: "بررسی نقشه‌های شاپ دراوینگ کارگاهی پروژه",
               ipAddress: "192.168.40.50",
               hardwareType: "ASUS Workstation - RTX 3060 GPU"
             },
