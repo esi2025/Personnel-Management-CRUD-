@@ -4,9 +4,19 @@ import { Personnel, Case, Monitor, Printer, Assignment } from '../types';
 interface BackupTabProps {
   onRestore: (backupData: any) => Promise<void>;
   onReload: () => void;
+  currentData?: {
+    personnel: Personnel[];
+    cases: Case[];
+    monitors: Monitor[];
+    printers: Printer[];
+    mice?: any[];
+    keyboards?: any[];
+    partsCatalog?: any[];
+    assignments: Assignment[];
+  };
 }
 
-export default function BackupTab({ onRestore, onReload }: BackupTabProps) {
+export default function BackupTab({ onRestore, onReload, currentData }: BackupTabProps) {
   const jsonInputRef = useRef<HTMLInputElement>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
@@ -14,8 +24,11 @@ export default function BackupTab({ onRestore, onReload }: BackupTabProps) {
   // Download entire database JSON Backup
   const handleDownloadBackup = async () => {
     try {
-      const res = await fetch('/api/data');
-      const data = await res.json();
+      let data = currentData;
+      if (!data) {
+        const res = await fetch('/api/data');
+        data = await res.json();
+      }
       
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);

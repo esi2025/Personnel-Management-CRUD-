@@ -976,6 +976,16 @@ export default function App() {
             <BackupTab 
               onRestore={handleRestoreDatabase}
               onReload={loadDatabase}
+              currentData={{
+                personnel,
+                cases,
+                monitors,
+                printers,
+                mice,
+                keyboards,
+                partsCatalog,
+                assignments
+              }}
             />
           )}
 
