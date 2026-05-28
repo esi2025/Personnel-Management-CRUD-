@@ -8,6 +8,7 @@ import HistoryTab from './components/HistoryTab';
 import ReportingTab from './components/ReportingTab';
 import BackupTab from './components/BackupTab';
 import AddNewTab from './components/AddNewTab';
+import SystemsTreeTab from './components/SystemsTreeTab';
 import EditModal from './components/EditModal';
 import QRCodeModal from './components/QRCodeModal';
 import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard, CatalogItem } from './types';
@@ -312,6 +313,7 @@ export default function App() {
           { id: 'transfer-tab', label: '🔄 جابجایی هوشمند' },
           { id: 'history-tab', label: '📜 تاریخچه لجستیک' },
           { id: 'reports-tab', label: '📋 گزارش و شناسنامه' },
+          { id: 'systems-tree-tab', label: '🌳 نمودار درختی سیستم‌ها' },
           { id: 'backup-tab', label: '⚙️ پشتیبان‌گیری و سورس' },
           { id: 'add-new-tab', label: '➕ ثبت جدید' }
         ].map((tab) => (
@@ -460,6 +462,10 @@ export default function App() {
               assignments={assignments}
               prefilledPersonnelCode={prefilledPersCode}
             />
+          )}
+
+          {activeTab === 'systems-tree-tab' && (
+            <SystemsTreeTab />
           )}
 
           {activeTab === 'backup-tab' && (
