@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import { 
   Network, 
   Server, 
-  Monitor, 
+  Monitor as MonitorIcon, 
   Search, 
   ZoomIn, 
   ZoomOut, 
@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   XCircle
 } from 'lucide-react';
+import { Personnel, Case, Monitor, Printer, Mouse, Keyboard } from '../types';
 
 // Define typed node interface for the D3 tree
 interface CustomTreeNode {
@@ -22,7 +23,7 @@ interface CustomTreeNode {
   name: string;
   persianName: string;
   type: 'root' | 'department' | 'category' | 'system';
-  dept?: 'IT' | 'Finance' | 'HR' | 'Operations' | 'root';
+  dept?: string;
   status?: 'active' | 'maintenance' | 'offline';
   description?: string;
   ipAddress?: string;
@@ -34,367 +35,6 @@ interface CustomTreeNode {
 
 // Fixed Document Code required by user
 const FIXED_DOC_CODE = "37-FO-IT-01-01";
-
-// Rich Hierarchical Dataset
-const initialTreeData: CustomTreeNode = {
-  id: "root-azarestan",
-  name: "Omran Azarestan",
-  persianName: "شرکت عمران آذرستان",
-  type: "root",
-  dept: "root",
-  docCode: FIXED_DOC_CODE,
-  description: "کلان‌سیستم توزیع سخـت‌افزارها و سامانه‌های اداری",
-  children: [
-    {
-      id: "dept-it",
-      name: "IT",
-      persianName: "واحد فناوری اطلاعات و ارتباطات (ICT)",
-      type: "department",
-      dept: "IT",
-      docCode: FIXED_DOC_CODE,
-      description: "مدیریت زیرساخت، شبکه‌ و پشتیبانی فنی کارگاه‌ها",
-      children: [
-        {
-          id: "it-servers",
-          name: "Servers",
-          persianName: "سرورهای مرکزی و فرعی",
-          type: "category",
-          dept: "IT",
-          docCode: FIXED_DOC_CODE,
-          children: [
-            {
-              id: "IT-SRV-MAIN",
-              name: "IT-SRV-MAIN",
-              persianName: "سرور اصلی اکتیو دایرکتوری (AD DS)",
-              type: "system",
-              dept: "IT",
-              status: "active",
-              docCode: FIXED_DOC_CODE,
-              description: "کنترلر دامین اصلی و احراز هویت مرکزی پرسنل",
-              ipAddress: "192.168.10.10",
-              hardwareType: "HPE ProLiant DL380 Gen10"
-            },
-            {
-              id: "IT-SRV-BACKUP",
-              name: "IT-SRV-BACKUP",
-              persianName: "سرور بک‌آپ‌گیری خودکار و آرشیو",
-              type: "system",
-              dept: "IT",
-              status: "maintenance",
-              docCode: FIXED_DOC_CODE,
-              description: "بروزرسانی ریداندنسی هارد دیسک‌ها و بک‌آپ دوره‌ای",
-              ipAddress: "192.168.10.12",
-              hardwareType: "Synology RackStation RS2423+"
-            }
-          ]
-        },
-        {
-          id: "it-workstations",
-          name: "Workstations",
-          persianName: "ایستگاه‌های کاری توسعه و ادمین",
-          type: "category",
-          dept: "IT",
-          docCode: FIXED_DOC_CODE,
-          children: [
-            {
-              id: "IT-WRK-ADMIN1",
-              name: "IT-WRK-ADMIN1",
-              persianName: "رایانه مدیریت و پاسخگویی تیکتینگ",
-              type: "system",
-              dept: "IT",
-              status: "active",
-              docCode: FIXED_DOC_CODE,
-              description: "پورتال کاربری مدیریت تجهیزات و پایش لاگ‌ها",
-              ipAddress: "192.168.10.50",
-              hardwareType: "Intel Core i7 Gen12 - 16GB RAM"
-            },
-            {
-              id: "IT-WRK-DEV2",
-              name: "IT-WRK-DEV2",
-              persianName: "ایستگاه توسعه پکیج‌ها و کدهای محلی",
-              type: "system",
-              dept: "IT",
-              status: "offline",
-              docCode: FIXED_DOC_CODE,
-              description: "خارج از شبکه جهت تعمیر اساسی منبع تغذیه (پاور)",
-              ipAddress: "10.100.2.11",
-              hardwareType: "Intel Core i9 Gen13 - 32GB RAM"
-            }
-          ]
-        },
-        {
-          id: "it-network",
-          name: "Network Devices",
-          persianName: "تجهیزات ارتباطی و سوئیچینگ",
-          type: "category",
-          dept: "IT",
-          docCode: FIXED_DOC_CODE,
-          children: [
-            {
-              id: "IT-NET-SWITCH-GW",
-              name: "IT-NET-SWITCH-GW",
-              persianName: "سوئیچ اصلی لایه ۳ پورت گیگابیت",
-              type: "system",
-              dept: "IT",
-              status: "active",
-              docCode: FIXED_DOC_CODE,
-              description: "توزیع پهنای باند و وی‌لن‌بندی سیستم‌های دفتری پروژه",
-              ipAddress: "192.168.10.1",
-              hardwareType: "Cisco Catalyst 3850 Series"
-            },
-            {
-              id: "IT-NET-AP-MAIN",
-              name: "IT-NET-AP-MAIN",
-              persianName: "اکسس پوینت وایرلس اداری",
-              type: "system",
-              dept: "IT",
-              status: "maintenance",
-              docCode: FIXED_DOC_CODE,
-              description: "تغییر کانال فرکانسی و کانفیگ رومینگ بی‌سیم کارگاه",
-              ipAddress: "192.168.10.5",
-              hardwareType: "UniFi AP AC LR"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: "dept-finance",
-      name: "Finance",
-      persianName: "مدیریت مالی و امور حسابداری",
-      type: "department",
-      dept: "Finance",
-      docCode: FIXED_DOC_CODE,
-      description: "ثبت اسناد، پرداخت حقوق و خزانه داری کارگاه",
-      children: [
-        {
-          id: "fin-servers",
-          name: "Servers",
-          persianName: "بانک‌های اطلاعات مالی",
-          type: "category",
-          dept: "Finance",
-          docCode: FIXED_DOC_CODE,
-          children: [
-            {
-              id: "FIN-SRV-ACC",
-              name: "FIN-SRV-ACC",
-              persianName: "سرور پایگاه داده همکاران سیستم",
-              type: "system",
-              dept: "Finance",
-              status: "active",
-              docCode: FIXED_DOC_CODE,
-              description: "پایگاه داده SQL سرور مالی عمران آذرستان",
-              ipAddress: "192.168.20.10",
-              hardwareType: "Dell PowerEdge T440"
-            }
-          ]
-        },
-        {
-          id: "fin-workstations",
-          name: "Workstations",
-          persianName: "کاربران حسابرسی و خزانه",
-          type: "category",
-          dept: "Finance",
-          docCode: FIXED_DOC_CODE,
-          children: [
-            {
-              id: "FIN-WRK-ACC1",
-              name: "FIN-WRK-ACC1",
-              persianName: "سیستم اختصاصی رئیس حسابداری",
-              type: "system",
-              dept: "Finance",
-              status: "active",
-              docCode: FIXED_DOC_CODE,
-              description: "تخصیص یافته به بخش حقوق دولتی و خزانه کارگاهی",
-              ipAddress: "192.168.20.50",
-              hardwareType: "Core i5 10th - 16GB RAM"
-            },
-            {
-              id: "FIN-WRK-AUDIT2",
-              name: "FIN-WRK-AUDIT2",
-              persianName: "کیس حسابرسی و مغایرت‌گیری بانکی",
-              type: "system",
-              dept: "Finance",
-              status: "offline",
-              docCode: FIXED_DOC_CODE,
-              description: "سیستم موقتاً خاموش - در انتظار بازگشت کاربر از مرخصی",
-              ipAddress: "192.168.20.55",
-              hardwareType: "Core i3 9th - 8GB RAM"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: "dept-hr",
-      name: "HR & Office",
-      persianName: "امور اداری و منابع انسانی",
-      type: "department",
-      dept: "HR",
-      docCode: FIXED_DOC_CODE,
-      description: "جذب نیرو، ثبت کارکرد روزانه و آرشیو مدارک پرسنل",
-      children: [
-        {
-          id: "hr-workstations",
-          name: "Workstations",
-          persianName: "ایستگاه‌های اداری و ثبت نام",
-          type: "category",
-          dept: "HR",
-          docCode: FIXED_DOC_CODE,
-          children: [
-            {
-              id: "HR-WRK-DIR",
-              name: "HR-WRK-DIR",
-              persianName: "رایانه رئیس کارگزینی و بیمه کارگاهی",
-              type: "system",
-              dept: "HR",
-              status: "active",
-              docCode: FIXED_DOC_CODE,
-              description: "ارتباط با پورتال بیمه تامین اجتماعی و ورود پرسنل جدید",
-              ipAddress: "192.168.30.20",
-              hardwareType: "Core i7 Fast - 16GB RAM"
-            },
-            {
-              id: "HR-WRK-RECP",
-              name: "HR-WRK-RECP",
-              persianName: "کیس متصدی پذیرش و ثبت ساعت ورود",
-              type: "system",
-              dept: "HR",
-              status: "active",
-              docCode: FIXED_DOC_CODE,
-              description: "تخلیه اطلاعات اکسس کنترل و دستگاه اثر انگشت",
-              ipAddress: "192.168.30.25",
-              hardwareType: "Core i5 11th - 8GB RAM"
-            }
-          ]
-        },
-        {
-          id: "hr-devices",
-          name: "Network Devices",
-          persianName: "پرینترها و اسکنرهای اداری",
-          type: "category",
-          dept: "HR",
-          docCode: FIXED_DOC_CODE,
-          children: [
-            {
-              id: "HR-NET-PRINTER-NET",
-              name: "HR-NET-PRINTER-NET",
-              persianName: "چاپگر توزیع‌شده اداری و چندکاره HP",
-              type: "system",
-              dept: "HR",
-              status: "maintenance",
-              docCode: FIXED_DOC_CODE,
-              description: "اشکال در درام پرینتر و شارژ کارتریج مجدد",
-              ipAddress: "192.168.30.100",
-              hardwareType: "HP LaserJet Enterprise M507dn"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: "dept-operations",
-      name: "Operations",
-      persianName: "بخش عملیاتی، کارگاه و ایمنی HSE",
-      type: "department",
-      dept: "Operations",
-      docCode: FIXED_DOC_CODE,
-      description: "کنترل بتن‌ریزی، ابنیه و پایش ترخیص متریال پروژه‌ها",
-      children: [
-        {
-          id: "ops-servers",
-          name: "Servers",
-          persianName: "سرورهای نظارت کارگاهی",
-          type: "category",
-          dept: "Operations",
-          docCode: FIXED_DOC_CODE,
-          children: [
-            {
-              id: "OPS-SRV-TELE",
-              name: "OPS-SRV-TELE",
-              persianName: "سرور پایش و تله‌متری سیلوها",
-              type: "system",
-              dept: "Operations",
-              status: "active",
-              docCode: FIXED_DOC_CODE,
-              description: "سنجش لحظه‌ای دما، رطوبت و باسکول الکترونیکی فولادها",
-              ipAddress: "192.168.40.10",
-              hardwareType: "Advantech Rackmount Industrial PC"
-            }
-          ]
-        },
-        {
-          id: "ops-workstations",
-          name: "Workstations",
-          persianName: "سیستم‌های مهندسی و نقشه‌کشی",
-          type: "category",
-          dept: "Operations",
-          docCode: FIXED_DOC_CODE,
-          children: [
-            {
-              id: "OPS-WRK-ENG1",
-              name: "OPS-WRK-ENG1",
-              persianName: "سیستم مهندس ناظر و اتوکد کارگاهی",
-              type: "system",
-              dept: "Operations",
-              status: "active",
-              docCode: FIXED_DOC_CODE,
-              description: "بررسی نقشه‌های شاپ دراوینگ کارگاهی پروژه",
-              ipAddress: "192.168.40.50",
-              hardwareType: "ASUS Workstation - RTX 3060 GPU"
-            },
-            {
-              id: "OPS-WRK-SITE2",
-              name: "OPS-WRK-SITE2",
-              persianName: "رایانه دفتری بخش متریال و انبار پای کار",
-              type: "system",
-              dept: "Operations",
-              status: "maintenance",
-              docCode: FIXED_DOC_CODE,
-              description: "رفع عیب نویز شدید فن پردازنده و منبع تغذیه کیس",
-              ipAddress: "192.168.40.52",
-              hardwareType: "Intel Core i5 - 8GB RAM"
-            }
-          ]
-        },
-        {
-          id: "ops-network",
-          name: "Network & Security",
-          persianName: "امنیت سخت‌افزاری و دوربین کارگاه",
-          type: "category",
-          dept: "Operations",
-          docCode: FIXED_DOC_CODE,
-          children: [
-            {
-              id: "OPS-NET-SW24",
-              name: "OPS-NET-SW24",
-              persianName: "سوئیچ صنعتی ۲۴ پورت کارگاهی",
-              type: "system",
-              dept: "Operations",
-              status: "active",
-              docCode: FIXED_DOC_CODE,
-              description: "توزیع کابل‌کشی پیرامونی و دکل‌های رادیویی کارگاه",
-              ipAddress: "192.168.40.5",
-              hardwareType: "Cisco Industrial Ethernet IE-3000"
-            },
-            {
-              id: "OPS-NET-CCTV-REC",
-              name: "OPS-NET-CCTV-REC",
-              persianName: "دستگاه ضبط تصویر NVR حراست",
-              type: "system",
-              dept: "Operations",
-              status: "active",
-              docCode: FIXED_DOC_CODE,
-              description: "ذخیره تصاویر ۶۰ روزه زوم روی سازه‌ها و خروجی انبار",
-              ipAddress: "192.168.40.80",
-              hardwareType: "Hikvision NVR 32-Channel"
-            }
-          ]
-        }
-      ]
-    }
-  ]
-};
 
 // Styling Configuration per department type
 const colors = {
@@ -430,12 +70,26 @@ const colors = {
   }
 };
 
-export default function SystemsTreeTab() {
+interface SystemsTreeTabProps {
+  personnel: Personnel[];
+  cases: Case[];
+  monitors: Monitor[];
+  printers: Printer[];
+  mice?: Mouse[];
+  keyboards?: Keyboard[];
+}
+
+export default function SystemsTreeTab({
+  personnel,
+  cases,
+  monitors,
+  printers,
+  mice = [],
+  keyboards = []
+}: SystemsTreeTabProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   
-  // State for collapsible tree data
-  const [treeData, setTreeData] = useState<CustomTreeNode>(initialTreeData);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedNode, setSelectedNode] = useState<CustomTreeNode | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'maintenance' | 'offline'>('all');
@@ -447,7 +101,287 @@ export default function SystemsTreeTab() {
   // Expand/Collapse state trackers
   const [collapsedNodes, setCollapsedNodes] = useState<Record<string, boolean>>({});
 
-  // Flat systems list extractor for search & stats calculation
+  // Map status helper: 'working' | 'repair' | 'retired' -> 'active' | 'maintenance' | 'offline'
+  const mapStatus = (status?: 'working' | 'repair' | 'retired' | string): 'active' | 'maintenance' | 'offline' => {
+    if (status === 'working') return 'active';
+    if (status === 'repair') return 'maintenance';
+    if (status === 'retired') return 'offline';
+    return 'active';
+  };
+
+  // Map department helper for visual themes
+  const getDeptKey = (dept?: string): 'IT' | 'Finance' | 'HR' | 'Operations' | 'root' => {
+    if (!dept) return 'root';
+    const d = dept.toLowerCase();
+    if (d.includes('فناوری') || d.includes('آی') || d.includes('it') || d.includes('ict')) return 'IT';
+    if (d.includes('مالی') || d.includes('حساب')) return 'Finance';
+    if (d.includes('اداری') || d.includes('منابع') || d.includes('hr')) return 'HR';
+    if (d.includes('عملیات' ) || d.includes('کارگاه') || d.includes('مهندسی') || d.includes('فنی') || d.includes('پروژه')) return 'Operations';
+    return 'IT';
+  };
+
+  // Dynamically Build Hierarchical Tree strictly from user's current DB
+  const dynamicTreeData = useMemo<CustomTreeNode>(() => {
+    const root: CustomTreeNode = {
+      id: "root-origin",
+      name: "Omran Azarestan",
+      persianName: "شرکت عمران آذرستان (اداری و کارگاهی)",
+      type: "root",
+      dept: "root",
+      docCode: FIXED_DOC_CODE,
+      description: "کلان‌سیستم توزیع سخت‌افزارها و سامانه‌های سازمان بر اساس واحد خدمتی (دپارتمان) و محل استقرار",
+      children: []
+    };
+
+    // Group personnel by department and location
+    const deptMap: Record<string, Record<string, Personnel[]>> = {};
+
+    personnel.forEach(p => {
+      const d = p.department || "سایر بخش‌ها";
+      const l = p.location || "نامشخص";
+      if (!deptMap[d]) {
+        deptMap[d] = {};
+      }
+      if (!deptMap[d][l]) {
+        deptMap[d][l] = [];
+      }
+      deptMap[d][l].push(p);
+    });
+
+    const deptNodes: CustomTreeNode[] = [];
+
+    // Map registered departments
+    Object.entries(deptMap).forEach(([deptName, locs]) => {
+      const deptKey = getDeptKey(deptName);
+      const deptNode: CustomTreeNode = {
+        id: `dept-${deptName}`,
+        name: deptName,
+        persianName: `واحد ${deptName}`,
+        type: "department",
+        dept: deptKey,
+        docCode: FIXED_DOC_CODE,
+        description: `تجهیزات و پرسنل متعلق به واحد ${deptName}`,
+        children: []
+      };
+
+      const locNodes: CustomTreeNode[] = [];
+
+      Object.entries(locs).forEach(([locName, persList]) => {
+        const locNode: CustomTreeNode = {
+          id: `loc-${deptName}-${locName}`,
+          name: locName,
+          persianName: `موقعیت: ${locName}`,
+          type: "category",
+          dept: deptKey,
+          docCode: FIXED_DOC_CODE,
+          children: []
+        };
+
+        const persNodes: CustomTreeNode[] = [];
+
+        persList.forEach(p => {
+          const persNode: CustomTreeNode = {
+            id: `p-${p.code}`,
+            name: p.code,
+            persianName: `${p.name} (${p.title || 'کارمند'})`,
+            type: "category",
+            dept: deptKey,
+            docCode: FIXED_DOC_CODE,
+            children: []
+          };
+
+          const assignedEquip: CustomTreeNode[] = [];
+
+          // Cases
+          cases.filter(c => c.assignedTo === p.code).forEach(c => {
+            assignedEquip.push({
+              id: `case-${c.code}`,
+              name: c.code,
+              persianName: `کیس: ${c.motherboard || 'مادربرد'} / CPU: ${c.cpu || 'پردازنده'}`,
+              type: "system",
+              dept: deptKey,
+              docCode: FIXED_DOC_CODE,
+              status: mapStatus(c.status),
+              description: `رم: ${c.ramQty || '8GB'} ${c.ramType || 'DDR4'} / گرافیک: ${c.vga || 'Onboard'}`
+            });
+          });
+
+          // Monitors
+          monitors.filter(m => m.assignedTo === p.code).forEach(m => {
+            assignedEquip.push({
+              id: `monitor-${m.code}`,
+              name: m.code,
+              persianName: `مانیتور: ${m.model}`,
+              type: "system",
+              dept: deptKey,
+              docCode: FIXED_DOC_CODE,
+              status: mapStatus(m.status),
+              description: m.description || "سالم و آماده به کار"
+            });
+          });
+
+          // Printers
+          printers.filter(pr => pr.assignedTo === p.code).forEach(pr => {
+            assignedEquip.push({
+              id: `printer-${pr.code}`,
+              name: pr.code,
+              persianName: `چاپگر: ${pr.model}`,
+              type: "system",
+              dept: deptKey,
+              docCode: FIXED_DOC_CODE,
+              status: mapStatus(pr.status),
+              description: pr.description || "سالم و متصل به شبکه"
+            });
+          });
+
+          // Keyboards
+          keyboards.filter(k => k.assignedTo === p.code).forEach(k => {
+            assignedEquip.push({
+              id: `keyboard-${k.code}`,
+              name: k.code,
+              persianName: `کیبورد: ${k.model}`,
+              type: "system",
+              dept: deptKey,
+              docCode: FIXED_DOC_CODE,
+              status: mapStatus(k.status),
+              description: k.description || "سالم و فعال"
+            });
+          });
+
+          // Mice
+          mice.filter(m => m.assignedTo === p.code).forEach(m => {
+            assignedEquip.push({
+              id: `mouse-${m.code}`,
+              name: m.code,
+              persianName: `ماوس: ${m.model}`,
+              type: "system",
+              dept: deptKey,
+              docCode: FIXED_DOC_CODE,
+              status: mapStatus(m.status),
+              description: m.description || "سالم و فعال"
+            });
+          });
+
+          if (assignedEquip.length > 0) {
+            persNode.children = assignedEquip;
+            persNodes.push(persNode);
+          }
+        });
+
+        if (persNodes.length > 0) {
+          locNode.children = persNodes;
+          locNodes.push(locNode);
+        }
+      });
+
+      if (locNodes.length > 0) {
+        deptNode.children = locNodes;
+        deptNodes.push(deptNode);
+      }
+    });
+
+    // 2. Unassigned Equipment / Warehouse Node
+    const warehouseNode: CustomTreeNode = {
+      id: "dept-warehouse",
+      name: "Warehouse",
+      persianName: "انبار مرکزی و تجهیزات مازاد",
+      type: "department",
+      dept: "IT",
+      docCode: FIXED_DOC_CODE,
+      description: "تجهیزات بدون تخصیص یا دپو شده در انبار شرکت",
+      children: []
+    };
+
+    const warehouseLocNode: CustomTreeNode = {
+      id: "loc-warehouse-main",
+      name: "Warehouse Main",
+      persianName: "موقعیت: انبار بزرگ شرکت",
+      type: "category",
+      dept: "IT",
+      docCode: FIXED_DOC_CODE,
+      children: []
+    };
+
+    const warehouseEquip: CustomTreeNode[] = [];
+
+    cases.filter(c => !c.assignedTo).forEach(c => {
+      warehouseEquip.push({
+        id: `case-${c.code}`,
+        name: c.code,
+        persianName: `کیس انبار: ${c.motherboard || 'مادربرد'} / CPU: ${c.cpu || 'پردازنده'}`,
+        type: "system",
+        dept: "IT",
+        docCode: FIXED_DOC_CODE,
+        status: mapStatus(c.status),
+        description: `رم: ${c.ramQty || '8GB'} ${c.ramType || 'DDR4'} / گرافیک: ${c.vga || 'Onboard'}`
+      });
+    });
+
+    monitors.filter(m => !m.assignedTo).forEach(m => {
+      warehouseEquip.push({
+        id: `monitor-${m.code}`,
+        name: m.code,
+        persianName: `مانیتور انبار: ${m.model}`,
+        type: "system",
+        dept: "IT",
+        docCode: FIXED_DOC_CODE,
+        status: mapStatus(m.status),
+        description: "تحویل انبار"
+      });
+    });
+
+    printers.filter(pr => !pr.assignedTo).forEach(pr => {
+      warehouseEquip.push({
+        id: `printer-${pr.code}`,
+        name: pr.code,
+        persianName: `چاپگر انبار: ${pr.model}`,
+        type: "system",
+        dept: "IT",
+        docCode: FIXED_DOC_CODE,
+        status: mapStatus(pr.status),
+        description: "تحویل انبار"
+      });
+    });
+
+    keyboards.filter(k => !k.assignedTo).forEach(k => {
+      warehouseEquip.push({
+        id: `keyboard-${k.code}`,
+        name: k.code,
+        persianName: `کیبورد انبار: ${k.model}`,
+        type: "system",
+        dept: "IT",
+        docCode: FIXED_DOC_CODE,
+        status: mapStatus(k.status),
+        description: "تحویل انبار"
+      });
+    });
+
+    mice.filter(m => !m.assignedTo).forEach(m => {
+      warehouseEquip.push({
+        id: `mouse-${m.code}`,
+        name: m.code,
+        persianName: `ماوس انبار: ${m.model}`,
+        type: "system",
+        dept: "IT",
+        docCode: FIXED_DOC_CODE,
+        status: mapStatus(m.status),
+        description: "تحویل انبار"
+      });
+    });
+
+    if (warehouseEquip.length > 0) {
+      warehouseLocNode.children = warehouseEquip;
+      warehouseNode.children = [warehouseLocNode];
+      deptNodes.push(warehouseNode);
+    }
+
+    root.children = deptNodes;
+    return root;
+  }, [personnel, cases, monitors, printers, mice, keyboards]);
+
+  const treeData = dynamicTreeData;
+
+  // Flat systems list extractor for search & stats calculation based on dynamic tree
   const allSystemsFlat = useMemo(() => {
     const list: CustomTreeNode[] = [];
     const recurse = (node: CustomTreeNode) => {
@@ -457,9 +391,9 @@ export default function SystemsTreeTab() {
       if (node.children) node.children.forEach(recurse);
       if (node._children) node._children.forEach(recurse);
     };
-    recurse(initialTreeData);
+    recurse(treeData);
     return list;
-  }, []);
+  }, [treeData]);
 
   // System Stats calculations
   const stats = useMemo(() => {
@@ -487,7 +421,7 @@ export default function SystemsTreeTab() {
       const svg = d3.select(svgRef.current);
       if (zoomBehaviorRef.current) {
         svg.transition().duration(600).call(
-          zoomBehaviorRef.current.transform, d3.zoomIdentity.translate(80, 280).scale(0.8)
+          zoomBehaviorRef.current.transform, d3.zoomIdentity.translate(80, 285).scale(0.8)
         );
       }
     }
@@ -570,16 +504,15 @@ export default function SystemsTreeTab() {
     zoomBehaviorRef.current = zoom;
 
     // Default translate coordinate to look nice in horizontal layout
-    // We want the root on the left or structured left-to-right nicely
     svg.call(zoom.transform, d3.zoomIdentity.translate(80, 240).scale(0.8));
 
     // Create D3 Hierarchical layouts
     const hierarchyRoot = d3.hierarchy<CustomTreeNode>(filteredRootData);
     
-    // Horizontal spacing: root nodes get more horizontal step
+    // Horizontal spacing layout with excellent margins to prevent overlaps
     const treeLayout = d3.tree<CustomTreeNode>()
       .size([height - 120, width - 360])
-      .nodeSize([84, 250]); // Spacing bounds [nodeHeight, nodeWidth]
+      .nodeSize([96, 280]); 
 
     treeLayout(hierarchyRoot);
 
@@ -598,7 +531,6 @@ export default function SystemsTreeTab() {
       .attr('d', linkGenerator)
       .attr('fill', 'none')
       .attr('stroke', (d) => {
-        // Source/Target specific color
         const targetDept = d.target.data.dept || 'root';
         return colors[targetDept as keyof typeof colors]?.accent || '#cbd5e1';
       })
@@ -621,7 +553,7 @@ export default function SystemsTreeTab() {
       .attr('transform', d => `translate(${d.y},${d.x})`)
       .style('cursor', 'pointer');
 
-    // Node container visual cards (Faking HTML card via SVG elements)
+    // Node container visual cards with all texts perfectly centered inside boxes
     node.each(function (d) {
       const g = d3.select(this);
       const isSystem = d.data.type === 'system';
@@ -632,7 +564,6 @@ export default function SystemsTreeTab() {
       const deptKey = (d.data.dept || 'root') as keyof typeof colors;
       const themeColors = colors[deptKey] || colors.root;
       
-      // Highlight check (Search & Status)
       const isMatchingSearch = searchQuery ? 
         d.data.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
         d.data.persianName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -640,25 +571,25 @@ export default function SystemsTreeTab() {
 
       const isSelected = selectedNode?.id === d.data.id;
 
-      // Draw outer glowing borders for system nodes with pulse or highlight
+      // Base Node Cards rectangle dimensions (wider, taller box guarantees space)
+      const cardWidth = isSystem ? 230 : (isRoot ? 250 : (isDept ? 210 : 190));
+      const cardHeight = isSystem ? 70 : (isRoot ? 58 : (isDept ? 52 : 48));
+      const rxVal = isSystem ? 8 : (isRoot ? 10 : 6);
+
+      // Draw outer glowing borders for highlight
       if (isMatchingSearch || isSelected) {
         g.append('rect')
-          .attr('x', -102)
-          .attr('y', -32)
-          .attr('width', 204)
-          .attr('height', 64)
-          .attr('rx', 12)
+          .attr('x', -cardWidth / 2 - 4)
+          .attr('y', -cardHeight / 2 - 4)
+          .attr('width', cardWidth + 8)
+          .attr('height', cardHeight + 8)
+          .attr('rx', rxVal + 4)
           .attr('fill', 'none')
           .attr('stroke', isMatchingSearch ? '#10b981' : themeColors.accent)
-          .attr('stroke-width', '4px')
+          .attr('stroke-width', '3px')
           .attr('class', 'animate-pulse')
-          .style('filter', 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.6))');
+          .style('filter', 'drop-shadow(0 0 6px rgba(16, 185, 129, 0.4))');
       }
-
-      // Base Node Cards rectangle dimensions
-      const cardWidth = isSystem ? 190 : (isRoot ? 230 : (isDept ? 190 : 160));
-      const cardHeight = isSystem ? 52 : (isRoot ? 50 : 42);
-      const rxVal = isSystem ? 8 : (isRoot ? 10 : 6);
 
       // Node background rect
       g.append('rect')
@@ -668,15 +599,14 @@ export default function SystemsTreeTab() {
         .attr('height', cardHeight)
         .attr('rx', rxVal)
         .attr('fill', () => {
-          // Status styled system bg
           if (isSystem) {
-            if (d.data.status === 'active') return '#f0fdf4'; // Light green
-            if (d.data.status === 'maintenance') return '#fffbeb'; // Light amber
-            if (d.data.status === 'offline') return '#fef2f2'; // Light red
+            if (d.data.status === 'active') return '#f0fdf4'; 
+            if (d.data.status === 'maintenance') return '#fffbeb'; 
+            if (d.data.status === 'offline') return '#fef2f2'; 
           }
-          if (isDept) return '#eff6ff'; // Light blue
-          if (isRoot) return '#f5f3ff'; // Light purple
-          return '#f8fafc'; // Slate 50
+          if (isDept) return '#eff6ff'; 
+          if (isRoot) return '#f5f3ff'; 
+          return '#f8fafc'; 
         })
         .attr('stroke', () => {
           if (isSystem) {
@@ -688,99 +618,146 @@ export default function SystemsTreeTab() {
         })
         .attr('stroke-width', isSelected ? '2.5px' : '1.5px');
 
-      // Status Indicator Pill for systems (Small circle on the side)
+      // Centered Text Rendering Engine for perfect centering inside boxes
       if (isSystem) {
+        // Status circle indicator placed at the top-left corner
         let statusColor = '#10b981';
         if (d.data.status === 'maintenance') statusColor = '#f59e0b';
         if (d.data.status === 'offline') statusColor = '#ef4444';
 
         g.append('circle')
           .attr('cx', -cardWidth / 2 + 12)
-          .attr('cy', 0)
-          .attr('r', 5)
+          .attr('cy', -cardHeight / 2 + 11)
+          .attr('r', 4.5)
           .attr('fill', statusColor);
-        
-        // Pulser for active systems
+
         if (d.data.status === 'active') {
           g.append('circle')
             .attr('cx', -cardWidth / 2 + 12)
-            .attr('cy', 0)
-            .attr('r', 8)
+            .attr('cy', -cardHeight / 2 + 11)
+            .attr('r', 7.5)
             .attr('fill', 'none')
             .attr('stroke', '#10b981')
             .attr('stroke-width', '1px')
             .attr('class', 'animate-ping')
-            .style('opacity', 0.35);
-        }
-      }
-
-      // 🩺 Document Code Label requested by user: Code "37-FO-IT-01-01" as a fixed label
-      g.append('text')
-        .attr('x', cardWidth / 2 - 8)
-        .attr('y', cardHeight / 2 - 4)
-        .attr('text-anchor', 'end')
-        .attr('fill', '#64748b')
-        .attr('font-size', '6.5px')
-        .attr('font-family', 'monospace')
-        .attr('font-weight', 'medium')
-        .text(d.data.docCode);
-
-      // System / Group Names Text Elements
-      // Name
-      g.append('text')
-        .attr('x', isSystem ? -cardWidth / 2 + 25 : 0)
-        .attr('y', isSystem ? -4 : (isCat ? -2 : 0))
-        .attr('text-anchor', isSystem ? 'start' : 'middle')
-        .attr('fill', '#0f172a')
-        .attr('font-weight', isRoot || isDept ? '900' : '700')
-        .attr('font-size', isRoot ? '11px' : (isDept ? '10px' : '9px'))
-        .attr('font-family', 'sans-serif')
-        .text(d.data.persianName);
-
-      // System ID / Technical Label
-      if (isSystem) {
-        g.append('text')
-          .attr('x', -cardWidth / 2 + 25)
-          .attr('y', 11)
-          .attr('text-anchor', 'start')
-          .attr('fill', '#475569')
-          .attr('font-family', 'monospace')
-          .attr('font-size', '8px')
-          .attr('font-weight', 'black')
-          .text(d.data.name);
-
-        // Status Badge text
-        let statusText = '🟢 فعال';
-        let statusColor = '#047857';
-        if (d.data.status === 'maintenance') {
-          statusText = '🟡 تعمیرات';
-          statusColor = '#b45309';
-        } else if (d.data.status === 'offline') {
-          statusText = '🔴 خاموش';
-          statusColor = '#b91c1c';
+            .style('opacity', 0.4);
         }
 
+        // Line 1: Centered Equipment Display Name (specs)
         g.append('text')
-          .attr('x', cardWidth / 2 - 8)
-          .attr('y', -3)
-          .attr('text-anchor', 'end')
-          .attr('fill', statusColor)
+          .attr('x', 0)
+          .attr('y', -11)
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'middle')
+          .attr('fill', '#0f172a')
           .attr('font-weight', 'bold')
-          .attr('font-size', '7.5px')
-          .text(statusText);
-      } else {
-        // Group secondary labels e.g. children counts
-        const childCount = (d.data.children || d.data._children || []).length;
-        if (childCount > 0 && !isRoot) {
+          .attr('font-size', '9.5px')
+          .attr('font-family', 'sans-serif')
+          .text(d.data.persianName);
+
+        // Line 2: Centered Code & Status Info
+        let statusText = 'فعال';
+        if (d.data.status === 'maintenance') {
+          statusText = 'تعمیرات';
+        } else if (d.data.status === 'offline') {
+          statusText = 'خاموش';
+        }
+
+        g.append('text')
+          .attr('x', 0)
+          .attr('y', 3)
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'middle')
+          .attr('fill', '#475569')
+          .attr('font-family', 'sans-serif')
+          .attr('font-size', '8.5px')
+          .attr('font-weight', 'bold')
+          .text(`${d.data.name} (${statusText})`);
+
+        // Line 3: Small Centered description details
+        if (d.data.description) {
           g.append('text')
             .attr('x', 0)
-            .attr('y', isCat ? 11 : 13)
+            .attr('y', 16)
             .attr('text-anchor', 'middle')
+            .attr('dominant-baseline', 'middle')
             .attr('fill', '#64748b')
             .attr('font-size', '7.5px')
-            .attr('font-weight', 'semibold')
-            .text(`(تعداد: ${childCount} آیتم)`);
+            .attr('font-weight', 'medium')
+            .text(d.data.description);
         }
+
+        // Line 4: Symmetrically centered Document Reference Code
+        g.append('text')
+          .attr('x', 0)
+          .attr('y', cardHeight / 2 - 5)
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'middle')
+          .attr('fill', '#cbd5e1')
+          .attr('font-size', '6.5px')
+          .attr('font-family', 'monospace')
+          .attr('font-weight', 'semibold')
+          .text(d.data.docCode);
+
+      } else {
+        // Non-system nodes: Center everything beautifully
+        // Line 1: Primary Centered Persian Name
+        g.append('text')
+          .attr('x', 0)
+          .attr('y', isRoot ? -8 : -5)
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'middle')
+          .attr('fill', isRoot ? '#1e1b4b' : '#0f172a')
+          .attr('font-weight', isRoot || isDept ? 'bold' : '600')
+          .attr('font-size', isRoot ? '11px' : (isDept ? '10px' : '9.5px'))
+          .attr('font-family', 'sans-serif')
+          .text(d.data.persianName);
+
+        // Line 2: Children counts / Description centered horizontally
+        const childCount = (d.data.children || d.data._children || []).length;
+        if (isRoot) {
+          g.append('text')
+            .attr('x', 0)
+            .attr('y', 6)
+            .attr('text-anchor', 'middle')
+            .attr('dominant-baseline', 'middle')
+            .attr('fill', '#4f46e5')
+            .attr('font-size', '8.5px')
+            .attr('font-weight', 'semibold')
+            .text("نمودار سلسله‌مراتب سازمانی اموال");
+        } else if (childCount > 0) {
+          g.append('text')
+            .attr('x', 0)
+            .attr('y', isCat ? 8 : 10)
+            .attr('text-anchor', 'middle')
+            .attr('dominant-baseline', 'middle')
+            .attr('fill', '#64748b')
+            .attr('font-size', '8px')
+            .attr('font-weight', 'semibold')
+            .text(`(شامل: ${childCount} آیتم فعال)`);
+        } else {
+          // Empty state placeholder
+          g.append('text')
+            .attr('x', 0)
+            .attr('y', 10)
+            .attr('text-anchor', 'middle')
+            .attr('dominant-baseline', 'middle')
+            .attr('fill', '#94a3b8')
+            .attr('font-size', '8px')
+            .text("(فاقد تجهیز فعلی)");
+        }
+
+        // Line 3: Standard Ref Doc Code aligned middle inside the box
+        g.append('text')
+          .attr('x', 0)
+          .attr('y', cardHeight / 2 - 5)
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'middle')
+          .attr('fill', '#cbd5e1')
+          .attr('font-size', '6.5px')
+          .attr('font-family', 'monospace')
+          .attr('font-weight', 'semibold')
+          .text(d.data.docCode);
       }
 
       // Plus/Minus Collapsible Circle on Nodes with children
@@ -792,7 +769,7 @@ export default function SystemsTreeTab() {
           .attr('transform', `translate(${cardWidth / 2}, 0)`);
 
         helperGroup.append('circle')
-          .attr('r', 6)
+          .attr('r', 6.5)
           .attr('fill', '#ffffff')
           .attr('stroke', themeColors.accent)
           .attr('stroke-width', '1.5px');
@@ -800,7 +777,7 @@ export default function SystemsTreeTab() {
         helperGroup.append('text')
           .attr('text-anchor', 'middle')
           .attr('dominant-baseline', 'central')
-          .attr('font-size', '9px')
+          .attr('font-size', '9.5px')
           .attr('fill', themeColors.accent)
           .attr('font-weight', 'black')
           .text(isSelfCollapsed ? '+' : '-');
@@ -840,7 +817,7 @@ export default function SystemsTreeTab() {
             <span>نمودار درختی تعاملی توزیع سیستم‌های سازمانی</span>
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
-            پایش سلسله‌مراتب سیستم‌های سروری، کلاینت‌ها و سوئیچ‌های تفکیک شده عمران آذرستان به همراه کد مرجع ثابت سند
+            پایش سلسله‌مراتب زنده سیستم‌های سروری، کلاینت‌ها و سوئیچ‌های تفکیک شده بر اساس واحد خدمتی، محل استقرار و وضعیت سلامت زنده
           </p>
         </div>
 
@@ -854,19 +831,19 @@ export default function SystemsTreeTab() {
       {/* Systems Summary Statistics Widgets */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800 p-3 rounded-xl">
-          <span className="text-slate-500 dark:text-slate-400 text-[11px] block font-bold">کل تجهیزات پایش شده</span>
+          <span className="text-slate-500 dark:text-slate-400 text-[11px] block font-bold">کل تجهیزات پایه‌ریزی شده</span>
           <span className="text-2xl font-black text-slate-800 dark:text-slate-100 font-mono mt-0.5 block">{stats.total}</span>
         </div>
         <div className="bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 p-3 rounded-xl">
-          <span className="text-emerald-600 dark:text-emerald-400 text-[11px] block font-bold">🟢 روشن و در مدار (Active)</span>
+          <span className="text-emerald-600 dark:text-emerald-400 text-[11px] block font-bold">🟢 روشن و در مدار (Working)</span>
           <span className="text-2xl font-black text-emerald-700 dark:text-emerald-300 font-mono mt-0.5 block">{stats.active}</span>
         </div>
         <div className="bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/40 p-3 rounded-xl">
-          <span className="text-amber-600 dark:text-amber-400 text-[11px] block font-bold">🟡 در حال اورهال / سرویس</span>
+          <span className="text-amber-600 dark:text-amber-400 text-[11px] block font-bold">🟡 در حال اورهال / تعمیر</span>
           <span className="text-2xl font-black text-amber-700 dark:text-amber-300 font-mono mt-0.5 block">{stats.maintenance}</span>
         </div>
         <div className="bg-red-50/50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/40 p-3 rounded-xl">
-          <span className="text-red-600 dark:text-red-400 text-[11px] block font-bold">🔴 خارج از مدار (Offline)</span>
+          <span className="text-red-600 dark:text-red-400 text-[11px] block font-bold">🔴 خارج از مدار (Retired)</span>
           <span className="text-2xl font-black text-red-700 dark:text-red-300 font-mono mt-0.5 block">{stats.offline}</span>
         </div>
       </div>
@@ -876,13 +853,13 @@ export default function SystemsTreeTab() {
         
         {/* Search Input Filter */}
         <div className="w-full xl:max-w-md relative">
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">جستجو و ریملایتینگ تجهیزات در ساختار:</label>
+          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">جستجو و ریملایتینگ تجهیزات در ساختار درختی:</label>
           <div className="relative">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="مثلاً: IT-SRV یا سرور یا نقشه‌کشی..."
+              placeholder="مثلاً: کیس یا مانیتور یا نام پرسنل..."
               className="w-full text-right p-2.5 pl-9 pr-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm focus:border-blue-500 focus:outline-none dark:text-white"
             />
             <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
@@ -891,7 +868,7 @@ export default function SystemsTreeTab() {
 
         {/* Status Filters */}
         <div className="flex items-center gap-2 self-start xl:self-center flex-wrap">
-          <span className="text-xs font-bold text-slate-600 dark:text-slate-400">فیلتر وضعیت سلامت:</span>
+          <span className="text-xs font-bold text-slate-600 dark:text-slate-400">فیلتر وضعیت کاربری:</span>
           {(['all', 'active', 'maintenance', 'offline'] as const).map((filter) => (
             <button
               key={filter}
@@ -903,9 +880,9 @@ export default function SystemsTreeTab() {
               }`}
             >
               {filter === 'all' && '🌐 نمایش همه'}
-              {filter === 'active' && '🟢 فقط روشن'}
+              {filter === 'active' && '🟢 فقط سالم'}
               {filter === 'maintenance' && '🟡 فقط تعمیرات'}
-              {filter === 'offline' && '🔴 فقط خاموش'}
+              {filter === 'offline' && '🔴 فقط اسقاط'}
             </button>
           ))}
         </div>
@@ -948,15 +925,15 @@ export default function SystemsTreeTab() {
             <span className="font-bold text-slate-800 dark:text-slate-200 block border-b pb-1">راهنما و فیلتربندی رنگ‌ها:</span>
             <div className="flex items-center gap-1.5 text-indigo-700 dark:text-indigo-400">
               <span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
-              <span>عمران آذرستان (کل دپارتمان‌ها)</span>
+              <span>سامانه مرکزی سازمان (عمران آذرستان)</span>
             </div>
             <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-              <span>آی‌تی و مرکز ارتباطات (ICT)</span>
+              <span>واحدهای فناوری اطلاعات و ارتباطات</span>
             </div>
             <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-              <span>دپارتمان مالی و حسابرسی</span>
+              <span>دپارتمان مالی و حسابداری</span>
             </div>
             <div className="flex items-center gap-1.5 text-purple-700 dark:text-purple-400">
               <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
@@ -964,9 +941,9 @@ export default function SystemsTreeTab() {
             </div>
             <div className="flex items-center gap-1.5 text-sky-700 dark:text-sky-400">
               <span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
-              <span>عملیات عمرانی و دوربین پیشرفته</span>
+              <span>واحدهای فنی، کارگاهی و سایر بخش‌ها</span>
             </div>
-            <span className="text-[9px] text-slate-400 mt-1 block border-t pt-1">💡 جهت مشاهده جزییات یا بازبستن روی نودها کلیک فرمایید.</span>
+            <span className="text-[9px] text-slate-400 mt-1 block border-t pt-1">💡 جهت پایش جزییات یا بازبستن روی نودها کلیک فرمایید.</span>
           </div>
 
           {/* Scale HUD info */}
@@ -977,7 +954,7 @@ export default function SystemsTreeTab() {
           {/* The drawing box */}
           <div 
             ref={containerRef} 
-            className="w-full h-[580px] overflow-hidden"
+            className="w-full h-[580px] overflow-hidden bg-slate-50 dark:bg-slate-950"
             onClick={handleClearSelection}
           >
             <svg 
@@ -990,7 +967,7 @@ export default function SystemsTreeTab() {
         {/* Sidebar displaying details of selected node */}
         <div className="lg:col-span-1 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-slate-50/50 dark:bg-slate-800/40">
           <h3 className="text-xs font-bold text-slate-800 dark:text-slate-300 border-b pb-2 mb-3 flex items-center justify-between">
-            <span>🔍 جزییات و متادیتای سیستم انتخاب‌شده</span>
+            <span>🔍 جزییات و متادیتای تجهیز انتخاب‌شده</span>
             <span className="text-blue-500 block font-normal text-[10px]">کلیک کنید</span>
           </h3>
 
@@ -1001,15 +978,15 @@ export default function SystemsTreeTab() {
               <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
                 <div className="text-[10px] text-slate-400 font-bold uppercase mb-1">
                   {selectedNode.type === 'root' && '🏢 سامانه مرکزی سازمان'}
-                  {selectedNode.type === 'department' && '👥 دپارتمان بزرگ'}
-                  {selectedNode.type === 'category' && '📂 دسته بندی فرعی'}
+                  {selectedNode.type === 'department' && '👥 واحد بزرگ خدمتی'}
+                  {selectedNode.type === 'category' && '📂 رده یا موقعیت استقرار'}
                   {selectedNode.type === 'system' && '🖥️ تجهیز سخت‌افزاری فعال'}
                 </div>
                 <h4 className="text-sm font-black text-slate-900 dark:text-white leading-tight">
                   {selectedNode.persianName}
                 </h4>
                 <div className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 mt-1">
-                  id: {selectedNode.name}
+                  کد شناسایی: {selectedNode.name}
                 </div>
               </div>
 
@@ -1020,11 +997,11 @@ export default function SystemsTreeTab() {
                   selectedNode.status === 'maintenance' ? 'bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/20 dark:border-amber-900/40 dark:text-amber-400' :
                   'bg-red-50 border-red-200 text-red-800 dark:bg-red-950/20 dark:border-red-900/40 dark:text-red-400'
                 }`}>
-                  <span className="font-bold">وضعیت در ساختار درختی:</span>
+                  <span className="font-bold">وضعیت سلامت تجهیز:</span>
                   <span className="font-bold font-mono">
-                    {selectedNode.status === 'active' && '🟢 ACTIVE (فعال)'}
-                    {selectedNode.status === 'maintenance' && '🟡 MAINTENANCE (تعمیر)'}
-                    {selectedNode.status === 'offline' && '🔴 OFFLINE (خاموش)'}
+                    {selectedNode.status === 'active' && '🟢 WORKING (سالم)'}
+                    {selectedNode.status === 'maintenance' && '🟡 SERVICE (تعمیر)'}
+                    {selectedNode.status === 'offline' && '🔴 RETIRED (اسقاط)'}
                   </span>
                 </div>
               )}
@@ -1035,28 +1012,28 @@ export default function SystemsTreeTab() {
                 <span className="font-mono font-black text-slate-800 dark:text-slate-300 block select-all">
                   {selectedNode.docCode}
                 </span>
-                <span className="text-[9px] text-slate-400 font-medium block">ثبت شده تحت لایسنس بازاریابی سازمان</span>
+                <span className="text-[9px] text-slate-400 font-medium block">ثبت شده تحت قالب گزارش اموال کارگاهی</span>
               </div>
 
               {/* Metadata variables if System layout */}
               <div className="space-y-2.5 p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-xs">
                 {selectedNode.ipAddress && (
                   <div>
-                    <span className="text-slate-400 text-[10px] block">🌐 آدرس آی‌پی (IP Address):</span>
+                    <span className="text-slate-400 text-[10px] block">🌐 آدرس آی‌پی (IP):</span>
                     <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-xs">{selectedNode.ipAddress}</span>
                   </div>
                 )}
                 
                 {selectedNode.hardwareType && (
                   <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-400 text-[10px] block">📦 مدل و نام سخت‌افزار استاندارد:</span>
+                    <span className="text-slate-400 text-[10px] block">📦 رده سخت‌افزاری استاندارد:</span>
                     <span className="font-bold text-slate-700 dark:text-slate-300 text-xs">{selectedNode.hardwareType}</span>
                   </div>
                 )}
 
                 {selectedNode.description && (
                   <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-400 text-[10px] block">📝 نقش کاربردی در دیسپاچینگ:</span>
+                    <span className="text-slate-400 text-[10px] block">📝 مشخصات سیستم یا کاربری پرسنل:</span>
                     <span className="text-slate-600 dark:text-slate-400 text-xs font-semibold leading-normal block mt-0.5">
                       {selectedNode.description}
                     </span>
@@ -1065,7 +1042,7 @@ export default function SystemsTreeTab() {
               </div>
 
               <div className="text-[9px] text-slate-400 leading-relaxed text-center">
-                جهت بازیابی اطلاعات درختی اصلی، از فیلتر وضعیت در نوار بالایی استفاده کنید.
+                جهت فیلتر برحسب وضعیت‌های خاص، بر روی دکمه‌های کنترلی نوار بالایی بفشارید.
               </div>
 
             </div>
@@ -1073,7 +1050,7 @@ export default function SystemsTreeTab() {
             <div className="flex flex-col items-center justify-center p-8 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500">
               <span className="text-3xl mb-1.5 opacity-75">💬</span>
               <p className="text-xs font-semibold">هیچ آیتمی انتخاب نشده است.</p>
-              <p className="text-[10px] mt-1">جهت مشاهده متادیتا، آی‌پی پیوندی و شرح وظیفه، روی نودهای درختی دلخواه کلیک فرمایید.</p>
+              <p className="text-[10px] mt-1">جهت مشاهده کامل متادیتا، آی‌پی‌ها و مشخصات قطعات تجهیز، روی نودهای درختی کلیک کنید.</p>
             </div>
           )}
 

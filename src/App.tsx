@@ -969,7 +969,14 @@ export default function App() {
           )}
 
           {activeTab === 'systems-tree-tab' && (
-            <SystemsTreeTab />
+            <SystemsTreeTab 
+              personnel={personnel}
+              cases={cases}
+              monitors={monitors}
+              printers={printers}
+              mice={mice}
+              keyboards={keyboards}
+            />
           )}
 
           {activeTab === 'backup-tab' && (
