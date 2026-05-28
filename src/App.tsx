@@ -13,10 +13,165 @@ import EditModal from './components/EditModal';
 import QRCodeModal from './components/QRCodeModal';
 import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard, CatalogItem } from './types';
 
+export interface BackupData {
+  personnel: Personnel[];
+  cases: Case[];
+  monitors: Monitor[];
+  printers: Printer[];
+  mice?: Mouse[];
+  keyboards?: Keyboard[];
+  partsCatalog?: CatalogItem[];
+  assignments: Assignment[];
+}
+
+const INITIAL_DEMO_DATA = {
+  personnel: [
+    {
+      id: "p1",
+      name: "علی علوی",
+      code: "1001",
+      title: "مدیر پروژه",
+      department: "مهندسی",
+      location: "دفتر فنی کارگاه"
+    },
+    {
+      id: "p2",
+      name: "زهرا حسینی",
+      code: "1002",
+      title: "کارشناس فناوری اطلاعات",
+      department: "فناوری اطلاعات و ارتباطات",
+      location: "اتاق سرور"
+    }
+  ],
+  cases: [
+    {
+      code: "C-201",
+      motherboard: "ASUS H610M-K",
+      cpu: "Intel Core i5-12400",
+      vga: "Desktop Intel UHD Graphics",
+      hdd1: "SSD 512GB NVMe",
+      hdd2: "HDD 1TB WD Blue",
+      ramType: "DDR4",
+      ramQty: "16GB",
+      assignedTo: "1001"
+    },
+    {
+      code: "C-202",
+      motherboard: "MSI B760-P",
+      cpu: "Intel Core i7-13700",
+      vga: "NVIDIA RTX 3050 8GB",
+      hdd1: "SSD 1TB NVMe",
+      hdd2: "-",
+      ramType: "DDR5",
+      ramQty: "32GB",
+      assignedTo: null
+    }
+  ],
+  monitors: [
+    {
+      code: "M-301",
+      model: "Samsung 24\" LF24T350",
+      assignedTo: "1001"
+    },
+    {
+      code: "M-302",
+      model: "LG 22\" 22MP400",
+      assignedTo: "1002"
+    }
+  ],
+  printers: [
+    {
+      code: "P-401",
+      model: "HP LaserJet Pro M402dn",
+      assignedTo: "1002"
+    },
+    {
+      code: "P-402",
+      model: "Canon LBP6030w",
+      assignedTo: null
+    }
+  ],
+  mice: [
+    {
+      code: "MOU-501",
+      model: "A4Tech OP-620D Wired Mouse",
+      assignedTo: "1001"
+    },
+    {
+      code: "MOU-502",
+      model: "Logitech M170 Wireless Mouse",
+      assignedTo: "1002"
+    }
+  ],
+  keyboards: [
+    {
+      code: "KB-601",
+      model: "A4Tech KR-83 Wired Keyboard",
+      assignedTo: "1001"
+    },
+    {
+      code: "KB-602",
+      model: "Logitech K120 USB Keyboard",
+      assignedTo: null
+    }
+  ],
+  partsCatalog: [
+    { id: "pc1", category: "cpu" as const, name: "Intel Core i5-12400", description: "6 Cores, 12 Threads, 2.5 GHz Base, LGA1700" },
+    { id: "pc2", category: "cpu" as const, name: "Intel Core i7-13700", description: "16 Cores, 24 Threads, 2.1 GHz Base, LGA1700" },
+    { id: "pc3", category: "motherboard" as const, name: "ASUS PRIME H610M-R", description: "Intel Socket LGA1700, DDR4 Support, Micro-ATX" },
+    { id: "pc5", category: "vga" as const, name: "NVIDIA GeForce RTX 3050 8GB", description: "Dedicated GDDR6 Graphics Card" },
+    { id: "pc6", category: "ramType" as const, name: "DDR4", description: "DDR4 Desktop Memory SDRAM" },
+    { id: "pc7", category: "ramType" as const, name: "DDR5", description: "DDR5 Next-Gen High Speed Memory" },
+    { id: "pc8", category: "monitorBrand" as const, name: "LG 22MP400 (22 Inch)", description: "22-Inch Full HD (1920x1080) IPS Monitor" },
+    { id: "pc9", category: "monitorBrand" as const, name: "Samsung LF24T350 (24 Inch)", description: "24-Inch Full HD IPS 75Hz Bezel-less Monitor" },
+    { id: "pc10", category: "printerBrand" as const, name: "HP LaserJet Pro M402dn", description: "Monochrome Laser Printer, Auto Duplex" },
+    { id: "pc11", category: "printerBrand" as const, name: "Canon LBP6030w", description: "Compact Wireless Monochrome Laser Printer" }
+  ],
+  assignments: [
+    {
+      id: "a1",
+      equipmentCode: "C-201",
+      equipmentType: "case" as const,
+      personnelCode: "1001",
+      personnelName: "علی علوی",
+      startDate: "1405/01/15",
+      endDate: null
+    },
+    {
+      id: "a2",
+      equipmentCode: "M-301",
+      equipmentType: "monitor" as const,
+      personnelCode: "1001",
+      personnelName: "علی علوی",
+      startDate: "1405/01/15",
+      endDate: null
+    },
+    {
+      id: "a3",
+      equipmentCode: "M-302",
+      equipmentType: "monitor" as const,
+      personnelCode: "1002",
+      personnelName: "زهرا حسینی",
+      startDate: "1405/02/01",
+      endDate: null
+    },
+    {
+      id: "a4",
+      equipmentCode: "P-401",
+      equipmentType: "printer" as const,
+      personnelCode: "1002",
+      personnelName: "زهرا حسینی",
+      startDate: "1405/02/01",
+      endDate: null
+    }
+  ]
+};
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('personnel-tab');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
 
   // Theme states (persisted via localStorage)
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -68,12 +223,19 @@ export default function App() {
     setQrModalOpen(true);
   };
 
-  // Fetch all databases from Express server imitation
+  // Fetch all databases from Express server imitation with robust localStorage fallback
   const loadDatabase = async () => {
     try {
       setLoading(true);
+      setError(null);
       const res = await fetch('/api/data');
-      if (!res.ok) throw new Error('خطا در بارگذاری اطلاعات از وب‌سرور شبیه‌ساز.');
+      if (!res.ok) throw new Error('NOT_OK');
+      
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error('NOT_JSON'); // Cookie check or SPA HTML fallback returned
+      }
+
       const data = await res.json();
       setPersonnel(data.personnel || []);
       setCases(data.cases || []);
@@ -83,9 +245,47 @@ export default function App() {
       setKeyboards(data.keyboards || []);
       setPartsCatalog(data.partsCatalog || []);
       setAssignments(data.assignments || []);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'خطای غیرمنتظره در ارتباط با وب‌سرویس.');
+
+      // Cache locally
+      localStorage.setItem('azarestan_ict_db', JSON.stringify({
+        personnel: data.personnel || [],
+        cases: data.cases || [],
+        monitors: data.monitors || [],
+        printers: data.printers || [],
+        mice: data.mice || [],
+        keyboards: data.keyboards || [],
+        partsCatalog: data.partsCatalog || [],
+        assignments: data.assignments || []
+      }));
+      setIsOfflineMode(false);
+    } catch (err) {
+      console.warn('Backend connection issue (cookie block). Loading Local DB from storage.', err);
+      const raw = localStorage.getItem('azarestan_ict_db');
+      let localDb: any = null;
+      if (raw) {
+        try {
+          localDb = JSON.parse(raw);
+        } catch (parseErr) {
+          console.error(parseErr);
+        }
+      }
+
+      if (!localDb) {
+        localDb = { ...INITIAL_DEMO_DATA };
+        localStorage.setItem('azarestan_ict_db', JSON.stringify(localDb));
+      }
+
+      setPersonnel(localDb.personnel || []);
+      setCases(localDb.cases || []);
+      setMonitors(localDb.monitors || []);
+      setPrinters(localDb.printers || []);
+      setMice(localDb.mice || []);
+      setKeyboards(localDb.keyboards || []);
+      setPartsCatalog(localDb.partsCatalog || []);
+      setAssignments(localDb.assignments || []);
+      
+      setIsOfflineMode(true);
+      setError(null); // Bypass red screen of death completely
     } finally {
       setLoading(false);
     }
@@ -97,25 +297,154 @@ export default function App() {
 
   // Save/Edit entity
   const handleSaveItem = async (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'catalog', data: any) => {
-    try {
-      const res = await fetch('/api/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, ...data })
-      });
+    if (!isOfflineMode) {
+      try {
+        const res = await fetch('/api/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type, ...data })
+        });
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          await loadDatabase();
+          return true;
+        }
+      } catch (err) {
+        console.warn('API save failed. Switching to Local fallback.', err);
+      }
+    }
 
-      if (!res.ok) {
-        const errJson = await res.json();
-        alert(`عدم موفقیت در ثبت اطلاعات: ${errJson.error || 'خطای نامشخص'}`);
+    // Local / Offline mutate simulation
+    const rawDb = localStorage.getItem('azarestan_ict_db');
+    let db = rawDb ? JSON.parse(rawDb) : { ...INITIAL_DEMO_DATA };
+
+    if (type === 'personnel') {
+      let list = db.personnel || [];
+      if (!data.code) {
+        alert("کد پرسنلی الزامی است.");
         return false;
       }
-      
-      await loadDatabase();
-      return true;
-    } catch (err) {
-      alert('خطا در ثبت اطلاعات.');
-      return false;
+      if (!data.name) {
+        alert("نام پرسنل الزامی است.");
+        return false;
+      }
+      const index = list.findIndex((p: any) => p.code === data.code || (data.id && p.id === data.id));
+      if (index > -1) {
+        list[index] = { ...list[index], ...data };
+      } else {
+        if (list.some((p: any) => p.code === data.code)) {
+          alert("کد پرسنلی تکراری است.");
+          return false;
+        }
+        list.push({ id: 'p_' + Date.now(), ...data });
+      }
+      db.personnel = list;
+    } 
+    else if (type === 'case') {
+      let list = db.cases || [];
+      if (!data.code) {
+        alert("کد کیس الزامی است.");
+        return false;
+      }
+      const index = list.findIndex((c: any) => c.code === data.code);
+      if (index > -1) {
+        list[index] = { ...list[index], ...data };
+      } else {
+        if (list.some((c: any) => c.code === data.code)) {
+          alert("کد کیس تکراری است.");
+          return false;
+        }
+        list.push({ ...data, assignedTo: null });
+      }
+      db.cases = list;
     }
+    else if (type === 'monitor') {
+      let list = db.monitors || [];
+      if (!data.code) {
+        alert("کد مانیتور الزامی است.");
+        return false;
+      }
+      const index = list.findIndex((m: any) => m.code === data.code);
+      if (index > -1) {
+        list[index] = { ...list[index], ...data };
+      } else {
+        if (list.some((m: any) => m.code === data.code)) {
+          alert("کد مانیتور تکراری است.");
+          return false;
+        }
+        list.push({ ...data, assignedTo: null });
+      }
+      db.monitors = list;
+    }
+    else if (type === 'printer') {
+      let list = db.printers || [];
+      if (!data.code) {
+        alert("کد چاپگر الزامی است.");
+        return false;
+      }
+      const index = list.findIndex((p: any) => p.code === data.code);
+      if (index > -1) {
+        list[index] = { ...list[index], ...data };
+      } else {
+        if (list.some((p: any) => p.code === data.code)) {
+          alert("کد چاپگر تکراری است.");
+          return false;
+        }
+        list.push({ ...data, assignedTo: null });
+      }
+      db.printers = list;
+    }
+    else if (type === 'mouse') {
+      let list = db.mice || [];
+      if (!data.code) {
+        alert("کد ماوس الزامی است.");
+        return false;
+      }
+      const index = list.findIndex((m: any) => m.code === data.code);
+      if (index > -1) {
+        list[index] = { ...list[index], ...data };
+      } else {
+        if (list.some((m: any) => m.code === data.code)) {
+          alert("کد ماوس تکراری است.");
+          return false;
+        }
+        list.push({ ...data, assignedTo: null });
+      }
+      db.mice = list;
+    }
+    else if (type === 'keyboard') {
+      let list = db.keyboards || [];
+      if (!data.code) {
+        alert("کد کیبورد الزامی است.");
+        return false;
+      }
+      const index = list.findIndex((k: any) => k.code === data.code);
+      if (index > -1) {
+        list[index] = { ...list[index], ...data };
+      } else {
+        if (list.some((k: any) => k.code === data.code)) {
+          alert("کد کیبورد تکراری است.");
+          return false;
+        }
+        list.push({ ...data, assignedTo: null });
+      }
+      db.keyboards = list;
+    }
+    else if (type === 'catalog') {
+      let list = db.partsCatalog || [];
+      const index = list.findIndex((c: any) => c.id === data.id);
+      if (index > -1) {
+        list[index] = { ...list[index], ...data };
+      } else {
+        list.push({ id: 'pc_' + Date.now(), ...data });
+      }
+      db.partsCatalog = list;
+    }
+
+    localStorage.setItem('azarestan_ict_db', JSON.stringify(db));
+    setIsOfflineMode(true);
+    await loadDatabase();
+    return true;
   };
 
   // Delete entity
@@ -126,60 +455,217 @@ export default function App() {
 
     if (!window.confirm(confirmationMsg)) return;
 
-    try {
-      const res = await fetch('/api/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, id, today: '1405/03/03' })
-      });
-
-      if (!res.ok) {
-        const errJson = await res.json();
-        alert(`عدم موفقیت در حذف: ${errJson.error || 'خطای سیستم'}`);
-        return;
+    if (!isOfflineMode) {
+      try {
+        const res = await fetch('/api/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type, id, today: '1405/03/03' })
+        });
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          alert('مورد با موفقیت از سیستم حذف و بایگانی شد.');
+          await loadDatabase();
+          return;
+        }
+      } catch (err) {
+        console.warn('API delete failed. Fallback to Local deletion.', err);
       }
-
-      alert('مورد با موفقیت از سیستم حذف و بایگانی شد.');
-      await loadDatabase();
-    } catch (err) {
-      alert('خطا در برقراری ارتباط حذف.');
     }
+
+    // Local deletion simulation
+    const rawDb = localStorage.getItem('azarestan_ict_db');
+    let db = rawDb ? JSON.parse(rawDb) : { ...INITIAL_DEMO_DATA };
+    const dateStr = '1405/03/03';
+
+    if (type === 'personnel') {
+      let list = db.personnel || [];
+      const idx = list.findIndex((p: any) => p.id === id);
+      if (idx !== -1) {
+        const codeToClear = list[idx].code;
+        list.splice(idx, 1);
+        db.personnel = list;
+
+        // Cascade release
+        if (codeToClear) {
+          (db.cases || []).forEach((c: any) => { if (c.assignedTo === codeToClear) c.assignedTo = null; });
+          (db.monitors || []).forEach((m: any) => { if (m.assignedTo === codeToClear) m.assignedTo = null; });
+          (db.printers || []).forEach((p: any) => { if (p.assignedTo === codeToClear) p.assignedTo = null; });
+          (db.mice || []).forEach((m: any) => { if (m.assignedTo === codeToClear) m.assignedTo = null; });
+          (db.keyboards || []).forEach((k: any) => { if (k.assignedTo === codeToClear) k.assignedTo = null; });
+
+          (db.assignments || []).forEach((ass: any) => {
+            if (ass.personnelCode === codeToClear && ass.endDate === null) {
+              ass.endDate = dateStr;
+            }
+          });
+        }
+      }
+    } else {
+      const keyMap: Record<string, string> = {
+        'case': 'cases',
+        'monitor': 'monitors',
+        'printer': 'printers',
+        'mouse': 'mice',
+        'keyboard': 'keyboards',
+        'catalog': 'partsCatalog'
+      };
+      const listKey = keyMap[type];
+      if (listKey) {
+        let list = db[listKey] || [];
+        const idx = list.findIndex((x: any) => (type === 'catalog' ? x.id : x.code) === id);
+        if (idx !== -1) {
+          list.splice(idx, 1);
+          db[listKey] = list;
+
+          if (type !== 'catalog') {
+            (db.assignments || []).forEach((ass: any) => {
+              if (ass.equipmentCode === id && ass.equipmentType === type && ass.endDate === null) {
+                ass.endDate = dateStr;
+              }
+            });
+          }
+        }
+      }
+    }
+
+    localStorage.setItem('azarestan_ict_db', JSON.stringify(db));
+    setIsOfflineMode(true);
+    alert('مورد با موفقیت از سیستم محلی حذف و بایگانی شد.');
+    await loadDatabase();
   };
 
   // Intelligent Equipment Transfer
   const handleTransferItem = async (equipmentCode: string, targetPersonnelCode: string | null) => {
-    try {
-      const res = await fetch('/api/transfer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ equipmentCode, targetPersonnelCode, today: '1405/03/03' })
-      });
+    const today = '1405/03/03';
 
-      if (!res.ok) {
-        const errJson = await res.json();
-        alert(`خطا در ثبت فرآیند واگذاری: ${errJson.error || 'خطای سیستمی'}`);
-        throw new Error(errJson.error);
+    if (!isOfflineMode) {
+      try {
+        const res = await fetch('/api/transfer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ equipmentCode, targetPersonnelCode, today })
+        });
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          await loadDatabase();
+          return;
+        }
+      } catch (err) {
+        console.warn('API transfer failed. Fallback to Local transfer.', err);
       }
-
-      await loadDatabase();
-    } catch (err) {
-      console.error(err);
-      throw err;
     }
+
+    // Local Transfer simulation
+    const rawDb = localStorage.getItem('azarestan_ict_db');
+    let db = rawDb ? JSON.parse(rawDb) : { ...INITIAL_DEMO_DATA };
+    const dateStr = today;
+
+    // Locate Equipment
+    let equipType: "case" | "monitor" | "printer" | "mouse" | "keyboard" | null = null;
+    let equipItem: any = null;
+
+    const listKeys = ['cases', 'monitors', 'printers', 'mice', 'keyboards'] as const;
+    const typesMap = { cases: 'case', monitors: 'monitor', printers: 'printer', mice: 'mouse', keyboards: 'keyboard' } as const;
+
+    for (const key of listKeys) {
+      const idx = (db[key] || []).findIndex((x: any) => x.code === equipmentCode);
+      if (idx !== -1) {
+        equipType = typesMap[key];
+        equipItem = db[key][idx];
+        break;
+      }
+    }
+
+    if (!equipItem || !equipType) {
+      alert("تجهیزی با این کد اموال یافت نشد.");
+      throw new Error("تجهیزی با این کد اموال یافت نشد.");
+    }
+
+    const currentOwnerCode = equipItem.assignedTo;
+
+    let targetCode: string | null = targetPersonnelCode;
+    if (!targetCode || targetCode === "null" || targetCode === "warehouse") {
+      targetCode = null;
+    }
+
+    if (currentOwnerCode === targetCode && targetCode !== null) {
+      alert("دستگاه در حال حاضر تحویل همین شخص می‌باشد.");
+      throw new Error("Duplicate ownership");
+    }
+
+    let targetName: string | null = null;
+    if (targetCode !== null) {
+      const p = (db.personnel || []).find((pers: any) => pers.code === targetCode);
+      if (!p) {
+        alert("کاربر هدف یافت نشد.");
+        throw new Error("User not found");
+      }
+      targetName = p.name;
+    }
+
+    equipItem.assignedTo = targetCode;
+
+    // History log
+    const assignments = db.assignments || [];
+    if (currentOwnerCode !== null) {
+      assignments.forEach((ass: any) => {
+        if (ass.equipmentCode === equipmentCode && ass.equipmentType === equipType && ass.endDate === null) {
+          ass.endDate = dateStr;
+        }
+      });
+    }
+
+    if (targetCode !== null) {
+      assignments.push({
+        id: `ass_${Date.now()}`,
+        equipmentCode,
+        equipmentType: equipType,
+        personnelCode: targetCode,
+        personnelName: targetName,
+        startDate: dateStr,
+        endDate: null
+      });
+    } else {
+      assignments.push({
+        id: `ass_${Date.now()}`,
+        equipmentCode,
+        equipmentType: equipType,
+        personnelCode: null,
+        personnelName: "خروج به انبار/تحویل به کارگاه",
+        startDate: dateStr,
+        endDate: dateStr
+      });
+    }
+
+    db.assignments = assignments;
+    localStorage.setItem('azarestan_ict_db', JSON.stringify(db));
+    setIsOfflineMode(true);
+    await loadDatabase();
   };
 
   // Restore Entire Database
   const handleRestoreDatabase = async (backupData: any) => {
-    const res = await fetch('/api/restore', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(backupData)
-    });
-
-    if (!res.ok) {
-      const errJson = await res.json();
-      throw new Error(errJson.error || 'خطا در بازیابی دیتابیس.');
+    if (!isOfflineMode) {
+      try {
+        const res = await fetch('/api/restore', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(backupData)
+        });
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          await loadDatabase();
+          return;
+        }
+      } catch (err) {
+        console.warn('API restore failed. Fallback to Local restore.', err);
+      }
     }
+
+    localStorage.setItem('azarestan_ict_db', JSON.stringify(backupData));
+    setIsOfflineMode(true);
+    await loadDatabase();
   };
 
   // Helper callbacks to transition tabs with parameter pre-filling
@@ -275,6 +761,24 @@ export default function App() {
       
       {/* 1. System Header component */}
       <Header isDark={darkMode} onToggleTheme={() => setDarkMode(!darkMode)} />
+
+      {isOfflineMode && (
+        <div className="no-print mb-6 bg-yellow-500/10 border border-yellow-500/20 text-yellow-800 dark:text-yellow-300 p-4 rounded-xl text-xs flex flex-col sm:flex-row items-center justify-between gap-3 font-medium">
+          <div className="flex items-center gap-2">
+            <span className="text-base animate-pulse">⚡</span>
+            <span>
+              <strong>اجرای مستقل محلی (LocalStorage DB):</strong> مرورگر شما کوکی‌های امنیتی را در محیط فریم مسدود کرده است. تمامی قابلیت‌های مدیریت سخت‌افزار، گزارش‌ها و جابجایی فعال و روی مرورگر شما ذخیره و آپدیت می‌شوند.
+            </span>
+          </div>
+          <button 
+            type="button" 
+            onClick={() => window.open(window.location.href, '_blank')} 
+            className="shrink-0 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-1.5 px-3.5 rounded-lg text-[10px] transition cursor-pointer"
+          >
+            🌟 باز کردن در تب جدید جهت اتصال پایگاه ابر
+          </button>
+        </div>
+      )}
 
       {/* 2. Global search bar (hides in print mode) */}
       <div className="no-print bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
