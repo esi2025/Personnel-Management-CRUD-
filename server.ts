@@ -6,6 +6,40 @@ import AdmZip from "adm-zip";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 
+function getPersianDateString(date = new Date()): string {
+  try {
+    const formatter = new Intl.DateTimeFormat('fa-IR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    const formatted = formatter.format(date);
+    const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+    let result = formatted;
+    for (let i = 0; i < 10; i++) {
+      result = result.replace(new RegExp(persianDigits[i], 'g'), String(i));
+    }
+    result = result.replace(/[^\d/]/g, '');
+    const parts = result.split('/');
+    if (parts.length === 3) {
+      let year = parts[0];
+      let month = parts[1];
+      let day = parts[2];
+      if (year.length === 2 && day.length === 4) {
+        const temp = year;
+        year = day;
+        day = temp;
+      }
+      if (month.length === 1) month = `0${month}`;
+      if (day.length === 1) day = `0${day}`;
+      return `${year}/${month}/${day}`;
+    }
+    return result;
+  } catch (e) {
+    return "1405/03/09";
+  }
+}
+
 // Helper to ensure database files exist with initial demo data
 function initializeDatabase() {
   if (!fs.existsSync(DATA_DIR)) {
@@ -513,7 +547,7 @@ async function startServer() {
   // API: Delete Item
   app.post("/api/delete", (req, res) => {
     const { type, id, today } = req.body;
-    const dateStr = today || "1405/03/03";
+    const dateStr = today || getPersianDateString();
 
     if (!type || !id) {
       return res.status(400).json({ error: "شناسه یا مانیفست حذف ارسال نگردیده." });
@@ -692,7 +726,7 @@ async function startServer() {
   // API: Intelligent Equipment Transfer
   app.post("/api/transfer", (req, res) => {
     const { equipmentCode, targetPersonnelCode, today } = req.body;
-    const dateStr = today || "1405/03/03";
+    const dateStr = today || getPersianDateString();
 
     if (!equipmentCode) {
       return res.status(400).json({ error: "کد سخت‌افزار ارسالی الزامی است." });

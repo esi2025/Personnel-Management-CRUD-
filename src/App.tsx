@@ -12,6 +12,7 @@ import SystemsTreeTab from './components/SystemsTreeTab';
 import EditModal from './components/EditModal';
 import QRCodeModal from './components/QRCodeModal';
 import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard, CatalogItem } from './types';
+import { getPersianDateString } from './utils/date';
 
 export interface BackupData {
   personnel: Personnel[];
@@ -460,7 +461,7 @@ export default function App() {
         const res = await fetch('/api/delete', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type, id, today: '1405/03/03' })
+          body: JSON.stringify({ type, id, today: getPersianDateString() })
         });
         const contentType = res.headers.get('content-type') || '';
         if (res.ok && contentType.includes('application/json')) {
@@ -476,7 +477,7 @@ export default function App() {
     // Local deletion simulation
     const rawDb = localStorage.getItem('azarestan_ict_db');
     let db = rawDb ? JSON.parse(rawDb) : { ...INITIAL_DEMO_DATA };
-    const dateStr = '1405/03/03';
+    const dateStr = getPersianDateString();
 
     if (type === 'personnel') {
       let list = db.personnel || [];
@@ -537,7 +538,7 @@ export default function App() {
 
   // Intelligent Equipment Transfer
   const handleTransferItem = async (equipmentCode: string, targetPersonnelCode: string | null) => {
-    const today = '1405/03/03';
+    const today = getPersianDateString();
 
     if (!isOfflineMode) {
       try {

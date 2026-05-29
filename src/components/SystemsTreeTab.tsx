@@ -101,6 +101,12 @@ export default function SystemsTreeTab({
   // Expand/Collapse state trackers
   const [collapsedNodes, setCollapsedNodes] = useState<Record<string, boolean>>({});
 
+  // Show/Hide specific levels of the tree structure: Units, Locations, Personnel, Equipment
+  const [showUnits, setShowUnits] = useState(true);
+  const [showLocations, setShowLocations] = useState(true);
+  const [showPersonnel, setShowPersonnel] = useState(true);
+  const [showEquipment, setShowEquipment] = useState(true);
+
   // Map status helper: 'working' | 'repair' | 'retired' -> 'active' | 'maintenance' | 'offline'
   const mapStatus = (status?: 'working' | 'repair' | 'retired' | string): 'active' | 'maintenance' | 'offline' => {
     if (status === 'working') return 'active';
@@ -381,6 +387,53 @@ export default function SystemsTreeTab({
 
   const treeData = dynamicTreeData;
 
+  // 1. Rebuild / bypass layers based on user checkbox settings
+  const customizedTree = useMemo<CustomTreeNode | null>(() => {
+    if (!treeData) return null;
+
+    const getNodeLevel = (node: CustomTreeNode): 'root' | 'unit' | 'location' | 'personnel' | 'equipment' => {
+      if (node.type === 'root') return 'root';
+      if (node.type === 'department') return 'unit';
+      if (node.id.startsWith('loc-')) return 'location';
+      if (node.id.startsWith('p-')) return 'personnel';
+      if (node.type === 'system') return 'equipment';
+      return 'equipment';
+    };
+
+    const rebuildTreeWithBypass = (node: CustomTreeNode): CustomTreeNode[] => {
+      const level = getNodeLevel(node);
+      
+      let keep = true;
+      if (level === 'unit' && !showUnits) keep = false;
+      if (level === 'location' && !showLocations) keep = false;
+      if (level === 'personnel' && !showPersonnel) keep = false;
+      if (level === 'equipment' && !showEquipment) keep = false;
+      
+      let childrenList: CustomTreeNode[] = [];
+      const sourceChildren = node.children || node._children || [];
+      
+      sourceChildren.forEach(child => {
+        childrenList.push(...rebuildTreeWithBypass(child));
+      });
+
+      if (keep) {
+        const newNode = { ...node };
+        if (childrenList.length > 0) {
+          newNode.children = childrenList;
+        } else {
+          delete newNode.children;
+          delete newNode._children;
+        }
+        return [newNode];
+      } else {
+        return childrenList;
+      }
+    };
+
+    const results = rebuildTreeWithBypass(treeData);
+    return results[0] || null;
+  }, [treeData, showUnits, showLocations, showPersonnel, showEquipment]);
+
   // Flat systems list extractor for search & stats calculation based on dynamic tree
   const allSystemsFlat = useMemo(() => {
     const list: CustomTreeNode[] = [];
@@ -391,9 +444,11 @@ export default function SystemsTreeTab({
       if (node.children) node.children.forEach(recurse);
       if (node._children) node._children.forEach(recurse);
     };
-    recurse(treeData);
+    if (customizedTree) {
+      recurse(customizedTree);
+    }
     return list;
-  }, [treeData]);
+  }, [customizedTree]);
 
   // System Stats calculations
   const stats = useMemo(() => {
@@ -451,11 +506,38 @@ export default function SystemsTreeTab({
       return checkDescendant(node);
     };
 
+    // Check if node matches the search query
+    const matchesSearch = (node: CustomTreeNode): boolean => {
+      if (!searchQuery) return false;
+      const q = searchQuery.toLowerCase();
+      return (
+        node.name.toLowerCase().includes(q) ||
+        node.persianName.toLowerCase().includes(q) ||
+        (node.description?.toLowerCase().includes(q) ?? false) ||
+        (node.docCode?.toLowerCase().includes(q) ?? false)
+      );
+    };
+
+    // Check if node or any of its descendants matches the search
+    const hasMatchingDescendant = (node: CustomTreeNode): boolean => {
+      if (matchesSearch(node)) return true;
+      const sourceChildren = node.children || node._children || [];
+      return sourceChildren.some(hasMatchingDescendant);
+    };
+
     // Deep clone the tree structure while respecting collapsed nodes state & filtering
     const buildFilteredHierarchy = (node: CustomTreeNode): CustomTreeNode | null => {
+      // If there is an active search, filter out nodes that don't match or have matching descendants
+      if (searchQuery && !hasMatchingDescendant(node)) {
+        return null;
+      }
+
       if (!nodeMatchesFilter(node)) return null;
 
-      const isCollapsed = collapsedNodes[node.id];
+      // Force expansion if this node has a matching descendant so search results are never hidden
+      const forceExpand = searchQuery && hasMatchingDescendant(node);
+      const isCollapsed = collapsedNodes[node.id] && !forceExpand;
+
       const newNode: CustomTreeNode = { 
         ...node, 
         children: undefined, 
@@ -478,7 +560,11 @@ export default function SystemsTreeTab({
       return newNode;
     };
 
-    const filteredRootData = buildFilteredHierarchy(treeData);
+    if (!customizedTree) {
+      d3.select(svgRef.current).selectAll('.main-group').remove();
+      return;
+    }
+    const filteredRootData = buildFilteredHierarchy(customizedTree);
     if (!filteredRootData) {
       // If nothing matches filter, clear SVG
       d3.select(svgRef.current).selectAll('.main-group').remove();
@@ -799,7 +885,7 @@ export default function SystemsTreeTab({
       }
     });
 
-  }, [treeData, collapsedNodes, searchQuery, selectedNode, statusFilter]);
+  }, [customizedTree, collapsedNodes, searchQuery, selectedNode, statusFilter]);
 
   // Click outside clears selected card
   const handleClearSelection = () => {
@@ -848,70 +934,189 @@ export default function SystemsTreeTab({
         </div>
       </div>
 
-      {/* Controller Bars (Filters & Searches) */}
-      <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-200/70 dark:border-slate-800/60 p-4 rounded-xl flex flex-col xl:flex-row justify-between items-center gap-4 mb-5">
+      {/* 🛠️ مرکز کنترل و فیلترهای تعاملی هوشمند */}
+      <div className="bg-slate-50 dark:bg-slate-800/20 border border-slate-200/80 dark:border-slate-800/60 rounded-2xl p-5 mb-6 space-y-5">
         
-        {/* Search Input Filter */}
-        <div className="w-full xl:max-w-md relative">
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">جستجو و ریملایتینگ تجهیزات در ساختار درختی:</label>
-          <div className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="مثلاً: کیس یا مانیتور یا نام پرسنل..."
-              className="w-full text-right p-2.5 pl-9 pr-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm focus:border-blue-500 focus:outline-none dark:text-white"
-            />
-            <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+        {/* ردیف اول: جستجوی پیشرفته + ابزارهای ناوبری و زوم */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+          
+          {/* بخش جستجوی پیشرفته با استایل هوشمند و حرفه‌ای (۸ ستون در دسکتاپ) */}
+          <div className="lg:col-span-8 space-y-1.5 w-full">
+            <label className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <span className="text-blue-500 text-sm">🔍</span>
+              <span>جستجو و ریملایتینگ هوشمند تجهیزات و پرسنل:</span>
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="کد سخت‌افزار، نام پرسنل، نوع تجهیزات (کیس، مانیتور...) یا دپارتمان..."
+                className="w-full text-right p-3 pl-10 pr-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs sm:text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 focus:outline-none dark:text-white transition shadow-sm font-medium placeholder-slate-400 dark:placeholder-slate-500"
+              />
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1 text-slate-400">
+                <Search className="w-4 h-4" />
+                {searchQuery && (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="hover:text-red-500 transition text-xs font-bold font-mono px-1 rounded bg-slate-100 dark:bg-slate-800"
+                  >
+                    ×
+                  </button>
+                )}
+              </span>
+            </div>
           </div>
+
+          {/* ابزارهای زوم و ناوبری (۴ ستون در دسکتاپ) */}
+          <div className="lg:col-span-4 space-y-1.5 w-full">
+            <label className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <span>🎛️</span>
+              <span>تنظیم ابعاد نقشه:</span>
+            </label>
+            <div className="flex items-center gap-2 h-11">
+              <button
+                onClick={() => handleZoom(1.2)}
+                className="flex-1 h-full flex items-center justify-center gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-all font-semibold text-xs active:scale-[0.98] cursor-pointer shadow-sm"
+                title="بزرگنمایی"
+              >
+                <ZoomIn className="w-4 h-4 text-blue-500" />
+                <span>+</span>
+              </button>
+              <button
+                onClick={() => handleZoom(0.8)}
+                className="flex-1 h-full flex items-center justify-center gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-all font-semibold text-xs active:scale-[0.98] cursor-pointer shadow-sm"
+                title="کوچکنمایی"
+              >
+                <ZoomOut className="w-4 h-4 text-slate-500" />
+                <span>-</span>
+              </button>
+              <button
+                onClick={handleResetZoom}
+                className="flex-[2] h-full flex items-center justify-center gap-1.5 bg-slate-900 dark:bg-blue-600 dark:hover:bg-blue-700 text-white border border-transparent rounded-xl hover:bg-slate-800 transition-all font-bold text-xs active:scale-[0.98] cursor-pointer shadow-sm"
+                title="بازنشانی اندازه و زاویه دید دایره‌ای"
+              >
+                <RotateCcw className="w-3.5 h-3.5 animate-spin-reverse" />
+                <span>بازنشانی مرکز</span>
+              </button>
+            </div>
+          </div>
+
         </div>
 
-        {/* Status Filters */}
-        <div className="flex items-center gap-2 self-start xl:self-center flex-wrap">
-          <span className="text-xs font-bold text-slate-600 dark:text-slate-400">فیلتر وضعیت کاربری:</span>
-          {(['all', 'active', 'maintenance', 'offline'] as const).map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setStatusFilter(filter)}
-              className={`px-3 py-1.5 rounded-lg text-[11px] font-black cursor-pointer transition ${
-                statusFilter === filter
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100'
-              }`}
-            >
-              {filter === 'all' && '🌐 نمایش همه'}
-              {filter === 'active' && '🟢 فقط سالم'}
-              {filter === 'maintenance' && '🟡 فقط تعمیرات'}
-              {filter === 'offline' && '🔴 فقط اسقاط'}
-            </button>
-          ))}
+        {/* خط جداکننده افقی ظریف */}
+        <div className="border-t border-slate-200/60 dark:border-slate-800/80"></div>
+
+        {/* ردیف دوم: فیلتر وضعیت سلامت کاربری + فیلتر سطوح درخت */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          
+          {/* فیلتر وضعیت کاربری تجهیزات */}
+          <div className="space-y-2">
+            <span className="text-xs font-black text-slate-700 dark:text-slate-300 block">فیلتر بر اساس وضعیت سیستم‌ها:</span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {(['all', 'active', 'maintenance', 'offline'] as const).map((filter) => {
+                const isActive = statusFilter === filter;
+                return (
+                  <button
+                    key={filter}
+                    onClick={() => setStatusFilter(filter)}
+                    className={`p-2.5 rounded-xl text-[11px] font-black cursor-pointer transition-all flex items-center justify-center gap-1.5 border ${
+                      isActive
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/10 scale-[1.02]'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80'
+                    }`}
+                  >
+                    {filter === 'all' && <span className="text-sm">🌐</span>}
+                    {filter === 'active' && <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-500/15"></span>}
+                    {filter === 'maintenance' && <span className="w-2.5 h-2.5 rounded-full bg-amber-500 ring-4 ring-amber-500/15"></span>}
+                    {filter === 'offline' && <span className="w-2.5 h-2.5 rounded-full bg-red-500 ring-4 ring-red-500/15"></span>}
+
+                    <span>
+                      {filter === 'all' && 'نمایش همه'}
+                      {filter === 'active' && 'فقط سالم'}
+                      {filter === 'maintenance' && 'فقط تعمیرات'}
+                      {filter === 'offline' && 'فقط اسقاط'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* فیلتر نمایش پارامترهای ساختار (سطوح درخت) */}
+          <div className="space-y-2">
+            <span className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <span>⚙️</span>
+              <span>فیلتر نمایش پارامترهای ساختار (سطوح درخت):</span>
+            </span>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              
+              {/* واحدها */}
+              <label className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer select-none transition-all ${
+                showUnits 
+                  ? 'bg-blue-50/50 dark:bg-blue-950/10 border-blue-200/70 dark:border-blue-900/60 text-blue-900 dark:text-blue-300 font-bold' 
+                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 line-through'
+              }`}>
+                <input 
+                  type="checkbox" 
+                  checked={showUnits} 
+                  onChange={(e) => setShowUnits(e.target.checked)}
+                  className="w-4 h-4 rounded text-blue-600 border-slate-300 dark:border-slate-700 focus:ring-blue-500 cursor-pointer"
+                />
+                <span className="text-xs leading-none">واحدها</span>
+              </label>
+
+              {/* موقعیت‌ها */}
+              <label className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer select-none transition-all ${
+                showLocations 
+                  ? 'bg-blue-50/50 dark:bg-blue-950/10 border-blue-200/70 dark:border-blue-900/60 text-blue-900 dark:text-blue-300 font-bold' 
+                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 line-through'
+              }`}>
+                <input 
+                  type="checkbox" 
+                  checked={showLocations} 
+                  onChange={(e) => setShowLocations(e.target.checked)}
+                  className="w-4 h-4 rounded text-blue-600 border-slate-300 dark:border-slate-700 focus:ring-blue-500 cursor-pointer"
+                />
+                <span className="text-xs leading-none">موقعیت‌ها</span>
+              </label>
+
+              {/* پرسنل‌ها */}
+              <label className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer select-none transition-all ${
+                showPersonnel 
+                  ? 'bg-blue-50/50 dark:bg-blue-950/10 border-blue-200/70 dark:border-blue-900/60 text-blue-900 dark:text-blue-300 font-bold' 
+                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 line-through'
+              }`}>
+                <input 
+                  type="checkbox" 
+                  checked={showPersonnel} 
+                  onChange={(e) => setShowPersonnel(e.target.checked)}
+                  className="w-4 h-4 rounded text-blue-600 border-slate-300 dark:border-slate-700 focus:ring-blue-500 cursor-pointer"
+                />
+                <span className="text-xs leading-none">پرسنل‌ها</span>
+              </label>
+
+              {/* تجهیزات */}
+              <label className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer select-none transition-all ${
+                showEquipment 
+                  ? 'bg-blue-50/50 dark:bg-blue-950/10 border-blue-200/70 dark:border-blue-900/60 text-blue-900 dark:text-blue-300 font-bold' 
+                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 line-through'
+              }`}>
+                <input 
+                  type="checkbox" 
+                  checked={showEquipment} 
+                  onChange={(e) => setShowEquipment(e.target.checked)}
+                  className="w-4 h-4 rounded text-blue-600 border-slate-300 dark:border-slate-700 focus:ring-blue-500 cursor-pointer"
+                />
+                <span className="text-xs leading-none">تجهیزات</span>
+              </label>
+
+            </div>
+          </div>
+
         </div>
 
-        {/* Zoom & Navigation Actions */}
-        <div className="flex items-center gap-1.5 self-end xl:self-center">
-          <button
-            onClick={() => handleZoom(1.2)}
-            className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 text-slate-600 dark:text-slate-300 transition cursor-pointer"
-            title="بزرگنمایی"
-          >
-            <ZoomIn className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleZoom(0.8)}
-            className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 text-slate-600 dark:text-slate-300 transition cursor-pointer"
-            title="کوچکنمایی"
-          >
-            <ZoomOut className="w-4 h-4" />
-          </button>
-          <button
-            onClick={handleResetZoom}
-            className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 text-slate-600 dark:text-slate-300 transition cursor-pointer flex items-center gap-1 font-bold text-xs"
-            title="بازنشانی اندازه و زاویه دید دایره‌ای"
-          >
-            <RotateCcw className="w-4 h-4" />
-            <span>بازنشانی مرکز</span>
-          </button>
-        </div>
       </div>
 
       {/* Main Container visual panel hosting SVG tree */}
