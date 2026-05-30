@@ -346,6 +346,86 @@ export default function App() {
         list.push({ id: 'p_' + Date.now(), ...data });
       }
       db.personnel = list;
+
+      // Handle local termination cascade
+      if (data.status === 'terminated') {
+        const today = getPersianDateString();
+        const trimmedCode = data.code.trim();
+        const returnedHardware: { code: string; type: "case" | "monitor" | "printer" | "mouse" | "keyboard" }[] = [];
+
+        // Cases
+        db.cases = (db.cases || []).map((c: any) => {
+          if (c.assignedTo === trimmedCode) {
+            returnedHardware.push({ code: c.code, type: 'case' });
+            return { ...c, assignedTo: null };
+          }
+          return c;
+        });
+
+        // Monitors
+        db.monitors = (db.monitors || []).map((m: any) => {
+          if (m.assignedTo === trimmedCode) {
+            returnedHardware.push({ code: m.code, type: 'monitor' });
+            return { ...m, assignedTo: null };
+          }
+          return m;
+        });
+
+        // Printers
+        db.printers = (db.printers || []).map((p: any) => {
+          if (p.assignedTo === trimmedCode) {
+            returnedHardware.push({ code: p.code, type: 'printer' });
+            return { ...p, assignedTo: null };
+          }
+          return p;
+        });
+
+        // Mice
+        db.mice = (db.mice || []).map((m: any) => {
+          if (m.assignedTo === trimmedCode) {
+            returnedHardware.push({ code: m.code, type: 'mouse' });
+            return { ...m, assignedTo: null };
+          }
+          return m;
+        });
+
+        // Keyboards
+        db.keyboards = (db.keyboards || []).map((k: any) => {
+          if (k.assignedTo === trimmedCode) {
+            returnedHardware.push({ code: k.code, type: 'keyboard' });
+            return { ...k, assignedTo: null };
+          }
+          return k;
+        });
+
+        if (returnedHardware.length > 0) {
+          db.assignments = db.assignments || [];
+          returnedHardware.forEach((itemToReturn) => {
+            // Close active assignment
+            db.assignments = db.assignments.map((ass: any) => {
+              if (
+                ass.equipmentCode === itemToReturn.code &&
+                ass.equipmentType === itemToReturn.type &&
+                (ass.endDate === null || ass.endDate === '')
+              ) {
+                return { ...ass, endDate: today };
+              }
+              return ass;
+            });
+
+            // Log warehouse return
+            db.assignments.push({
+              id: `ass_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+              equipmentCode: itemToReturn.code,
+              equipmentType: itemToReturn.type,
+              personnelCode: null,
+              personnelName: `خروج به انبار/تحویل به کارگاه (به علت خاتمه همکاری ${data.name})`,
+              startDate: today,
+              endDate: today,
+            });
+          });
+        }
+      }
     } 
     else if (type === 'case') {
       let list = db.cases || [];

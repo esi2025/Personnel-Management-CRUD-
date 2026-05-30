@@ -17,6 +17,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
   const [pDept, setPDept] = useState('');
   const [pLoc, setPLoc] = useState('');
   const [pDocNum, setPDocNum] = useState('');
+  const [pStatus, setPStatus] = useState<'active' | 'terminated'>('active');
 
   // Case states
   const [cCode, setCCode] = useState('');
@@ -46,6 +47,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
       setPDept(item.department || '');
       setPLoc(item.location || '');
       setPDocNum(item.documentNumber || '');
+      setPStatus(item.status || 'active');
     } else if (type === 'case') {
       setCCode(item.code || '');
       setCMobo(item.motherboard || '');
@@ -80,6 +82,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
       data.department = pDept;
       data.location = pLoc;
       data.documentNumber = pDocNum;
+      data.status = pStatus;
     } else if (type === 'case') {
       data.code = cCode;
       data.oldCode = item.code; // Track old code if user modifies Case Code ID
@@ -174,6 +177,17 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
                   placeholder="مثال: 0001"
                   className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
                 />
+              </div>
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700">وضعیت فعالیت پرسنل:</label>
+                <select
+                  value={pStatus}
+                  onChange={(e) => setPStatus(e.target.value as 'active' | 'terminated')}
+                  className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="active">🟢 شاغل (فعال)</option>
+                  <option value="terminated">🔴 خاتمه همکاری (غیرفعال)</option>
+                </select>
               </div>
             </div>
           )}

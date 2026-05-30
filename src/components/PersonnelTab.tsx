@@ -67,6 +67,7 @@ export default function PersonnelTab({
                 <th className="p-2.5 font-bold text-right">سمت سازمانی</th>
                 <th className="p-2.5 font-bold text-right">واحد خدمتی</th>
                 <th className="p-2.5 font-bold text-right">موقعیت استقرار</th>
+                <th className="p-2.5 font-bold text-right">وضعیت فعالیت</th>
                 <th className="p-2.5 font-bold text-right">سخت‌افزارهای تحویل‌شده</th>
                 <th className="p-2.5 font-bold text-center">عملیات مدیریت</th>
               </tr>
@@ -88,6 +89,17 @@ export default function PersonnelTab({
                       <td className="p-2.5 text-slate-600">{p.title}</td>
                       <td className="p-2.5 text-slate-600">{p.department}</td>
                       <td className="p-2.5 text-slate-600">{p.location}</td>
+                      <td className="p-2.5">
+                        {p.status === 'terminated' ? (
+                          <span className="bg-red-50 border border-red-200 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold">
+                            🔴 خاتمه همکاری
+                          </span>
+                        ) : (
+                          <span className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold">
+                            🟢 شاغل (فعال)
+                          </span>
+                        )}
+                      </td>
                       <td className="p-2.5 whitespace-normal">
                          <div className="flex flex-wrap gap-1 max-w-[280px]">
                           {assigns.cases.map(c => (

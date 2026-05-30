@@ -6,6 +6,7 @@ export interface Personnel {
   department: string; // واحد خدمتی
   location: string; // موقعیت استقرار
   documentNumber?: string; // شماره سند خروجی (یکتا و توالی)
+  status?: 'active' | 'terminated'; // وضعیت فعالیت (فعال یا خاتمه همکاری)
 }
 
 export interface Case {

@@ -125,7 +125,7 @@ export default function ReportingTab({
   useEffect(() => {
     if (reportType === 'certificate' && liveCertificatePers && !liveCertificatePers.documentNumber && onSaveItem && !isProcessing) {
       const assignedNum = padZero(nextDocSeq);
-      const updatedPers = { ...liveCertificatePers, documentNumber: assignedNum };
+      const updatedPers = { ...liveCertificatePers, documentNumber: assignedNum, isEdit: true };
       
       setIsProcessing(true);
       onSaveItem('personnel', updatedPers).then(success => {
@@ -208,7 +208,7 @@ export default function ReportingTab({
     try {
       for (const p of sorted) {
         const docNum = padZero(currentSeq);
-        await onSaveItem('personnel', { ...p, documentNumber: docNum });
+        await onSaveItem('personnel', { ...p, documentNumber: docNum, isEdit: true });
         currentSeq++;
       }
       localStorage.setItem('next_document_sequence', String(currentSeq));
@@ -232,7 +232,7 @@ export default function ReportingTab({
     try {
       for (const p of personnel) {
         if (p.documentNumber) {
-          await onSaveItem('personnel', { ...p, documentNumber: "" });
+          await onSaveItem('personnel', { ...p, documentNumber: "", isEdit: true });
         }
       }
       localStorage.setItem('next_document_sequence', "1");
@@ -250,7 +250,7 @@ export default function ReportingTab({
     if (!onSaveItem) return;
     setIsProcessing(true);
     try {
-      await onSaveItem('personnel', { ...p, documentNumber: editingDocNumVal.trim() });
+      await onSaveItem('personnel', { ...p, documentNumber: editingDocNumVal.trim(), isEdit: true });
       setEditingDocPersonnelId(null);
       setEditingDocNumVal('');
       alert(`شماره سند جدید برای ${p.name} با موفقیت ثبت شد.`);
@@ -622,6 +622,7 @@ export default function ReportingTab({
                   <table className="w-full text-xs text-right border-collapse border border-slate-300">
                     <thead className="bg-slate-50 text-slate-700">
                       <tr>
+                        <th className="border border-slate-300 p-2 font-bold w-12 text-center">ردیف</th>
                         <th className="border border-slate-300 p-2 font-bold">نام کامل</th>
                         <th className="border border-slate-300 p-2 font-bold">کد پرسنلی</th>
                         <th className="border border-slate-300 p-2 font-bold">سمت</th>
@@ -630,8 +631,9 @@ export default function ReportingTab({
                       </tr>
                     </thead>
                     <tbody>
-                      {personnel.map(p => (
+                      {personnel.map((p, idx) => (
                         <tr key={p.id}>
+                          <td className="border border-slate-300 p-2 text-center font-mono">{idx + 1}</td>
                           <td className="border border-slate-300 p-2 font-bold">{p.name}</td>
                           <td className="border border-slate-300 p-2 font-mono">{p.code}</td>
                           <td className="border border-slate-300 p-2">{p.title}</td>
@@ -654,6 +656,7 @@ export default function ReportingTab({
                   <table className="w-full text-xs text-right border-collapse border border-slate-300">
                     <thead className="bg-slate-50 text-slate-700">
                       <tr>
+                        <th className="border border-slate-300 p-2 font-bold w-12 text-center">ردیف</th>
                         <th className="border border-slate-300 p-2 font-bold">کد کیس</th>
                         <th className="border border-slate-300 p-2 font-bold">مادربورد</th>
                         <th className="border border-slate-300 p-2 font-bold">پردازنده</th>
@@ -668,11 +671,12 @@ export default function ReportingTab({
                     <tbody>
                       {filteredCases.length === 0 ? (
                         <tr>
-                          <td colSpan={9} className="border border-slate-300 p-4 text-center text-slate-400">موردی با این مشخصات یافت نشد.</td>
+                          <td colSpan={10} className="border border-slate-300 p-4 text-center text-slate-400">موردی با این مشخصات یافت نشد.</td>
                         </tr>
                       ) : (
-                        filteredCases.map(c => (
+                        filteredCases.map((c, idx) => (
                           <tr key={c.code}>
+                            <td className="border border-slate-300 p-2 text-center font-mono">{idx + 1}</td>
                             <td className="border border-slate-300 p-2 font-mono font-bold text-slate-900">{c.code}</td>
                             <td className="border border-slate-300 p-2">{c.motherboard}</td>
                             <td className="border border-slate-300 p-2">{c.cpu}</td>
@@ -704,6 +708,7 @@ export default function ReportingTab({
                   <table className="w-full text-xs text-right border-collapse border border-slate-300 font-sans">
                     <thead className="bg-slate-50 text-slate-700">
                       <tr>
+                        <th className="border border-slate-300 p-2 font-bold w-12 text-center">ردیف</th>
                         <th className="border border-slate-300 p-2 font-bold">کد مانیتور</th>
                         <th className="border border-slate-300 p-2 font-bold">مدل و مشخصات فنی</th>
                         <th className="border border-slate-300 p-2 font-bold">وضعیت سلامت</th>
@@ -713,11 +718,12 @@ export default function ReportingTab({
                     <tbody>
                       {filteredMonitors.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="border border-slate-300 p-4 text-center text-slate-400">موردی با این مشخصات یافت نشد.</td>
+                          <td colSpan={5} className="border border-slate-300 p-4 text-center text-slate-400">موردی با این مشخصات یافت نشد.</td>
                         </tr>
                       ) : (
-                        filteredMonitors.map(m => (
+                        filteredMonitors.map((m, idx) => (
                           <tr key={m.code}>
+                            <td className="border border-slate-300 p-2 text-center font-mono">{idx + 1}</td>
                             <td className="border border-slate-300 p-2 font-mono font-bold">{m.code}</td>
                             <td className="border border-slate-300 p-2">{m.model}</td>
                             <td className="border border-slate-300 p-2">
@@ -744,6 +750,7 @@ export default function ReportingTab({
                   <table className="w-full text-xs text-right border-collapse border border-slate-300 font-sans">
                     <thead className="bg-slate-50 text-slate-700">
                       <tr>
+                        <th className="border border-slate-300 p-2 font-bold w-12 text-center">ردیف</th>
                         <th className="border border-slate-300 p-2 font-bold">کد پرینتر</th>
                         <th className="border border-slate-300 p-2 font-bold">مدل کالا</th>
                         <th className="border border-slate-300 p-2 font-bold">وضعیت سلامت</th>
@@ -753,11 +760,12 @@ export default function ReportingTab({
                     <tbody>
                       {filteredPrinters.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="border border-slate-300 p-4 text-center text-slate-400">موردی با این مشخصات یافت نشد.</td>
+                          <td colSpan={5} className="border border-slate-300 p-4 text-center text-slate-400">موردی با این مشخصات یافت نشد.</td>
                         </tr>
                       ) : (
-                        filteredPrinters.map(pr => (
+                        filteredPrinters.map((pr, idx) => (
                           <tr key={pr.code}>
+                            <td className="border border-slate-300 p-2 text-center font-mono">{idx + 1}</td>
                             <td className="border border-slate-300 p-2 font-mono font-bold">{pr.code}</td>
                             <td className="border border-slate-300 p-2">{pr.model}</td>
                             <td className="border border-slate-300 p-2">
@@ -781,6 +789,7 @@ export default function ReportingTab({
                   <table className="w-full text-xs text-right border-collapse border border-slate-300">
                     <thead className="bg-slate-50 text-slate-700">
                       <tr>
+                        <th className="border border-slate-300 p-2 font-bold w-12 text-center">ردیف</th>
                         <th className="border border-slate-300 p-2 font-bold">نوع تجهیز</th>
                         <th className="border border-slate-300 p-2 font-bold">کد اموال</th>
                         <th className="border border-slate-300 p-2 font-bold">تحویل گیرنده</th>
@@ -789,8 +798,9 @@ export default function ReportingTab({
                       </tr>
                     </thead>
                     <tbody>
-                      {assignments.map(ass => (
+                      {assignments.map((ass, idx) => (
                         <tr key={ass.id}>
+                          <td className="border border-slate-300 p-2 text-center font-mono">{idx + 1}</td>
                           <td className="border border-slate-300 p-2 font-bold">{ass.equipmentType === 'case' ? 'کیس کامپیوتر' : ass.equipmentType === 'monitor' ? 'مانیتور' : 'پرینتر'}</td>
                           <td className="border border-slate-300 p-2 font-mono">{ass.equipmentCode}</td>
                           <td className="border border-slate-300 p-2 font-semibold">{ass.personnelName || 'انبار مرکزی'}</td>
@@ -808,6 +818,12 @@ export default function ReportingTab({
           {/* Render 2: Official System Profile Certificate (سه برگی) */}
           {reportType === 'certificate' && liveCertificatePers && (() => {
             const certificatePers = liveCertificatePers;
+            const secondaryList = [
+              ...getAssignedEquipments(certificatePers.code).monitors.map(m => ({ type: '📺 نمایشگر (مانیتور اداری)', code: m.code, model: m.model })),
+              ...getAssignedEquipments(certificatePers.code).printers.map(pr => ({ type: '🖨️ پرینتر / چاپگر کارگاهی', code: pr.code, model: pr.model })),
+              ...getAssignedEquipments(certificatePers.code).mice.map(m => ({ type: '🖱️ ماوس (پرونده پرسنلی)', code: m.code, model: m.model })),
+              ...getAssignedEquipments(certificatePers.code).keyboards.map(k => ({ type: '⌨️ کیبورد (پرونده پرسنلی)', code: k.code, model: k.model })),
+            ];
             return (
               <div className="space-y-6 text-black font-sans print:p-0">
               
@@ -825,10 +841,19 @@ export default function ReportingTab({
                 </div>
                 
                 {/* Left side: Code & Document metadata */}
-                <div className="text-left text-[10px] md:text-xs space-y-1">
-                  <div>کد سند: <span dir="ltr" className="font-mono font-bold select-all">37-FO-IT-01-01</span></div>
-                  <div>شماره سند: <strong className="font-mono text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">ICT-CERT-{certificatePers.documentNumber || "----"}</strong></div>
-                  <div>تاریخ صدور سند: <span className="font-mono">۱۴۰۵/۰۳/۰۳</span></div>
+                <div className="text-xs space-y-1.5 flex flex-col items-end mr-auto">
+                  <div className="w-[215px] flex items-center justify-between border-b border-slate-100 pb-0.5">
+                    <span className="text-slate-500 font-bold">کد سند:</span>
+                    <span dir="ltr" className="font-mono font-bold select-all text-slate-800">37-FO-IT-01-01</span>
+                  </div>
+                  <div className="w-[215px] flex items-center justify-between border-b border-slate-100 pb-0.5">
+                    <span className="text-slate-500 font-bold">شماره سند:</span>
+                    <span dir="ltr" className="font-mono font-bold text-indigo-700 bg-indigo-50 px-1 pb-0.5 rounded">ICT-CERT-{certificatePers.documentNumber || "----"}</span>
+                  </div>
+                  <div className="w-[215px] flex items-center justify-between">
+                    <span className="text-slate-500 font-bold">تاریخ صدور سند:</span>
+                    <span className="font-mono font-bold text-slate-800">۱۴۰۵/۰۳/۰۳</span>
+                  </div>
                 </div>
               </div>
 
@@ -915,45 +940,23 @@ export default function ReportingTab({
                     ))}
 
                     {/* Monitors and Printers spec table */}
-                    {(getAssignedEquipments(certificatePers.code).monitors.length > 0 || 
-                      getAssignedEquipments(certificatePers.code).printers.length > 0 ||
-                      getAssignedEquipments(certificatePers.code).mice.length > 0 ||
-                      getAssignedEquipments(certificatePers.code).keyboards.length > 0) && (
+                    {secondaryList.length > 0 && (
                       <table className="w-full text-xs text-right border-collapse border border-black">
                         <thead>
                           <tr className="bg-slate-200">
+                            <th className="border border-black p-2 font-bold w-[10%] text-center">ردیف</th>
                             <th className="border border-black p-2 font-bold w-[35%]">دسته سخت‌افزار</th>
-                            <th className="border border-black p-2 font-bold w-[25%] font-mono">کد اموال و ردیاب</th>
-                            <th className="border border-black p-2 font-bold w-[40%]">سازنده و مدل دقیق کالا تحویل شده</th>
+                            <th className="border border-black p-2 font-bold w-[20%] font-mono">کد اموال و ردیاب</th>
+                            <th className="border border-black p-2 font-bold w-[35%]">سازنده و مدل دقیق کالا تحویل شده</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {getAssignedEquipments(certificatePers.code).monitors.map(m => (
-                            <tr key={m.code}>
-                              <td className="border border-black p-2 font-bold">📺 نمایشگر (مانیتور اداری)</td>
-                              <td className="border border-black p-2 font-mono font-bold text-slate-800">{m.code}</td>
-                              <td className="border border-black p-2">{m.model}</td>
-                            </tr>
-                          ))}
-                          {getAssignedEquipments(certificatePers.code).printers.map(pr => (
-                            <tr key={pr.code}>
-                              <td className="border border-black p-2 font-bold">🖨️ پرینتر / چاپگر کارگاهی</td>
-                              <td className="border border-black p-2 font-mono font-bold text-slate-800">{pr.code}</td>
-                              <td className="border border-black p-2">{pr.model}</td>
-                            </tr>
-                          ))}
-                          {getAssignedEquipments(certificatePers.code).mice.map(m => (
-                            <tr key={m.code}>
-                              <td className="border border-black p-2 font-bold">🖱️ ماوس (پرونده پرسنلی)</td>
-                              <td className="border border-black p-2 font-mono font-bold text-slate-800">{m.code}</td>
-                              <td className="border border-black p-2">{m.model}</td>
-                            </tr>
-                          ))}
-                          {getAssignedEquipments(certificatePers.code).keyboards.map(k => (
-                            <tr key={k.code}>
-                              <td className="border border-black p-2 font-bold">⌨️ کیبورد (پرونده پرسنلی)</td>
-                              <td className="border border-black p-2 font-mono font-bold text-slate-800">{k.code}</td>
-                              <td className="border border-black p-2">{k.model}</td>
+                          {secondaryList.map((item, idx) => (
+                            <tr key={item.code}>
+                              <td className="border border-black p-2 text-center font-mono">{idx + 1}</td>
+                              <td className="border border-black p-2 font-bold">{item.type}</td>
+                              <td className="border border-black p-2 font-mono font-bold text-slate-800">{item.code}</td>
+                              <td className="border border-black p-2">{item.model}</td>
                             </tr>
                           ))}
                         </tbody>

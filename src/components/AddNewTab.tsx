@@ -14,6 +14,7 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
   const [pDept, setPDept] = useState('');
   const [pLoc, setPLoc] = useState('');
   const [pDocNum, setPDocNum] = useState('');
+  const [pStatus, setPStatus] = useState<'active' | 'terminated'>('active');
 
   // Case fields
   const [cCode, setCCode] = useState('');
@@ -47,7 +48,7 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
   const [equipDesc, setEquipDesc] = useState('');
 
   const handleResetForm = () => {
-    setPName(''); setPCode(''); setPTitle(''); setPDept(''); setPLoc(''); setPDocNum('');
+    setPName(''); setPCode(''); setPTitle(''); setPDept(''); setPLoc(''); setPDocNum(''); setPStatus('active');
     setCCode(''); setCMobo(''); setCCpu(''); setCVga(''); setCHdd1(''); setCHdd2(''); setCRamType('DDR4'); setCRamQty('8GB'); setCPower('');
     setMCode(''); setMModel('');
     setPrCode(''); setPrModel('');
@@ -67,7 +68,7 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
         alert('وارد کردن نام کامل و کد پرسنلی الزامی است.');
         return;
       }
-      data = { name: pName, code: pCode, title: pTitle, department: pDept, location: pLoc, documentNumber: pDocNum };
+      data = { name: pName, code: pCode, title: pTitle, department: pDept, location: pLoc, documentNumber: pDocNum, status: pStatus };
     } else if (activeType === 'case') {
       if (!cCode.trim()) {
         alert('وارد کردن کد کیس (اموال) الزامی است.');
@@ -202,6 +203,17 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
                 placeholder="مثال: 0001 (در صورت خالی بودن، به ترتیب تخصیص می‌یابد)"
                 className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
               />
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">وضعیت فعالیت پرسنل:</label>
+              <select
+                value={pStatus}
+                onChange={(e) => setPStatus(e.target.value as 'active' | 'terminated')}
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              >
+                <option value="active">🟢 شاغل (فعال)</option>
+                <option value="terminated">🔴 خاتمه همکاری (غیرفعال)</option>
+              </select>
             </div>
           </div>
         )}

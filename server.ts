@@ -301,23 +301,26 @@ async function startServer() {
         return res.status(400).json({ error: "نام پرسنل الزامی است." });
       }
 
-      const existingIndex = personnel.findIndex((p) => p.code === trimmedCode && (!isEdit || p.id !== id));
+      const isEditing = !!(isEdit || id);
+      const existingIndex = personnel.findIndex((p) => p.code === trimmedCode && (!isEditing || p.id !== id));
       if (existingIndex !== -1) {
         return res.status(400).json({ error: "کد پرسنلی تکراری است." });
       }
 
-      const existingItem = isEdit ? personnel.find((p) => p.id === id) : null;
+      const existingItem = isEditing ? personnel.find((p) => p.id === id) : null;
+      const status = fields.status || "active";
       const item = {
-        id: isEdit ? id : `p_${Date.now()}`,
+        id: isEditing ? id : `p_${Date.now()}`,
         name,
         code: trimmedCode,
         title: title || "-",
         department: department || "-",
         location: location || "کارگاه بوشهر",
         documentNumber: fields.documentNumber !== undefined ? fields.documentNumber : (existingItem ? existingItem.documentNumber : ""),
+        status: status,
       };
 
-      if (isEdit) {
+      if (isEditing) {
         const idx = personnel.findIndex((p) => p.id === id);
         if (idx !== -1) {
           const oldPersCode = personnel[idx].code;
@@ -373,6 +376,98 @@ async function startServer() {
         }
       } else {
         personnel.push(item);
+      }
+
+      // Check if personnel status is set to terminated (terminate cooperation)
+      // If terminated, return all currently assigned equipment to the central workshop store/warehouse
+      if (status === "terminated") {
+        const dateStr = getPersianDateString();
+        const returnedHardware: { code: string; type: "case" | "monitor" | "printer" | "mouse" | "keyboard" }[] = [];
+
+        // 1. Cases
+        const cases = readDb("cases.json");
+        let casesChanged = false;
+        cases.forEach((c) => {
+          if (c.assignedTo === trimmedCode) {
+            c.assignedTo = null;
+            casesChanged = true;
+            returnedHardware.push({ code: c.code, type: "case" });
+          }
+        });
+        if (casesChanged) writeDb("cases.json", cases);
+
+        // 2. Monitors
+        const monitors = readDb("monitors.json");
+        let monitorsChanged = false;
+        monitors.forEach((m) => {
+          if (m.assignedTo === trimmedCode) {
+            m.assignedTo = null;
+            monitorsChanged = true;
+            returnedHardware.push({ code: m.code, type: "monitor" });
+          }
+        });
+        if (monitorsChanged) writeDb("monitors.json", monitors);
+
+        // 3. Printers
+        const printers = readDb("printers.json");
+        let printersChanged = false;
+        printers.forEach((pr) => {
+          if (pr.assignedTo === trimmedCode) {
+            pr.assignedTo = null;
+            printersChanged = true;
+            returnedHardware.push({ code: pr.code, type: "printer" });
+          }
+        });
+        if (printersChanged) writeDb("printers.json", printers);
+
+        // 4. Mice
+        const mice = readDb("mice.json");
+        let miceChanged = false;
+        mice.forEach((m) => {
+          if (m.assignedTo === trimmedCode) {
+            m.assignedTo = null;
+            miceChanged = true;
+            returnedHardware.push({ code: m.code, type: "mouse" });
+          }
+        });
+        if (miceChanged) writeDb("mice.json", mice);
+
+        // 5. Keyboards
+        const keyboards = readDb("keyboards.json");
+        let keyboardsChanged = false;
+        keyboards.forEach((k) => {
+          if (k.assignedTo === trimmedCode) {
+            k.assignedTo = null;
+            keyboardsChanged = true;
+            returnedHardware.push({ code: k.code, type: "keyboard" });
+          }
+        });
+        if (keyboardsChanged) writeDb("keyboards.json", keyboards);
+
+        // 6. Update Assignments History logs
+        if (returnedHardware.length > 0) {
+          const assignments = readDb("assignments.json");
+          returnedHardware.forEach((hw) => {
+            // End active assignment
+            assignments.forEach((ass) => {
+              if (ass.equipmentCode === hw.code && ass.equipmentType === hw.type && (ass.endDate === null || ass.endDate === "")) {
+                ass.endDate = dateStr;
+              }
+            });
+
+            // Create returned to store log entry
+            assignments.push({
+              id: `ass_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+              equipmentCode: hw.code,
+              equipmentType: hw.type,
+              personnelCode: null,
+              personnelName: `خروج به انبار/تحویل به کارگاه (به علت خاتمه همکاری ${name})`,
+              startDate: dateStr,
+              endDate: dateStr,
+            });
+          });
+          writeDb("assignments.json", assignments);
+        }
       }
 
       writeDb("personnel.json", personnel);
