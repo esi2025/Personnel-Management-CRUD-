@@ -67,7 +67,7 @@ export interface Assignment {
   id: string; // شناسه تاریخچه
   equipmentCode: string; // کد تجهیز
   equipmentType: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard'; // نوع تجهیز
-  personnelCode: string | null; // کد پرسنلی (یا null برای خروج به انبار)
+  personnelCode: string | null; // کد پرسنلی (یا null برای عودت به انبار)
   personnelName: string | null; // نام پرسنل
   startDate: string; // تاریخ شروع (خورشیدی)
   endDate: string | null; // تاریخ پایان یا null (به عنوان فعلی)

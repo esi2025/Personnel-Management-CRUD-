@@ -419,7 +419,7 @@ export default function App() {
               equipmentCode: itemToReturn.code,
               equipmentType: itemToReturn.type,
               personnelCode: null,
-              personnelName: `خروج به انبار/تحویل به کارگاه (به علت خاتمه همکاری ${data.name})`,
+              personnelName: `عودت به انبار/تحویل به کارگاه (به علت خاتمه همکاری ${data.name})`,
               startDate: today,
               endDate: today,
             });
@@ -719,7 +719,7 @@ export default function App() {
         equipmentCode,
         equipmentType: equipType,
         personnelCode: null,
-        personnelName: "خروج به انبار/تحویل به کارگاه",
+        personnelName: "عودت به انبار/تحویل به کارگاه",
         startDate: dateStr,
         endDate: dateStr
       });

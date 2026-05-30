@@ -461,7 +461,7 @@ async function startServer() {
               equipmentCode: hw.code,
               equipmentType: hw.type,
               personnelCode: null,
-              personnelName: `خروج به انبار/تحویل به کارگاه (به علت خاتمه همکاری ${name})`,
+              personnelName: `عودت به انبار/تحویل به کارگاه (به علت خاتمه همکاری ${name})`,
               startDate: dateStr,
               endDate: dateStr,
             });
@@ -965,7 +965,7 @@ async function startServer() {
         equipmentCode,
         equipmentType: equipType,
         personnelCode: null,
-        personnelName: "خروج به انبار/تحویل به کارگاه",
+        personnelName: "عودت به انبار/تحویل به کارگاه",
         startDate: dateStr,
         endDate: dateStr,
       });
