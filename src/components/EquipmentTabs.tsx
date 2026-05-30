@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Case, Monitor, Printer, Personnel, Mouse, Keyboard } from '../types';
 
 export function StatusBadge({ status }: { status?: 'working' | 'repair' | 'retired' }) {
@@ -49,6 +49,57 @@ export function CasesSubTab({
   onTabChange,
   onShowQR
 }: CasesSubTabProps) {
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortAsc, setSortAsc] = useState<boolean>(true);
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortAsc(!sortAsc);
+    } else {
+      setSortField(field);
+      setSortAsc(true);
+    }
+  };
+
+  const getOwnerName = (assignedToCode: string | null) => {
+    if (!assignedToCode) return '';
+    const found = personnel.find(p => p.code === assignedToCode);
+    return found ? found.name : '';
+  };
+
+  const sortedCases = useMemo(() => {
+    if (!sortField) return cases;
+    return [...cases].sort((a: any, b: any) => {
+      let valA = '';
+      let valB = '';
+
+      if (sortField === 'assignedTo') {
+        valA = getOwnerName(a.assignedTo);
+        valB = getOwnerName(b.assignedTo);
+      } else if (sortField === 'ram') {
+        valA = `${a.ramType || ''} ${a.ramQty || ''}`;
+        valB = `${b.ramType || ''} ${b.ramQty || ''}`;
+      } else if (sortField === 'hdd') {
+        valA = `${a.hdd1 || ''} ${a.hdd2 || ''}`;
+        valB = `${b.hdd1 || ''} ${b.hdd2 || ''}`;
+      } else {
+        valA = String(a[sortField] || '');
+        valB = String(b[sortField] || '');
+      }
+
+      return sortAsc 
+        ? valA.localeCompare(valB, 'fa') 
+        : valB.localeCompare(valA, 'fa');
+    });
+  }, [cases, sortField, sortAsc, personnel]);
+
+  const renderSortIndicator = (field: string) => {
+    if (sortField !== field) return <span className="text-slate-300 mr-1 select-none text-[10px]">⇅</span>;
+    return sortAsc 
+      ? <span className="text-blue-600 mr-1 select-none">▲</span> 
+      : <span className="text-blue-600 mr-1 select-none">▼</span>;
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -66,28 +117,28 @@ export function CasesSubTab({
           <table className="w-full text-right border-collapse text-[11px] md:text-xs">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 whitespace-nowrap">
-                <th className="p-2.5 font-bold text-right">کد کیس (شماره اموال)</th>
-                <th className="p-2.5 font-bold text-right">مادربورد</th>
-                <th className="p-2.5 font-bold text-right">پردازنده (CPU)</th>
-                <th className="p-2.5 font-bold text-right">رم (RAM)</th>
-                <th className="p-2.5 font-bold text-right">کارت گرافیک</th>
-                <th className="p-2.5 font-bold text-right">فضای هارد (HDD/SSD)</th>
-                <th className="p-2.5 font-bold text-right">پاور (منبع تغذیه)</th>
-                <th className="p-2.5 font-bold text-right">وضعیت سلامت</th>
-                <th className="p-2.5 font-bold text-right">توضیحات</th>
-                <th className="p-2.5 font-bold text-right">تحویل به</th>
-                <th className="p-2.5 font-bold text-center">عملیات</th>
+                <th onClick={() => handleSort('code')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کد کیس (شماره اموال) {renderSortIndicator('code')}</th>
+                <th onClick={() => handleSort('motherboard')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">مادربورد {renderSortIndicator('motherboard')}</th>
+                <th onClick={() => handleSort('cpu')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">پردازنده (CPU) {renderSortIndicator('cpu')}</th>
+                <th onClick={() => handleSort('ram')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">رم (RAM) {renderSortIndicator('ram')}</th>
+                <th onClick={() => handleSort('vga')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کارت گرافیک {renderSortIndicator('vga')}</th>
+                <th onClick={() => handleSort('hdd')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">فضای هارد (HDD/SSD) {renderSortIndicator('hdd')}</th>
+                <th onClick={() => handleSort('power')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">پاور (منبع تغذیه) {renderSortIndicator('power')}</th>
+                <th onClick={() => handleSort('status')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
+                <th className="p-2.5 font-bold text-right select-none">توضیحات</th>
+                <th onClick={() => handleSort('assignedTo')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">تحویل به {renderSortIndicator('assignedTo')}</th>
+                <th className="p-2.5 font-bold text-center select-none">عملیات</th>
               </tr>
             </thead>
             <tbody>
-              {cases.length === 0 ? (
+              {sortedCases.length === 0 ? (
                 <tr>
                    <td colSpan={11} className="p-6 text-center text-slate-400">
                     کیسی در سامانه ثبت نگردیده است. نسبت به افزودن از تب ثبت جدید اقدام فرمایید.
                   </td>
                 </tr>
               ) : (
-                cases.map((c) => {
+                sortedCases.map((c) => {
                   const owner = personnel.find(p => p.code === c.assignedTo);
                   return (
                     <tr 
@@ -184,6 +235,51 @@ export function MonitorsSubTab({
   onTabChange,
   onShowQR
 }: MonitorsSubTabProps) {
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortAsc, setSortAsc] = useState<boolean>(true);
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortAsc(!sortAsc);
+    } else {
+      setSortField(field);
+      setSortAsc(true);
+    }
+  };
+
+  const getOwnerName = (assignedToCode: string | null) => {
+    if (!assignedToCode) return '';
+    const found = personnel.find(p => p.code === assignedToCode);
+    return found ? found.name : '';
+  };
+
+  const sortedMonitors = useMemo(() => {
+    if (!sortField) return monitors;
+    return [...monitors].sort((a: any, b: any) => {
+      let valA = '';
+      let valB = '';
+
+      if (sortField === 'assignedTo') {
+        valA = getOwnerName(a.assignedTo);
+        valB = getOwnerName(b.assignedTo);
+      } else {
+        valA = String(a[sortField] || '');
+        valB = String(b[sortField] || '');
+      }
+
+      return sortAsc 
+        ? valA.localeCompare(valB, 'fa') 
+        : valB.localeCompare(valA, 'fa');
+    });
+  }, [monitors, sortField, sortAsc, personnel]);
+
+  const renderSortIndicator = (field: string) => {
+    if (sortField !== field) return <span className="text-slate-300 mr-1 select-none text-[10px]">⇅</span>;
+    return sortAsc 
+      ? <span className="text-blue-600 mr-1 select-none">▲</span> 
+      : <span className="text-blue-600 mr-1 select-none">▼</span>;
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -201,23 +297,23 @@ export function MonitorsSubTab({
           <table className="w-full text-right border-collapse text-[11px] md:text-xs">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 whitespace-nowrap">
-                <th className="p-2.5 font-bold text-right">کد مانیتور (اموال)</th>
-                <th className="p-2.5 font-bold text-right">نام مدل و مشخصات فنی</th>
-                <th className="p-2.5 font-bold text-right">وضعیت سلامت</th>
-                <th className="p-2.5 font-bold text-right">توضیحات</th>
-                <th className="p-2.5 font-bold text-right">کاربر تحویل گیرنده</th>
-                <th className="p-2.5 text-center font-bold">عملیات</th>
+                <th onClick={() => handleSort('code')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کد مانیتور (اموال) {renderSortIndicator('code')}</th>
+                <th onClick={() => handleSort('model')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">نام مدل و مشخصات فنی {renderSortIndicator('model')}</th>
+                <th onClick={() => handleSort('status')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
+                <th className="p-2.5 font-bold text-right select-none">توضیحات</th>
+                <th onClick={() => handleSort('assignedTo')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کاربر تحویل گیرنده {renderSortIndicator('assignedTo')}</th>
+                <th className="p-2.5 text-center font-bold select-none">عملیات</th>
               </tr>
             </thead>
             <tbody>
-              {monitors.length === 0 ? (
+              {sortedMonitors.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-6 text-center text-slate-400">
+                   <td colSpan={6} className="p-6 text-center text-slate-400">
                     مانیتوری در سامانه ثبت نگردیده است.
                   </td>
                 </tr>
               ) : (
-                monitors.map((m) => {
+                sortedMonitors.map((m) => {
                   const owner = personnel.find(p => p.code === m.assignedTo);
                   return (
                     <tr 
@@ -305,6 +401,51 @@ export function PrintersSubTab({
   onTabChange,
   onShowQR
 }: PrintersSubTabProps) {
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortAsc, setSortAsc] = useState<boolean>(true);
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortAsc(!sortAsc);
+    } else {
+      setSortField(field);
+      setSortAsc(true);
+    }
+  };
+
+  const getOwnerName = (assignedToCode: string | null) => {
+    if (!assignedToCode) return '';
+    const found = personnel.find(p => p.code === assignedToCode);
+    return found ? found.name : '';
+  };
+
+  const sortedPrinters = useMemo(() => {
+    if (!sortField) return printers;
+    return [...printers].sort((a: any, b: any) => {
+      let valA = '';
+      let valB = '';
+
+      if (sortField === 'assignedTo') {
+        valA = getOwnerName(a.assignedTo);
+        valB = getOwnerName(b.assignedTo);
+      } else {
+        valA = String(a[sortField] || '');
+        valB = String(b[sortField] || '');
+      }
+
+      return sortAsc 
+        ? valA.localeCompare(valB, 'fa') 
+        : valB.localeCompare(valA, 'fa');
+    });
+  }, [printers, sortField, sortAsc, personnel]);
+
+  const renderSortIndicator = (field: string) => {
+    if (sortField !== field) return <span className="text-slate-300 mr-1 select-none text-[10px]">⇅</span>;
+    return sortAsc 
+      ? <span className="text-blue-600 mr-1 select-none">▲</span> 
+      : <span className="text-blue-600 mr-1 select-none">▼</span>;
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -322,23 +463,23 @@ export function PrintersSubTab({
           <table className="w-full text-right border-collapse text-[11px] md:text-xs">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 whitespace-nowrap">
-                <th className="p-2.5 font-bold text-right">کد پرینتر (اموال)</th>
-                <th className="p-2.5 font-bold text-right">مدل و سازنده</th>
-                <th className="p-2.5 font-bold text-right">وضعیت سلامت</th>
-                <th className="p-2.5 font-bold text-right">توضیحات</th>
-                <th className="p-2.5 font-bold text-right">تحویل به کاربر کارگاه</th>
-                <th className="p-2.5 text-center font-bold">عملیات</th>
+                <th onClick={() => handleSort('code')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کده پرینتر (اموال) {renderSortIndicator('code')}</th>
+                <th onClick={() => handleSort('model')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">مدل و سازنده {renderSortIndicator('model')}</th>
+                <th onClick={() => handleSort('status')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
+                <th className="p-2.5 font-bold text-right select-none">توضیحات</th>
+                <th onClick={() => handleSort('assignedTo')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">تحویل به کاربر کارگاه {renderSortIndicator('assignedTo')}</th>
+                <th className="p-2.5 text-center font-bold select-none">عملیات</th>
               </tr>
             </thead>
             <tbody>
-              {printers.length === 0 ? (
+              {sortedPrinters.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-6 text-center text-slate-400">
+                   <td colSpan={6} className="p-6 text-center text-slate-400">
                     پرینتری در سیستم ثبت نگردیده است.
                   </td>
                 </tr>
               ) : (
-                printers.map((pr) => {
+                sortedPrinters.map((pr) => {
                   const owner = personnel.find(p => p.code === pr.assignedTo);
                   return (
                     <tr 
@@ -426,6 +567,51 @@ export function MiceSubTab({
   onTabChange,
   onShowQR
 }: MiceSubTabProps) {
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortAsc, setSortAsc] = useState<boolean>(true);
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortAsc(!sortAsc);
+    } else {
+      setSortField(field);
+      setSortAsc(true);
+    }
+  };
+
+  const getOwnerName = (assignedToCode: string | null) => {
+    if (!assignedToCode) return '';
+    const found = personnel.find(p => p.code === assignedToCode);
+    return found ? found.name : '';
+  };
+
+  const sortedMice = useMemo(() => {
+    if (!sortField) return mice;
+    return [...mice].sort((a: any, b: any) => {
+      let valA = '';
+      let valB = '';
+
+      if (sortField === 'assignedTo') {
+        valA = getOwnerName(a.assignedTo);
+        valB = getOwnerName(b.assignedTo);
+      } else {
+        valA = String(a[sortField] || '');
+        valB = String(b[sortField] || '');
+      }
+
+      return sortAsc 
+        ? valA.localeCompare(valB, 'fa') 
+        : valB.localeCompare(valA, 'fa');
+    });
+  }, [mice, sortField, sortAsc, personnel]);
+
+  const renderSortIndicator = (field: string) => {
+    if (sortField !== field) return <span className="text-slate-300 mr-1 select-none text-[10px]">⇅</span>;
+    return sortAsc 
+      ? <span className="text-blue-600 mr-1 select-none">▲</span> 
+      : <span className="text-blue-600 mr-1 select-none">▼</span>;
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -443,23 +629,23 @@ export function MiceSubTab({
           <table className="w-full text-right border-collapse text-[11px] md:text-xs">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 whitespace-nowrap">
-                <th className="p-2.5 font-bold text-right">کد ماوس (اموال)</th>
-                <th className="p-2.5 font-bold text-right">مدل و برند</th>
-                <th className="p-2.5 font-bold text-right">وضعیت سلامت</th>
-                <th className="p-2.5 font-bold text-right">توضیحات</th>
-                <th className="p-2.5 font-bold text-right">کاربر تحویل گیرنده</th>
-                <th className="p-2.5 text-center font-bold">عملیات</th>
+                <th onClick={() => handleSort('code')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کد ماوس (اموال) {renderSortIndicator('code')}</th>
+                <th onClick={() => handleSort('model')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">مدل و برند {renderSortIndicator('model')}</th>
+                <th onClick={() => handleSort('status')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
+                <th className="p-2.5 font-bold text-right select-none">توضیحات</th>
+                <th onClick={() => handleSort('assignedTo')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کاربر تحویل گیرنده {renderSortIndicator('assignedTo')}</th>
+                <th className="p-2.5 text-center font-bold select-none">عملیات</th>
               </tr>
             </thead>
             <tbody>
-              {mice.length === 0 ? (
+              {sortedMice.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="p-6 text-center text-slate-400">
                     ماوسی در سیستم ثبت نگردیده است.
                   </td>
                 </tr>
               ) : (
-                mice.map((m) => {
+                sortedMice.map((m) => {
                   const owner = personnel.find(p => p.code === m.assignedTo);
                   return (
                     <tr 
@@ -547,6 +733,51 @@ export function KeyboardsSubTab({
   onTabChange,
   onShowQR
 }: KeyboardsSubTabProps) {
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortAsc, setSortAsc] = useState<boolean>(true);
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortAsc(!sortAsc);
+    } else {
+      setSortField(field);
+      setSortAsc(true);
+    }
+  };
+
+  const getOwnerName = (assignedToCode: string | null) => {
+    if (!assignedToCode) return '';
+    const found = personnel.find(p => p.code === assignedToCode);
+    return found ? found.name : '';
+  };
+
+  const sortedKeyboards = useMemo(() => {
+    if (!sortField) return keyboards;
+    return [...keyboards].sort((a: any, b: any) => {
+      let valA = '';
+      let valB = '';
+
+      if (sortField === 'assignedTo') {
+        valA = getOwnerName(a.assignedTo);
+        valB = getOwnerName(b.assignedTo);
+      } else {
+        valA = String(a[sortField] || '');
+        valB = String(b[sortField] || '');
+      }
+
+      return sortAsc 
+        ? valA.localeCompare(valB, 'fa') 
+        : valB.localeCompare(valA, 'fa');
+    });
+  }, [keyboards, sortField, sortAsc, personnel]);
+
+  const renderSortIndicator = (field: string) => {
+    if (sortField !== field) return <span className="text-slate-300 mr-1 select-none text-[10px]">⇅</span>;
+    return sortAsc 
+      ? <span className="text-blue-600 mr-1 select-none">▲</span> 
+      : <span className="text-blue-600 mr-1 select-none">▼</span>;
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -564,23 +795,23 @@ export function KeyboardsSubTab({
           <table className="w-full text-right border-collapse text-[11px] md:text-xs">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 whitespace-nowrap">
-                <th className="p-2.5 font-bold text-right">کد کیبورد (اموال)</th>
-                <th className="p-2.5 font-bold text-right">مدل و برند</th>
-                <th className="p-2.5 font-bold text-right">وضعیت سلامت</th>
-                <th className="p-2.5 font-bold text-right">توضیحات</th>
-                <th className="p-2.5 font-bold text-right">کاربر تحویل گیرنده</th>
-                <th className="p-2.5 text-center font-bold">عملیات</th>
+                <th onClick={() => handleSort('code')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کد کیبورد (اموال) {renderSortIndicator('code')}</th>
+                <th onClick={() => handleSort('model')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">مدل و برند {renderSortIndicator('model')}</th>
+                <th onClick={() => handleSort('status')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
+                <th className="p-2.5 font-bold text-right select-none">توضیحات</th>
+                <th onClick={() => handleSort('assignedTo')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کاربر تحویل گیرنده {renderSortIndicator('assignedTo')}</th>
+                <th className="p-2.5 text-center font-bold select-none">عملیات</th>
               </tr>
             </thead>
             <tbody>
-              {keyboards.length === 0 ? (
+              {sortedKeyboards.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="p-6 text-center text-slate-400">
                     کیبوردی در سیستم ثبت نگردیده است.
                   </td>
                 </tr>
               ) : (
-                keyboards.map((k) => {
+                sortedKeyboards.map((k) => {
                   const owner = personnel.find(p => p.code === k.assignedTo);
                   return (
                     <tr 

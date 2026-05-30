@@ -190,6 +190,469 @@ export default function ReportingTab({
     };
   };
 
+  const exportToExcel = () => {
+    if (reportType === 'none') return;
+
+    let html = `
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+  <meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8">
+  <!--[if gte mso 9]>
+  <xml>
+    <x:ExcelWorkbook>
+      <x:ExcelWorksheets>
+        <x:ExcelWorksheet>
+          <x:Name>گزارش هوشمند</x:Name>
+          <x:WorksheetOptions>
+            <x:DisplayRightToLeft/>
+          </x:WorksheetOptions>
+        </x:ExcelWorksheet>
+      </x:ExcelWorksheets>
+    </x:ExcelWorkbook>
+  </xml>
+  <![endif]-->
+  <style>
+    body { font-family: Tahoma, Arial, sans-serif; direction: rtl; text-align: right; }
+    table { border-collapse: collapse; margin-bottom: 20px; width: 100%; direction: rtl; text-align: right; }
+    th { background-color: #f1f5f9; border: 1px solid #718096; font-weight: bold; padding: 10px; text-align: right; font-size: 12px; }
+    td { border: 1px solid #cbd5e0; padding: 10px; text-align: right; font-size: 11px; vertical-align: middle; }
+    .title-cell { font-size: 18px; font-weight: bold; color: #1a365d; text-align: center; padding: 15px 0; background-color: #ebf8ff; border: 1px solid #718096; }
+    .subtitle-cell { font-size: 13px; font-weight: bold; color: #2b6cb0; text-align: center; padding: 8px 0; background-color: #f7fafc; border: 1px solid #718096; }
+    .meta-cell { font-size: 11px; color: #4a5568; text-align: right; border: 1px solid #cbd5e0; background-color: #edf2f7; }
+    .section-header { font-size: 14px; font-weight: bold; color: #ffffff; background-color: #2b6cb0; text-align: right; padding: 8px; }
+    .card-header { font-size: 12px; font-weight: bold; color: #ffffff; background-color: #4a5568; text-align: center; }
+    .signature-title { font-weight: bold; font-size: 11px; background-color: #edf2f7; text-align: center; padding: 8px; }
+    .signature-body { height: 80px; font-size: 11px; text-align: center; vertical-align: bottom; padding: 5px; }
+    .badge { font-size: 10px; font-weight: bold; padding: 2px 6px; text-align: center; border-radius: 4px; }
+    .badge-ok { background-color: #c6f6d5; color: #22543d; }
+    .badge-repair { background-color: #feebc8; color: #744210; }
+    .badge-retired { background-color: #fed7d7; color: #742a2a; }
+  </style>
+</head>
+<body>
+`;
+
+    if (reportType === 'general') {
+      html += `
+  <table>
+    <tr>
+      <td colspan="10" class="title-cell">شرکت عمران آذرستان</td>
+    </tr>
+    <tr>
+      <td colspan="10" class="subtitle-cell">واحد فناوری اطلاعات و ارتباطات (ICT) — گزارش ترکیبی تجهیزات کل سامانه</td>
+    </tr>
+    <tr>
+      <td colspan="10" class="meta-cell">تاریخ گزارش: ۱۴۰۵/۰۳/۰۳ | فیلتر اعمال شده: بر اساس درخواست کاربر</td>
+    </tr>
+  </table>
+
+  <table>
+    <tr style="background-color: #f7fafc;">
+      <td colspan="4" style="font-weight: bold; text-align: center; border: 1px solid #718096; background-color: #ebf8ff; color: #2c5282;">آمار توزیع تجهیزات</td>
+      <td colspan="6" style="border: none;"></td>
+    </tr>
+    <tr>
+      <td colspan="2" style="font-weight: bold; background-color: #f7fafc;">کیس‌های کارگاهی / اداری:</td>
+      <td colspan="2" style="font-weight: bold; color: #84141A;">${filteredCases.length} عدد</td>
+      <td colspan="6" style="border: none;"></td>
+    </tr>
+    <tr>
+      <td colspan="2" style="font-weight: bold; background-color: #f7fafc;">دستگاه‌های مانیتور:</td>
+      <td colspan="2" style="font-weight: bold; color: #2563eb;">${filteredMonitors.length} عدد</td>
+      <td colspan="6" style="border: none;"></td>
+    </tr>
+    <tr>
+      <td colspan="2" style="font-weight: bold; background-color: #f7fafc;">پرینتر و ملزومات چاپ:</td>
+      <td colspan="2" style="font-weight: bold; color: #059669;">${filteredPrinters.length} عدد</td>
+      <td colspan="6" style="border: none;"></td>
+    </tr>
+  </table>
+`;
+
+      if (secPers) {
+        html += `
+  <table>
+    <tr>
+      <td colspan="6" class="section-header">👥 گزارش کاربران و پرسنل</td>
+    </tr>
+    <thead>
+      <tr>
+        <th style="width: 5%">ردیف</th>
+        <th style="width: 25%">نام کامل</th>
+        <th style="width: 15%">کد پرسنلی</th>
+        <th style="width: 20%">سمت</th>
+        <th style="width: 15%">بخش</th>
+        <th style="width: 20%">موقعیت استقرار</th>
+      </tr>
+    </thead>
+    <tbody>
+`;
+        personnel.forEach((p, idx) => {
+          html += `
+      <tr>
+        <td style="text-align: center; font-weight: bold;">${idx + 1}</td>
+        <td style="font-weight: bold; color: #1a202c;">${p.name || ''}</td>
+        <td style="font-family: monospace;">${p.code || ''}</td>
+        <td>${p.title || ''}</td>
+        <td>${p.department || ''}</td>
+        <td>${p.location || ''}</td>
+      </tr>
+`;
+        });
+        html += `
+    </tbody>
+  </table>
+`;
+      }
+
+      if (secCases) {
+        html += `
+  <table>
+    <tr>
+      <td colspan="10" class="section-header" style="background-color: #1a365d;">🖥️ گزارش فنی کیس‌ها</td>
+    </tr>
+    <thead>
+      <tr>
+        <th>ردیف</th>
+        <th>کد کیس</th>
+        <th>مادربورد</th>
+        <th>پردازنده</th>
+        <th>نوع رم</th>
+        <th>گرافیک</th>
+        <th>ذخیره سازی</th>
+        <th>پاور (PSU)</th>
+        <th>وضعیت سلامت</th>
+        <th>کاربر تحویل گیرنده</th>
+      </tr>
+    </thead>
+    <tbody>
+`;
+        if (filteredCases.length === 0) {
+          html += `<tr><td colspan="10" style="text-align: center; color: #a0aec0; padding: 20px;">موردی یافت نشد.</td></tr>`;
+        } else {
+          filteredCases.forEach((c, idx) => {
+            const statusLabel = c.status === 'repair' ? '⚠️ نیاز به تعمیر' : c.status === 'retired' ? '❌ اسقاط شده' : '✅ سالم';
+            const ownerName = c.assignedTo ? `${personnel.find(p => p.code === c.assignedTo)?.name || 'کد نامعتبر'} (${c.assignedTo})` : '📦 داخل انبار';
+            html += `
+        <tr>
+          <td style="text-align: center;">${idx + 1}</td>
+          <td style="font-family: monospace; font-weight: bold; color: #111827;">${c.code || ''}</td>
+          <td>${c.motherboard || ''}</td>
+          <td>${c.cpu || ''}</td>
+          <td style="font-family: monospace;">${c.ramType || ''} / ${c.ramQty || ''}</td>
+          <td>${c.vga || ''}</td>
+          <td>${c.hdd1 || ''} | ${c.hdd2 || ''}</td>
+          <td style="font-family: monospace;">${c.power || '—'}</td>
+          <td>${statusLabel}</td>
+          <td style="font-weight: bold;">${ownerName}</td>
+        </tr>
+`;
+          });
+        }
+        html += `
+    </tbody>
+  </table>
+`;
+      }
+
+      if (secMons) {
+        html += `
+  <table>
+    <tr>
+      <td colspan="5" class="section-header" style="background-color: #2c5282;">📺 گزارش مانیتورها</td>
+    </tr>
+    <thead>
+      <tr>
+        <th>ردیف</th>
+        <th>کد مانیتور</th>
+        <th>مدل و مشخصات فنی</th>
+        <th>وضعیت سلامت</th>
+        <th>تحویل گیرنده</th>
+      </tr>
+    </thead>
+    <tbody>
+`;
+        if (filteredMonitors.length === 0) {
+          html += `<tr><td colspan="5" style="text-align: center; color: #a0aec0; padding: 20px;">موردی یافت نشد.</td></tr>`;
+        } else {
+          filteredMonitors.forEach((m, idx) => {
+            const statusLabel = m.status === 'repair' ? '⚠️ نیاز به تعمیر' : m.status === 'retired' ? '❌ اسقاط شده' : '✅ سالم';
+            const ownerName = m.assignedTo ? `${personnel.find(p => p.code === m.assignedTo)?.name || 'کد نامعتبر'} (${m.assignedTo})` : '📦 انبار کارگاه';
+            html += `
+        <tr>
+          <td style="text-align: center;">${idx + 1}</td>
+          <td style="font-family: monospace; font-weight: bold;">${m.code || ''}</td>
+          <td>${m.model || ''}</td>
+          <td>${statusLabel}</td>
+          <td style="font-weight: bold;">${ownerName}</td>
+        </tr>
+`;
+          });
+        }
+        html += `
+    </tbody>
+  </table>
+`;
+      }
+
+      if (secPris) {
+        html += `
+  <table>
+    <tr>
+      <td colspan="5" class="section-header" style="background-color: #276749;">🖨️ گزارش پرینترها</td>
+    </tr>
+    <thead>
+      <tr>
+        <th>ردیف</th>
+        <th>کد پرینتر</th>
+        <th>مدل کالا</th>
+        <th>وضعیت سلامت</th>
+        <th>تحویل گیرنده</th>
+      </tr>
+    </thead>
+    <tbody>
+`;
+        if (filteredPrinters.length === 0) {
+          html += `<tr><td colspan="5" style="text-align: center; color: #a0aec0; padding: 20px;">موردی یافت نشد.</td></tr>`;
+        } else {
+          filteredPrinters.forEach((pr, idx) => {
+            const statusLabel = pr.status === 'repair' ? '⚠️ نیاز به تعمیر' : pr.status === 'retired' ? '❌ اسقاط شده' : '✅ سالم';
+            const ownerName = pr.assignedTo ? `${personnel.find(p => p.code === pr.assignedTo)?.name || 'کد نامعتبر'} (${pr.assignedTo})` : '📦 انبار کارگاه';
+            html += `
+        <tr>
+          <td style="text-align: center;">${idx + 1}</td>
+          <td style="font-family: monospace; font-weight: bold;">${pr.code || ''}</td>
+          <td>${pr.model || ''}</td>
+          <td>${statusLabel}</td>
+          <td style="font-weight: bold;">${ownerName}</td>
+        </tr>
+`;
+          });
+        }
+        html += `
+    </tbody>
+  </table>
+`;
+      }
+
+      if (secHis) {
+        html += `
+  <table>
+    <tr>
+      <td colspan="6" class="section-header" style="background-color: #4a5568;">📜 گزارش کلی ترانسفر کل تاریخچه‌ها</td>
+    </tr>
+    <thead>
+      <tr>
+        <th>ردیف</th>
+        <th>نوع تجهیز</th>
+        <th>کد اموال</th>
+        <th>تحویل گیرنده</th>
+        <th>تاریخ واگذاری (شروع)</th>
+        <th>تاریخ پایان (استرداد)</th>
+      </tr>
+    </thead>
+    <tbody>
+`;
+        assignments.forEach((ass, idx) => {
+          const typeLabel = ass.equipmentType === 'case' ? 'کیس کامپیوتر' : ass.equipmentType === 'monitor' ? 'مانیتور' : 'پرینتر';
+          const endStr = ass.endDate || 'در دست اقدام (فعلی)';
+          html += `
+      <tr>
+        <td style="text-align: center;">${idx + 1}</td>
+        <td style="font-weight: bold;">${typeLabel}</td>
+        <td style="font-family: monospace;">${ass.equipmentCode || ''}</td>
+        <td style="font-weight: bold;">${ass.personnelName || 'انبار مرکزی'}</td>
+        <td style="font-family: monospace;">${ass.startDate || ''}</td>
+        <td style="font-family: monospace;">${endStr}</td>
+      </tr>
+`;
+        });
+        html += `
+    </tbody>
+  </table>
+`;
+      }
+    } else if (reportType === 'certificate' && liveCertificatePers) {
+      const certificatePers = liveCertificatePers;
+      const secondaryList = [
+        ...getAssignedEquipments(certificatePers.code).monitors.map(m => ({ type: '📺 نمایشگر (مانیتور اداری)', code: m.code, model: m.model })),
+        ...getAssignedEquipments(certificatePers.code).printers.map(pr => ({ type: '🖨️ پرینتر / چاپگر کارگاهی', code: pr.code, model: pr.model })),
+        ...getAssignedEquipments(certificatePers.code).mice.map(m => ({ type: '🖱️ ماوس (پرونده پرسنلی)', code: m.code, model: m.model })),
+        ...getAssignedEquipments(certificatePers.code).keyboards.map(k => ({ type: '⌨️ کیبورد (پرونده پرسنلی)', code: k.code, model: k.model })),
+      ];
+
+      html += `
+  <table>
+    <tr>
+      <td colspan="4" class="title-cell">شرکت عمران آذرستان</td>
+    </tr>
+    <tr>
+      <td colspan="4" class="subtitle-cell">واحد فناوری اطلاعات و ارتباطات (ICT)</td>
+    </tr>
+    <tr>
+      <td class="meta-cell" style="font-weight: bold;">کد سند:</td>
+      <td class="meta-cell" style="font-family: monospace;">37-FO-IT-01-01</td>
+      <td class="meta-cell" style="font-weight: bold;">شماره سند:</td>
+      <td class="meta-cell" style="font-family: monospace; font-weight: bold; color: #3182ce;">ICT-CERT-${certificatePers.documentNumber || "----"}</td>
+    </tr>
+    <tr>
+      <td class="meta-cell" style="font-weight: bold;">تاریخ صدور سند:</td>
+      <td class="meta-cell" colspan="3">۱۴۰۵/۰۳/۰۳</td>
+    </tr>
+  </table>
+
+  <table>
+    <tr>
+      <td colspan="4" style="background-color: #2d3748; color: #ffffff; text-align: center; font-weight: bold; font-size: 13px; padding: 12px 0;">سند اداری شناسنامه هوشمند و تاییدیه تحویل تجهیزات رایانه‌ای پرسنل</td>
+    </tr>
+    <tr>
+      <td colspan="4" style="background-color: #f7fafc; font-weight: bold; text-align: right; color: #1a202c; border: 1px solid #cbd5e0;">۱. مشخصات کامل تحویل‌گیرنده کالا:</td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold; background-color: #edf2f7; width: 20%;">نام و نام خانوادگی:</td>
+      <td style="font-weight: bold; font-size: 12px; width: 30%;">${certificatePers.name || ''}</td>
+      <td style="font-weight: bold; background-color: #edf2f7; width: 20%;">کد پرسنلی پرسنل:</td>
+      <td style="font-family: monospace; font-weight: bold; width: 30%;">${certificatePers.code || ''}</td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold; background-color: #edf2f7;">سمت اداری/واحد:</td>
+      <td>${certificatePers.title || ''}</td>
+      <td style="font-weight: bold; background-color: #edf2f7;">واحد خدمتی:</td>
+      <td>${certificatePers.department || ''}</td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold; background-color: #edf2f7;">نشانی محل استقرار دارد:</td>
+      <td colspan="3">${certificatePers.location || ''}</td>
+    </tr>
+  </table>
+
+  <table>
+    <tr>
+      <td colspan="4" style="background-color: #f7fafc; font-weight: bold; text-align: right; color: #1a202c; border: 1px solid #cbd5e0;">۲. مشخصات سخت‌افزارهای ثبت شده در آلبوم و تحویل شده به فرد:</td>
+    </tr>
+  </table>
+`;
+
+      const userEquip = getAssignedEquipments(certificatePers.code);
+      if (userEquip.totalCount === 0) {
+        html += `
+  <table>
+    <tr>
+      <td style="text-align: center; color: #e53e3e; padding: 25px; font-weight: bold; background-color: #fff5f5;">در حال حاضر هیچگونه تجهیزات فعالی به نام این شخص واگذار و ثبت نگردیده است.</td>
+    </tr>
+  </table>
+`;
+      } else {
+        userEquip.cases.forEach(c => {
+          const statusLabel = c.status === 'repair' ? 'نیاز به تعمیر' : c.status === 'retired' ? 'اسقاط شده' : 'سالم و فعال';
+          html += `
+  <table>
+    <tr>
+      <td colspan="4" class="card-header" style="background-color: #2d3748; padding: 8px;">🔵 کیس کامپیوتر (سخت‌افزار اصلی) — کد اموال: ${c.code}</td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold; background-color: #edf2f7; width: 20%;">مادربورد:</td>
+      <td style="width: 30%;">${c.motherboard || ''}</td>
+      <td style="font-weight: bold; background-color: #edf2f7; width: 20%;">پردازنده (CPU):</td>
+      <td style="width: 30%;">${c.cpu || ''}</td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold; background-color: #edf2f7;">نوع رم:</td>
+      <td style="font-family: monospace;">${c.ramType || ''} / ${c.ramQty || ''}</td>
+      <td style="font-weight: bold; background-color: #edf2f7;">گرافیک VGA:</td>
+      <td>${c.vga || ''}</td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold; background-color: #edf2f7;">هارد اصلی SSD/HDD:</td>
+      <td>${c.hdd1 || ''}</td>
+      <td style="font-weight: bold; background-color: #edf2f7;">هارد ثانویه:</td>
+      <td>${c.hdd2 || ''}</td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold; background-color: #edf2f7;">منبع تغذیه (پاور):</td>
+      <td style="font-family: monospace;">${c.power || '—'}</td>
+      <td style="font-weight: bold; background-color: #edf2f7;">وضعیت سلامت:</td>
+      <td style="font-weight: bold; color: #2b6cb0;">${statusLabel}</td>
+    </tr>
+  </table>
+`;
+        });
+
+        if (secondaryList.length > 0) {
+          html += `
+  <table>
+    <thead>
+      <tr style="background-color: #cbd5e0;">
+        <th style="width: 10%; text-align: center;">ردیف</th>
+        <th style="width: 30%;">دسته سخت‌افزار</th>
+        <th style="width: 25%; font-family: monospace;">کد اموال و ردیاب</th>
+        <th style="width: 35%;">سازنده و مدل دقیق کالا تحویل شده</th>
+      </tr>
+    </thead>
+    <tbody>
+`;
+          secondaryList.forEach((item, idx) => {
+            html += `
+      <tr>
+        <td style="text-align: center; font-weight: bold;">${idx + 1}</td>
+        <td style="font-weight: bold; color: #2d3748;">${item.type}</td>
+        <td style="font-family: monospace; font-weight: bold; color: #1a202c;">${item.code}</td>
+        <td>${item.model}</td>
+      </tr>
+`;
+          });
+          html += `
+    </tbody>
+  </table>
+`;
+        }
+      }
+
+      html += `
+  <table style="margin-top: 40px;">
+    <tr>
+      <td class="signature-title" style="width: 33.3%;">امضا تحویل گیرنده (استفاده‌کننده):</td>
+      <td class="signature-title" style="width: 33.3%;">واحد انبار پروژه:</td>
+      <td class="signature-title" style="width: 33.3%;">واحد فناوری اطلاعات (ICT):</td>
+    </tr>
+    <tr>
+      <td class="signature-body">${certificatePers.name || ''} <br><br> امضا و تایید تحویل سخت‌افزار</td>
+      <td class="signature-body">امضا و تایید صدور فیزیکی کالا</td>
+      <td class="signature-body">ثبت سیستم شناسنامه مکتوب</td>
+    </tr>
+  </table>
+
+  <table>
+    <tr>
+      <td style="text-align: center; font-size: 10px; color: #718096; border: none; padding-top: 20px;">
+        سامانه هوشمند صدور شناسنامه تجهیزات کارگاهی شرکت عمران آذرستان سال ۱۴۰۵ | واحد فناوری اطلاعات و ارتباطات
+      </td>
+    </tr>
+  </table>
+`;
+    }
+
+    html += `
+</body>
+</html>
+`;
+
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    
+    const filename = reportType === 'general' 
+      ? `general_it_report_${new Date().toISOString().slice(0,10)}.xls`
+      : `certificate_${liveCertificatePers?.code || 'user'}_${new Date().toISOString().slice(0,10)}.xls`;
+      
+    link.setAttribute("download", filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleBatchAllocate = async () => {
     if (!onSaveItem) return;
     const unassigned = personnel.filter(p => !p.documentNumber);
@@ -550,19 +1013,32 @@ export default function ReportingTab({
       {/* Right report view area (printable format) */}
       <div className="lg:col-span-2 print:col-span-3 bg-slate-100 border border-slate-200 rounded-xl p-4 flex flex-col h-[700px] overflow-hidden print:h-auto print:overflow-visible print:bg-white print:border-none print:p-0">
         
-        <div className="no-print flex justify-between items-center border-b border-slate-200 pb-3 mb-3">
+        <div className="no-print flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-200 pb-3 mb-3 gap-2">
           <h4 className="text-slate-800 font-bold text-xs md:text-sm">📋 پیش‌نمایش زنده و چاپ مستقیم سند</h4>
-          <button
-            onClick={() => window.print()}
-            disabled={reportType === 'none'}
-            className={`px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition cursor-pointer ${
-              reportType !== 'none' 
-                ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow'
-                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-            }`}
-          >
-            🖨️ چاپ مستقیم گزارش / ذخیره PDF مکتوب
-          </button>
+          <div className="flex gap-2 w-full md:w-auto">
+            <button
+              onClick={() => window.print()}
+              disabled={reportType === 'none'}
+              className={`flex-1 md:flex-none px-3 py-1.5 md:py-2 rounded-lg text-[11px] md:text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1 ${
+                reportType !== 'none' 
+                  ? 'bg-rose-600 hover:bg-rose-700 text-white shadow'
+                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+              }`}
+            >
+              🖨️ چاپگر / ذخیره PDF مکتوب
+            </button>
+            <button
+              onClick={exportToExcel}
+              disabled={reportType === 'none'}
+              className={`flex-1 md:flex-none px-3 py-1.5 md:py-2 rounded-lg text-[11px] md:text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1 ${
+                reportType !== 'none' 
+                  ? 'bg-[#107c41] hover:bg-[#0b592e] text-white shadow'
+                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+              }`}
+            >
+              📥 فایل شکیل اکسل (RTL Excel)
+            </button>
+          </div>
         </div>
 
         {/* Informational guide banner regarding browser iframe permissions for printing */}

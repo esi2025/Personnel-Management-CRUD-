@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Personnel, Case, Monitor, Printer, Mouse, Keyboard } from '../types';
 
 interface PersonnelTabProps {
@@ -28,6 +28,8 @@ export default function PersonnelTab({
   onSelectTransfer,
   onTabChange
 }: PersonnelTabProps) {
+  const [sortField, setSortField] = useState<'name' | 'code' | 'title' | 'department' | 'location' | 'status' | 'hardware' | null>(null);
+  const [sortAsc, setSortAsc] = useState<boolean>(true);
   
   const getAssignedEquipmentCount = (code: string) => {
     const userCases = cases.filter(c => c.assignedTo === code);
@@ -43,6 +45,38 @@ export default function PersonnelTab({
       keyboards: userKeyboards,
       total: userCases.length + userMonitors.length + userPrinters.length + userMice.length + userKeyboards.length
     };
+  };
+
+  const handleSort = (field: 'name' | 'code' | 'title' | 'department' | 'location' | 'status' | 'hardware') => {
+    if (sortField === field) {
+      setSortAsc(!sortAsc);
+    } else {
+      setSortField(field);
+      setSortAsc(true);
+    }
+  };
+
+  const sortedPersonnel = useMemo(() => {
+    if (!sortField) return personnel;
+    return [...personnel].sort((a, b) => {
+      if (sortField === 'hardware') {
+        const assignsA = getAssignedEquipmentCount(a.code).total;
+        const assignsB = getAssignedEquipmentCount(b.code).total;
+        return sortAsc ? assignsA - assignsB : assignsB - assignsA;
+      }
+      const valA = a[sortField] || '';
+      const valB = b[sortField] || '';
+      return sortAsc 
+        ? valA.localeCompare(valB, 'fa') 
+        : valB.localeCompare(valA, 'fa');
+    });
+  }, [personnel, sortField, sortAsc, cases, monitors, printers, mice, keyboards]);
+
+  const renderSortIndicator = (field: 'name' | 'code' | 'title' | 'department' | 'location' | 'status' | 'hardware') => {
+    if (sortField !== field) return <span className="text-slate-300 mr-1 select-none text-[10px]">⇅</span>;
+    return sortAsc 
+      ? <span className="text-blue-600 mr-1 select-none">▲</span> 
+      : <span className="text-blue-600 mr-1 select-none">▼</span>;
   };
 
   return (
@@ -62,25 +96,39 @@ export default function PersonnelTab({
           <table className="w-full text-right border-collapse text-[11px] md:text-xs">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 whitespace-nowrap">
-                <th className="p-2.5 font-bold text-right">نام کامل</th>
-                <th className="p-2.5 font-bold text-right">کد پرسنلی</th>
-                <th className="p-2.5 font-bold text-right">سمت سازمانی</th>
-                <th className="p-2.5 font-bold text-right">واحد خدمتی</th>
-                <th className="p-2.5 font-bold text-right">موقعیت استقرار</th>
-                <th className="p-2.5 font-bold text-right">وضعیت فعالیت</th>
-                <th className="p-2.5 font-bold text-right">سخت‌افزارهای تحویل‌شده</th>
-                <th className="p-2.5 font-bold text-center">عملیات مدیریت</th>
+                <th onClick={() => handleSort('name')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">
+                  نام کامل {renderSortIndicator('name')}
+                </th>
+                <th onClick={() => handleSort('code')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">
+                  کد پرسنلی {renderSortIndicator('code')}
+                </th>
+                <th onClick={() => handleSort('title')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">
+                  سمت سازمانی {renderSortIndicator('title')}
+                </th>
+                <th onClick={() => handleSort('department')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">
+                  واحد خدمتی {renderSortIndicator('department')}
+                </th>
+                <th onClick={() => handleSort('location')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">
+                  موقعیت استقرار {renderSortIndicator('location')}
+                </th>
+                <th onClick={() => handleSort('status')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">
+                  وضعیت فعالیت {renderSortIndicator('status')}
+                </th>
+                <th onClick={() => handleSort('hardware')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">
+                  سخت‌افزارهای تحویل‌شده {renderSortIndicator('hardware')}
+                </th>
+                <th className="p-2.5 font-bold text-center select-none">عملیات مدیریت</th>
               </tr>
             </thead>
             <tbody>
-              {personnel.length === 0 ? (
+              {sortedPersonnel.length === 0 ? (
                 <tr>
-                   <td colSpan={7} className="p-6 text-center text-slate-400">
+                   <td colSpan={8} className="p-6 text-center text-slate-400">
                     هیچ کاربری در سامانه یافت نشد. جهت افزودن پرسنل، روی ثبت جدید کلیک کنید.
                   </td>
                 </tr>
               ) : (
-                personnel.map((p) => {
+                sortedPersonnel.map((p) => {
                   const assigns = getAssignedEquipmentCount(p.code);
                   return (
                     <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition whitespace-nowrap">
