@@ -11,6 +11,9 @@ import AddNewTab from './components/AddNewTab';
 import SystemsTreeTab from './components/SystemsTreeTab';
 import EditModal from './components/EditModal';
 import QRCodeModal from './components/QRCodeModal';
+import LoginScreen from './components/LoginScreen';
+import UsersTab from './components/UsersTab';
+import BulkQRTab from './components/BulkQRTab';
 import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard, CatalogItem } from './types';
 import { getPersianDateString } from './utils/date';
 
@@ -173,6 +176,19 @@ const INITIAL_DEMO_DATA = {
 };
 
 export default function App() {
+  // Session user storage checking
+  const [currentUser, setCurrentUser] = useState<any>(() => {
+    const saved = localStorage.getItem('current_user');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+
   const [activeTab, setActiveTab] = useState('personnel-tab');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -304,6 +320,25 @@ export default function App() {
 
   // Save/Edit entity
   const handleSaveItem = async (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'catalog', data: any) => {
+    // Permission validation checks
+    if (type === 'personnel') {
+      if (!currentUser?.canEditPersonnel && currentUser?.role !== 'admin') {
+        alert("دسترسی غیرمجاز! شما صلاحیت افزودن یا ویرایش پرونده پرسنلی را ندارید.");
+        return false;
+      }
+    } else if (type === 'catalog') {
+      if (currentUser?.role !== 'admin') {
+        alert("دسترسی غیرمجاز! ویرایش لیست قطعات مرجع کارگاه منحصراً در اختیار ادمین اصلی است.");
+        return false;
+      }
+    } else {
+      // Equipment types: case, monitor, printer, mouse, keyboard
+      if (!currentUser?.canEditEquipment && currentUser?.role !== 'admin') {
+        alert("دسترسی غیرمجاز! شما صلاحیت افزودن یا ویرایش تجهیزات را ندارید.");
+        return false;
+      }
+    }
+
     if (!isOfflineMode) {
       try {
         const res = await fetch('/api/save', {
@@ -536,6 +571,25 @@ export default function App() {
 
   // Delete entity
   const handleDeleteItem = async (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'catalog', id: string) => {
+    // Permission validation checks for deletion
+    if (type === 'personnel') {
+      if (!currentUser?.canEditPersonnel && currentUser?.role !== 'admin') {
+        alert("دسترسی غیرمجاز! شما صلاحیت حذف پرونده پرسنلی را ندارید.");
+        return;
+      }
+    } else if (type === 'catalog') {
+      if (currentUser?.role !== 'admin') {
+        alert("دسترسی غیرمجاز! حذف از لیست قطعات مرجع کارگاه منحصراً در اختیار ادمین اصلی است.");
+        return;
+      }
+    } else {
+      // Equipment types: case, monitor, printer, mouse, keyboard
+      if (!currentUser?.canEditEquipment && currentUser?.role !== 'admin') {
+        alert("دسترسی غیرمجاز! شما صلاحیت حذف تجهیزات را ندارید.");
+        return;
+      }
+    }
+
     const confirmationMsg = type === 'personnel' 
       ? 'آیا از حذف این پرسنل اطمینان دارید؟ تمامی تجهیزات تحت تصرف وی آزاد شده و به انبار پروژه بازگردانده می‌شوند.'
       : 'آیا از حذف این سخت‌افزار از سامانه اطمینان کامل دارید؟';
@@ -844,11 +898,40 @@ export default function App() {
     );
   };
 
+  if (!currentUser) {
+    return <LoginScreen onLoginSuccess={(u) => { setCurrentUser(u); }} />;
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('current_user');
+    setCurrentUser(null);
+    window.dispatchEvent(new Event('user-session-changed'));
+    setActiveTab('personnel-tab');
+  };
+
   return (
     <div className="min-h-screen flex flex-col p-4 md:p-8 font-sans max-w-[1600px] w-full mx-auto print:p-0 print:max-w-none" dir="rtl">
       
       {/* 1. System Header component */}
       <Header isDark={darkMode} onToggleTheme={() => setDarkMode(!darkMode)} />
+
+      {/* Welcome & logout bar */}
+      <div className="no-print mt-4 mb-2 flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs shadow-sm">
+        <div className="flex items-center gap-2">
+          <span className="text-sm">🗣️</span>
+          <span>
+            کاربر جاری سیستم: <strong className="text-indigo-650 dark:text-indigo-400 font-bold">{currentUser.name}</strong> 
+            <span className="text-slate-555 dark:text-slate-400 font-medium mr-2">({currentUser.role === 'admin' ? 'مدير ارشد سیستم (ادمین)' : currentUser.role === 'editor_equipment' ? 'اپراتور سخت‌افزار' : 'ناظر سیستم'})</span>
+          </span>
+        </div>
+        <button 
+          onClick={handleLogout}
+          className="bg-red-50 hover:bg-red-100 dark:bg-red-950/20 text-red-650 hover:text-red-750 text-[11px] font-black px-4 py-1.5 rounded-lg border border-red-200/50 cursor-pointer transition flex items-center gap-1.5 animate-pulse"
+          style={{ color: '#dc2626' }}
+        >
+          🚪 خروج امن از سیستم
+        </button>
+      </div>
 
       {isOfflineMode && (
         <div className="no-print mb-6 bg-yellow-500/10 border border-yellow-500/20 text-yellow-800 dark:text-yellow-300 p-4 rounded-xl text-xs flex flex-col sm:flex-row items-center justify-between gap-3 font-medium">
@@ -895,20 +978,22 @@ export default function App() {
       {/* 3. Navigation tabs bar (hides in print) */}
       <nav className="no-print flex flex-wrap gap-1.5 border-b border-slate-200 pb-3 mb-6">
         {[
-          { id: 'personnel-tab', label: '👥 لیست پرسنل' },
-          { id: 'cases-tab', label: '🖥️ کیس‌های کارگاه' },
-          { id: 'monitors-tab', label: '📺 مانیتورها' },
-          { id: 'printers-tab', label: '🖨️ پرینترها' },
-          { id: 'mice-tab', label: '🖱️ ماوس‌ها' },
-          { id: 'keyboards-tab', label: '⌨️ کیبوردها' },
-          { id: 'catalog-tab', label: '🛠️ قطعات مرجع' },
-          { id: 'transfer-tab', label: '🔄 جابجایی هوشمند' },
-          { id: 'history-tab', label: '📜 تاریخچه لجستیک' },
-          { id: 'reports-tab', label: '📋 گزارش و شناسنامه' },
-          { id: 'systems-tree-tab', label: '🌳 نمودار درختی سیستم‌ها' },
-          { id: 'backup-tab', label: '⚙️ پشتیبان‌گیری و سورس' },
-          { id: 'add-new-tab', label: '➕ ثبت جدید' }
-        ].map((tab) => (
+          { id: 'personnel-tab', label: '👥 لیست پرسنل', show: true },
+          { id: 'cases-tab', label: '🖥️ کیس‌های کارگاه', show: true },
+          { id: 'monitors-tab', label: '📺 مانیتورها', show: true },
+          { id: 'printers-tab', label: '🖨️ پرینترها', show: true },
+          { id: 'mice-tab', label: '🖱️ ماوس‌ها', show: true },
+          { id: 'keyboards-tab', label: '⌨️ کیبوردها', show: true },
+          { id: 'catalog-tab', label: '🛠️ قطعات مرجع', show: true },
+          { id: 'transfer-tab', label: '🔄 جابجایی هوشمند', show: currentUser?.canEditEquipment || currentUser?.role === 'admin' },
+          { id: 'history-tab', label: '📜 تاریخچه لجستیک', show: true },
+          { id: 'reports-tab', label: '📋 گزارش و شناسنامه', show: currentUser?.canExport || currentUser?.role === 'admin' },
+          { id: 'bulk-qr-tab', label: '🖨️ چاپ گروهی بارکد', show: currentUser?.canExport || currentUser?.role === 'admin' },
+          { id: 'systems-tree-tab', label: '🌳 نمودار درختی سیستم‌ها', show: true },
+          { id: 'users-tab', label: '🛡️ مدیریت کاربران', show: currentUser?.role === 'admin' },
+          { id: 'backup-tab', label: '⚙️ پشتیبان‌گیری و سورس', show: currentUser?.canBackup || currentUser?.role === 'admin' },
+          { id: 'add-new-tab', label: '➕ ثبت جدید', show: currentUser?.canEditPersonnel || currentUser?.canEditEquipment || currentUser?.role === 'admin' }
+        ].filter(t => t.show).map((tab) => (
           <button
             key={tab.id}
             onClick={() => { setActiveTab(tab.id); }}
@@ -1082,6 +1167,21 @@ export default function App() {
                 partsCatalog,
                 assignments
               }}
+            />
+          )}
+
+          {activeTab === 'users-tab' && (
+            <UsersTab currentUser={currentUser} />
+          )}
+
+          {activeTab === 'bulk-qr-tab' && (
+            <BulkQRTab 
+              cases={cases}
+              monitors={monitors}
+              printers={printers}
+              mice={mice}
+              keyboards={keyboards}
+              personnel={personnel}
             />
           )}
 

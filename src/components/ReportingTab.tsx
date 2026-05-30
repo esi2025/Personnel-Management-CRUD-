@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard } from '../types';
 import Logo from './Logo';
 import EquipmentPieChart from './EquipmentPieChart';
@@ -1461,6 +1462,98 @@ export default function ReportingTab({
               {/* Legal Footer Info */}
               <div className="pt-6 border-t border-black text-center text-[10px] text-slate-500">
                 سامانه هوشمند صدور شناسنامه تجهیزات کارگاهی شرکت عمران آذرستان سال ۱۴۰۵ | واحد فناوری اطلاعات و ارتباطات
+              </div>
+
+              {/* PAGE 2 BREAK: Equipments Barcode Appendix */}
+              <div style={{ pageBreakBefore: 'always', breakBefore: 'page' }} className="pt-8 border-t-2 border-dashed border-slate-300 print:border-none print:pt-0 mt-8 print:mt-0" />
+
+              <div className="space-y-6 text-black font-sans print:p-0">
+                {/* Header Page 2 */}
+                <div className="grid grid-cols-3 items-center border-b-2 border-black pb-4">
+                  <div className="flex justify-start">
+                    <Logo size="h-[52px]" />
+                  </div>
+                  <div className="text-center space-y-0.5">
+                    <h2 className="text-xs md:text-sm font-black text-black leading-tight">شرکت عمران آذرستان (بوشهر)</h2>
+                    <h3 className="text-[10px] text-slate-800 font-bold">پیوست برچسب‌های رهگیری شناسنامه (QR Codes)</h3>
+                  </div>
+                  <div className="text-[10px] flex flex-col items-end mr-auto">
+                    <span>کد سند: 37-FO-IT-01-01</span>
+                    <span dir="ltr" className="font-mono font-bold text-indigo-700 bg-indigo-50 px-1 rounded">ICT-CERT-{certificatePers.documentNumber || "----"}</span>
+                  </div>
+                </div>
+
+                <div className="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-200 leading-normal">
+                  📌 <strong>راهنمای الصاق و نگهداری برچسب بارکد:</strong> این برگه حاوی کدهای پاسخ سریع (QR Code) اختصاصی تجهیزات واگذار شده به جناب آقای/سرکار خانم <strong>{certificatePers.name}</strong> می‌باشد. این بارکدها نشان‌دهنده هویت ثبت شده کالا در انبار ICT کارگاه بوشهر است. همکاران محترم موظفند برچسب‌های تولید شده را بر روی کیس، مانیتور و سایر سخت‌افزارها الصاق نموده و از مخدوش کردن یا کندن آنها خودداری فرمایند.
+                </div>
+
+                {(() => {
+                  const assignedAssetsObj = getAssignedEquipments(certificatePers.code);
+                  const assignedList: { type: string; categoryName: string; code: string; brand: string; model: string }[] = [];
+                  
+                  assignedAssetsObj.cases.forEach(c => {
+                    assignedList.push({ type: 'case', categoryName: '💻 کیس کامپیوتر', code: c.code, brand: 'Intel/AMD', model: c.cpu });
+                  });
+                  assignedAssetsObj.monitors.forEach(m => {
+                    assignedList.push({ type: 'monitor', categoryName: '📺 مانیتور اداری', code: m.code, brand: 'مانیتور', model: m.model });
+                  });
+                  assignedAssetsObj.printers.forEach(p => {
+                    assignedList.push({ type: 'printer', categoryName: '🖨️ چاپگر تحویلی', code: p.code, brand: 'چاپگر', model: p.model });
+                  });
+                  assignedAssetsObj.mice.forEach(m => {
+                    assignedList.push({ type: 'mouse', categoryName: '🖱️ ماوس پرونده', code: m.code, brand: 'ماوس', model: m.model });
+                  });
+                  assignedAssetsObj.keyboards.forEach(k => {
+                    assignedList.push({ type: 'keyboard', categoryName: '⌨️ کیبورد پرونده', code: k.code, brand: 'کیبورد', model: k.model });
+                  });
+
+                  if (assignedList.length === 0) {
+                    return (
+                      <p className="text-center py-10 text-xs text-slate-400 bg-slate-50 rounded border border-dashed">
+                        هیچ سخت‌افزاری در واگذاری این شخص ثبت نگردیده است؛ پیوست بارکد خالی می‌باشد.
+                      </p>
+                    );
+                  }
+
+                  return (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {assignedList.map(item => (
+                        <div 
+                          key={item.code} 
+                          className="bg-white border-2 border-black rounded-xl p-3 flex flex-col items-center justify-between text-center relative overflow-hidden break-inside-avoid shadow-sm"
+                          style={{ minHeight: '170px' }}
+                        >
+                          <div className="bg-slate-100 text-[9px] font-black py-0.5 rounded w-full text-slate-700 truncate leading-none">
+                            {item.categoryName}
+                          </div>
+
+                          {/* Quick standard QR generator */}
+                          <div className="my-2 p-1 bg-white border border-slate-200 rounded">
+                            <QRCodeSVG
+                              value={`ITEM|${item.type}|${item.code}`}
+                              size={85}
+                              level="H"
+                            />
+                          </div>
+
+                          <div className="w-full">
+                            <span className="font-mono block text-[10px] font-black tracking-widest text-[#84141A] border-t border-dashed border-slate-300 pt-1 pb-0.5">
+                              {item.code}
+                            </span>
+                            <span className="text-[8px] text-slate-500 font-bold block truncate">
+                              {item.brand} {item.model}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+
+                {/* Footer Signature approval notes */}
+                <div className="pt-8 text-[9px] text-slate-450 text-left border-t border-dashed border-slate-200 mt-6 font-medium">
+                  تاریخ تاییدیه و ثبت سیستم: ۱۴۰۵/۰۳/۰۳ | واحد فناوری اطلاعات و ارتباطات (ICT) عمران آذرستان
+                </div>
               </div>
 
             </div>

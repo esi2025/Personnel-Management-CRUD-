@@ -233,6 +233,49 @@ function initializeDatabase() {
     ];
     fs.writeFileSync(partsCatalogFile, JSON.stringify(demoCatalog, null, 2), "utf-8");
   }
+
+  const usersFile = path.join(DATA_DIR, "users.json");
+  if (!fs.existsSync(usersFile)) {
+    const demoUsers = [
+      {
+        id: "u1",
+        username: "admin",
+        password: "admin",
+        role: "admin",
+        name: "مهندس علوی (ادمین اصلی)",
+        canEditPersonnel: true,
+        canEditEquipment: true,
+        canExport: true,
+        canBackup: true,
+        allowedIPs: ""
+      },
+      {
+        id: "u2",
+        username: "editor",
+        password: "1234",
+        role: "editor_equipment",
+        name: "اپراتور تجهیزات کارگاه",
+        canEditPersonnel: false,
+        canEditEquipment: true,
+        canExport: true,
+        canBackup: false,
+        allowedIPs: ""
+      },
+      {
+        id: "u3",
+        username: "viewer",
+        password: "1111",
+        role: "viewer",
+        name: "کارشناس ناظر",
+        canEditPersonnel: false,
+        canEditEquipment: false,
+        canExport: false,
+        canBackup: false,
+        allowedIPs: ""
+      }
+    ];
+    fs.writeFileSync(usersFile, JSON.stringify(demoUsers, null, 2), "utf-8");
+  }
 }
 
 // Read database helper
@@ -266,6 +309,18 @@ async function startServer() {
   // Middleware for body parsing
   app.use(express.json({ limit: "50mb" }));
 
+  // Helper to extract connection remote client IP
+  function getClientIp(req: any): string {
+    let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || '';
+    if (typeof ip === 'string' && ip.includes(',')) {
+      ip = ip.split(',')[0].trim();
+    }
+    if (ip === '::1' || ip === '::ffff:127.0.0.1') {
+      ip = '127.0.0.1';
+    }
+    return ip;
+  }
+
   // API: Get All Data
   app.get("/api/data", (req, res) => {
     res.json({
@@ -278,6 +333,142 @@ async function startServer() {
       partsCatalog: readDb("parts_catalog.json"),
       assignments: readDb("assignments.json"),
     });
+  });
+
+  // API: Get Current Connection Status & Live IP
+  app.get("/api/session", (req, res) => {
+    const ip = getClientIp(req);
+    res.json({ ip });
+  });
+
+  // API: Secure User Login
+  app.post("/api/login", (req, res) => {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: "نام کاربری و کلمه عبور الزامی است." });
+    }
+    const users = readDb("users.json");
+    const user = users.find(u => u.username.toLowerCase() === username.trim().toLowerCase());
+    
+    if (!user) {
+      return res.status(401).json({ error: "کاربری با این مشخصات یافت نشد." });
+    }
+    if (user.password !== password) {
+      return res.status(401).json({ error: "کلمه عبور وارد شده نادرست است." });
+    }
+
+    // IP Check if configured
+    const clientIp = getClientIp(req);
+    if (user.allowedIPs && user.allowedIPs.trim() !== "") {
+      const allowed = user.allowedIPs.split(",").map((ip: string) => ip.trim());
+      if (!allowed.includes(clientIp)) {
+        return res.status(403).json({ error: `دسترسی کابر ${user.username} از آی‌پی شما (${clientIp}) مسدود می‌باشد.` });
+      }
+    }
+
+    // Return profile without leaking plain-text passwords
+    const { password: _, ...userInfo } = user;
+    res.json({ success: true, user: userInfo, ip: clientIp });
+  });
+
+  // API: Get System Users Configuration List (Admin Only)
+  app.get("/api/users", (req, res) => {
+    res.json(readDb("users.json"));
+  });
+
+  // API: Save or Update System User details
+  app.post("/api/users/save", (req, res) => {
+    const { id, username, password, role, name, canEditPersonnel, canEditEquipment, canExport, canBackup, allowedIPs } = req.body;
+    if (!username || !password || !role || !name) {
+      return res.status(400).json({ error: "نام، نام کاربری، نقش و رمز عبور الزامی هستند." });
+    }
+
+    const users = readDb("users.json");
+    const existingIndex = id ? users.findIndex(u => u.id === id) : -1;
+    const isEditing = existingIndex > -1;
+
+    // Check duplicate username
+    const duplicate = users.find((u, idx) => u.username.toLowerCase() === username.toLowerCase() && idx !== existingIndex);
+    if (duplicate) {
+      return res.status(400).json({ error: "این نام کاربری از قبل رزرو شده است." });
+    }
+
+    const updatedUser = {
+      id: id || `u_${Date.now()}`,
+      username: username.trim(),
+      password: password.trim(),
+      role,
+      name: name.trim(),
+      canEditPersonnel: !!canEditPersonnel,
+      canEditEquipment: !!canEditEquipment,
+      canExport: !!canExport,
+      canBackup: !!canBackup,
+      allowedIPs: (allowedIPs || "").trim()
+    };
+
+    if (isEditing) {
+      users[existingIndex] = updatedUser;
+    } else {
+      users.push(updatedUser);
+    }
+
+    writeDb("users.json", users);
+    res.json({ success: true, user: updatedUser });
+  });
+
+  // API: Delete User (Main Admin cannot be deleted)
+  app.post("/api/users/delete", (req, res) => {
+    const { id } = req.body;
+    if (!id) {
+      return res.status(400).json({ error: "وارد کردن شناسه الزامی است." });
+    }
+
+    const users = readDb("users.json");
+    const userIndex = users.findIndex(u => u.id === id);
+    if (userIndex === -1) {
+      return res.status(404).json({ error: "کاربری یافت نشد." });
+    }
+
+    const user = users[userIndex];
+    if (user.username === 'admin') {
+      return res.status(400).json({ error: "امکان حذف کاربر مدیریت کل وجود ندارد." });
+    }
+
+    users.splice(userIndex, 1);
+    writeDb("users.json", users);
+    res.json({ success: true });
+  });
+
+  // API: Get Company Shared Corporate Logo
+  app.get("/api/logo", (req, res) => {
+    const logoFile = path.join(DATA_DIR, "logo.txt");
+    try {
+      if (fs.existsSync(logoFile)) {
+        const logo = fs.readFileSync(logoFile, "utf-8");
+        return res.json({ logo });
+      }
+      return res.json({ logo: null });
+    } catch (e) {
+      return res.json({ logo: null });
+    }
+  });
+
+  // API: Update Shared Corporate Logo (Admin Only)
+  app.post("/api/logo", (req, res) => {
+    const { logo } = req.body; // base64 string or null
+    const logoFile = path.join(DATA_DIR, "logo.txt");
+    try {
+      if (!logo) {
+        if (fs.existsSync(logoFile)) {
+          fs.unlinkSync(logoFile);
+        }
+        return res.json({ success: true, logo: null });
+      }
+      fs.writeFileSync(logoFile, logo, "utf-8");
+      return res.json({ success: true, logo });
+    } catch (e) {
+      return res.status(500).json({ error: "خطا در ذخیره لوگو روی سرور" });
+    }
   });
 
   // API: Save/Edit Item

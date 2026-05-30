@@ -84,3 +84,17 @@ export interface BackupData {
   assignments: Assignment[];
 }
 
+export interface SystemUser {
+  id: string;
+  username: string;
+  password?: string;
+  role: 'admin' | 'viewer' | 'editor_equipment' | 'custom';
+  name: string;
+  canEditPersonnel: boolean;
+  canEditEquipment: boolean;
+  canExport: boolean;
+  canBackup: boolean;
+  allowedIPs?: string;
+}
+
+

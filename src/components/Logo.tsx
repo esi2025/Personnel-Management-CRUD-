@@ -8,32 +8,70 @@ interface LogoProps {
 
 export default function Logo({ className = '', size = 'h-12' }: LogoProps) {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize and load custom logo from localStorage
+  // Load logo from server/localStorage & determine if the current user is an admin
   useEffect(() => {
-    const stored = localStorage.getItem('custom_company_logo');
-    if (stored) {
-      setLogoUrl(stored);
-    }
+    const fetchLogo = () => {
+      fetch('/api/logo')
+        .then(res => res.json())
+        .then(data => {
+          if (data.logo) {
+            localStorage.setItem('custom_company_logo', data.logo);
+            setLogoUrl(data.logo);
+          } else {
+            localStorage.removeItem('custom_company_logo');
+            setLogoUrl(null);
+          }
+        })
+        .catch(err => {
+          console.warn("Failed to fetch server logo, reading localStorage:", err);
+          const stored = localStorage.getItem('custom_company_logo');
+          if (stored) setLogoUrl(stored);
+        });
+    };
 
-    // Listener for logo sync across all Logo components instantly
+    fetchLogo();
+
+    // Check if current user role is admin
+    const checkRole = () => {
+      const storedUser = localStorage.getItem('current_user');
+      if (storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          setIsAdmin(parsed.role === 'admin');
+        } catch {
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+    };
+    checkRole();
+
+    // Custom sync listeners
     const handleSync = () => {
-      setLogoUrl(localStorage.getItem('custom_company_logo'));
+      const stored = localStorage.getItem('custom_company_logo');
+      setLogoUrl(stored);
     };
 
     window.addEventListener('custom-logo-updated', handleSync);
+    window.addEventListener('user-session-changed', checkRole);
+    
     return () => {
       window.removeEventListener('custom-logo-updated', handleSync);
+      window.removeEventListener('user-session-changed', checkRole);
     };
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isAdmin) return; // double check
+
     const files = e.target.files;
     if (files && files[0]) {
       const file = files[0];
       
-      // Limit file size to 2MB to keep localStorage healthy
       if (file.size > 2 * 1024 * 1024) {
         alert('حجم تصویر لوگو نباید بیشتر از ۲ مگابایت باشد.');
         return;
@@ -43,10 +81,21 @@ export default function Logo({ className = '', size = 'h-12' }: LogoProps) {
       reader.onload = (event) => {
         const base64 = event.target?.result as string;
         if (base64) {
-          localStorage.setItem('custom_company_logo', base64);
-          setLogoUrl(base64);
-          // Sync with all other instances
-          window.dispatchEvent(new Event('custom-logo-updated'));
+          fetch('/api/logo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ logo: base64 })
+          })
+          .then(res => res.json())
+          .then(() => {
+            localStorage.setItem('custom_company_logo', base64);
+            setLogoUrl(base64);
+            window.dispatchEvent(new Event('custom-logo-updated'));
+          })
+          .catch(err => {
+            console.error("Error updating logo on server:", err);
+            alert("خطا در ذخیره‌سازی لوگو بر روی سرور مرکزی.");
+          });
         }
       };
       reader.readAsDataURL(file);
@@ -54,28 +103,41 @@ export default function Logo({ className = '', size = 'h-12' }: LogoProps) {
   };
 
   const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Avoid triggering file click
+    e.stopPropagation();
+    if (!isAdmin) return;
+
     if (confirm('آیا مایل به حذف لوگوی بارگذاری شده هستید؟')) {
-      localStorage.removeItem('custom_company_logo');
-      setLogoUrl(null);
-      // Sync across all other Logo components
-      window.dispatchEvent(new Event('custom-logo-updated'));
+      fetch('/api/logo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logo: null })
+      })
+      .then(() => {
+        localStorage.removeItem('custom_company_logo');
+        setLogoUrl(null);
+        window.dispatchEvent(new Event('custom-logo-updated'));
+      })
+      .catch(err => console.error("Error resetting logo on server:", err));
     }
   };
 
   const triggerUploadClick = () => {
-    fileInputRef.current?.click();
+    if (isAdmin) {
+      fileInputRef.current?.click();
+    }
   };
 
   return (
     <div className={`inline-flex items-center select-none ${className}`} id="custom-logo-wrapper">
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        onChange={handleFileChange} 
-        accept="image/*" 
-        className="hidden" 
-      />
+      {isAdmin && (
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleFileChange} 
+          accept="image/*" 
+          className="hidden" 
+        />
+      )}
 
       {logoUrl ? (
         // Render custom corporate uploaded logo image
@@ -85,30 +147,34 @@ export default function Logo({ className = '', size = 'h-12' }: LogoProps) {
             className={`${size} object-contain max-w-[240px] drop-shadow-sm transition-transform duration-200 group-hover:scale-105`} 
             alt="لوگوی شرکت" 
           />
-          {/* Quick inline delete button - only visible on screen hover */}
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="no-print absolute -top-1.5 -left-1.5 bg-red-650 hover:bg-red-700 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md cursor-pointer flex items-center justify-center"
-            style={{ backgroundColor: '#dc2626' }}
-            title="حذف لوگو"
-          >
-            <X size={14} className="stroke-[3px]" />
-          </button>
+          {/* Quick inline delete button - only visible on screen hover for Admin */}
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="no-print absolute -top-1.5 -left-1.5 bg-red-650 hover:bg-red-700 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md cursor-pointer flex items-center justify-center"
+              style={{ backgroundColor: '#dc2626' }}
+              title="حذف لوگو"
+            >
+              <X size={14} className="stroke-[3px]" />
+            </button>
+          )}
         </div>
       ) : (
-        // DEFAULT: Keep Logo area EMPTY as requested by the user ("پیشفرض برنامه جای لوگو خالی باشد")
-        // But render a small professional interactive upload button on screen (hidden in print)
-        // so that administrators know they can click of course, while keeping the physical profile document pristine.
-        <button
-          type="button"
-          onClick={triggerUploadClick}
-          className="no-print group flex items-center gap-2 border-2 border-dashed border-slate-600/50 hover:border-blue-500 hover:bg-blue-50/10 text-xs text-slate-400 hover:text-blue-400 px-4.5 py-2.5 rounded-xl transition-all cursor-pointer font-sans shadow-sm"
-          title="بارگذاری لوگوی جدید شرکت"
-        >
-          <Upload size={14} className="group-hover:animate-bounce shrink-0" />
-          <span>افزودن لوگوی شرکت (۳۰٪ بزرگتر)</span>
-        </button>
+        // DEFAULT: Keep Logo area EMPTY when none is selected or visitor is not Admin
+        isAdmin ? (
+          <button
+            type="button"
+            onClick={triggerUploadClick}
+            className="no-print group flex items-center gap-2 border-2 border-dashed border-slate-600/50 hover:border-blue-500 hover:bg-blue-50/10 text-xs text-slate-400 hover:text-blue-400 px-4.5 py-2.5 rounded-xl transition-all cursor-pointer font-sans shadow-sm"
+            title="بارگذاری لوگوی جدید شرکت"
+          >
+            <Upload size={14} className="group-hover:animate-bounce shrink-0" />
+            <span>افزودن لوگوی شرکت (۳۰٪ بزرگتر)</span>
+          </button>
+        ) : (
+          <div className="no-print hidden"></div>
+        )
       )}
     </div>
   );
