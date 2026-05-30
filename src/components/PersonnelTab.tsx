@@ -59,22 +59,22 @@ export default function PersonnelTab({
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-right border-collapse text-xs md:text-sm">
+          <table className="w-full text-right border-collapse text-[11px] md:text-xs">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-700">
-                <th className="p-3.5 font-bold">نام کامل</th>
-                <th className="p-3.5 font-bold">کد پرسنلی</th>
-                <th className="p-3.5 font-bold">سمت سازمانی</th>
-                <th className="p-3.5 font-bold">واحد خدمتی</th>
-                <th className="p-3.5 font-bold">موقعیت استقرار</th>
-                <th className="p-3.5 font-bold">سخت‌افزارهای تحویل‌شده</th>
-                <th className="p-3.5 font-bold text-center">عملیات مدیریت</th>
+              <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 whitespace-nowrap">
+                <th className="p-2.5 font-bold text-right">نام کامل</th>
+                <th className="p-2.5 font-bold text-right">کد پرسنلی</th>
+                <th className="p-2.5 font-bold text-right">سمت سازمانی</th>
+                <th className="p-2.5 font-bold text-right">واحد خدمتی</th>
+                <th className="p-2.5 font-bold text-right">موقعیت استقرار</th>
+                <th className="p-2.5 font-bold text-right">سخت‌افزارهای تحویل‌شده</th>
+                <th className="p-2.5 font-bold text-center">عملیات مدیریت</th>
               </tr>
             </thead>
             <tbody>
               {personnel.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-400">
+                   <td colSpan={7} className="p-6 text-center text-slate-400">
                     هیچ کاربری در سامانه یافت نشد. جهت افزودن پرسنل، روی ثبت جدید کلیک کنید.
                   </td>
                 </tr>
@@ -82,89 +82,89 @@ export default function PersonnelTab({
                 personnel.map((p) => {
                   const assigns = getAssignedEquipmentCount(p.code);
                   return (
-                    <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition">
-                      <td className="p-3.5 font-bold text-slate-900">{p.name}</td>
-                      <td className="p-3.5 font-mono text-slate-500">{p.code}</td>
-                      <td className="p-3.5 text-slate-600">{p.title}</td>
-                      <td className="p-3.5 text-slate-600">{p.department}</td>
-                      <td className="p-3.5 text-slate-600">{p.location}</td>
-                      <td className="p-3.5">
-                        <div className="flex flex-wrap gap-1.5 max-w-xs">
+                    <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition whitespace-nowrap">
+                      <td className="p-2.5 font-bold text-slate-900">{p.name}</td>
+                      <td className="p-2.5 font-mono text-slate-500">{p.code}</td>
+                      <td className="p-2.5 text-slate-600">{p.title}</td>
+                      <td className="p-2.5 text-slate-600">{p.department}</td>
+                      <td className="p-2.5 text-slate-600">{p.location}</td>
+                      <td className="p-2.5 whitespace-normal">
+                         <div className="flex flex-wrap gap-1 max-w-[280px]">
                           {assigns.cases.map(c => (
                             <span 
                               key={c.code} 
-                              className="bg-blue-50 border border-blue-200 text-blue-700 px-2 py-0.5 rounded text-[11px] font-medium"
+                              className="bg-blue-50 border border-blue-200 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap"
                               title={`${c.motherboard} | CPU: ${c.cpu}`}
                             >
-                              🖥️ کیس: {c.code}
+                              🖥️ {c.code}
                             </span>
                           ))}
                           {assigns.monitors.map(m => (
                             <span 
                               key={m.code} 
-                              className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-2 py-0.5 rounded text-[11px] font-medium"
+                              className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap"
                               title={m.model}
                             >
-                              📺 مانیتور: {m.code}
+                              📺 {m.code}
                             </span>
                           ))}
                           {assigns.printers.map(pr => (
                             <span 
                               key={pr.code} 
-                              className="bg-amber-50 border border-amber-200 text-amber-700 px-2 py-0.5 rounded text-[11px] font-medium"
+                              className="bg-amber-50 border border-amber-200 text-amber-700 px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap"
                               title={pr.model}
                             >
-                              🖨️ پرینتر: {pr.code}
+                              🖨️ {pr.code}
                             </span>
                           ))}
                           {assigns.mice.map(m => (
                             <span 
                               key={m.code} 
-                              className="bg-pink-50 border border-pink-200 text-pink-700 px-2 py-0.5 rounded text-[11px] font-medium"
+                              className="bg-pink-50 border border-pink-200 text-pink-700 px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap"
                               title={m.model}
                             >
-                              🖱️ ماوس: {m.code}
+                              🖱️ {m.code}
                             </span>
                           ))}
                           {assigns.keyboards.map(k => (
                             <span 
                               key={k.code} 
-                              className="bg-purple-50 border border-purple-200 text-purple-700 px-2 py-0.5 rounded text-[11px] font-medium"
+                              className="bg-purple-50 border border-purple-200 text-purple-700 px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap"
                               title={k.model}
                             >
-                              ⌨️ کیبورد: {k.code}
+                              ⌨️ {k.code}
                             </span>
                           ))}
                           {assigns.total === 0 && (
-                            <span className="bg-slate-100 text-slate-400 px-2 py-0.5 rounded text-[11px]">
+                            <span className="bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded text-[10px]">
                               بدون سخت‌افزار
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="p-3.5">
-                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                      <td className="p-2.5 text-center">
+                        <div className="flex items-center justify-center gap-1">
                           <button 
                             onClick={() => onEdit(p)}
-                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded text-xs transition cursor-pointer"
+                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
                           >
                             ✏️ ویرایش
                           </button>
                           <button 
                             onClick={() => onDelete(p.id!)}
-                            className="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded text-xs transition cursor-pointer"
+                            className="bg-red-50 hover:bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
                           >
                             🗑️ حذف
                           </button>
                           <button 
                             onClick={() => onShowCertificate(p.code)}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-xs transition font-semibold cursor-pointer"
+                            className="bg-indigo-650 hover:bg-indigo-700 text-white px-2 py-0.5 rounded text-[10px] md:text-xs transition font-semibold cursor-pointer"
                           >
                             📜 شناسنامه
                           </button>
                           <button 
                             onClick={() => onSelectTransfer(p.code)}
-                            className="bg-slate-200 hover:bg-slate-300 text-slate-800 px-2.5 py-1 rounded text-xs transition cursor-pointer"
+                            className="bg-slate-200 hover:bg-slate-300 text-slate-800 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
                           >
                             🔄 انتقال
                           </button>

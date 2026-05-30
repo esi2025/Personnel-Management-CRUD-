@@ -146,6 +146,7 @@ export default function BackupTab({ onRestore, onReload, currentData }: BackupTa
               hdd2: cHdd || '-',
               ramType: cRamType,
               ramQty: cRamQty,
+              power: '-',
               assignedTo: pCode
             });
 

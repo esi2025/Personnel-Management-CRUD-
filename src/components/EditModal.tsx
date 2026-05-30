@@ -16,6 +16,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
   const [pTitle, setPTitle] = useState('');
   const [pDept, setPDept] = useState('');
   const [pLoc, setPLoc] = useState('');
+  const [pDocNum, setPDocNum] = useState('');
 
   // Case states
   const [cCode, setCCode] = useState('');
@@ -26,6 +27,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
   const [cHdd2, setCHdd2] = useState('');
   const [cRamType, setCRamType] = useState('DDR4');
   const [cRamQty, setCRamQty] = useState('8GB');
+  const [cPower, setCPower] = useState('');
 
   // Monitor/Printer/Mouse/Keyboard states
   const [equipCode, setEquipCode] = useState('');
@@ -43,6 +45,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
       setPTitle(item.title || '');
       setPDept(item.department || '');
       setPLoc(item.location || '');
+      setPDocNum(item.documentNumber || '');
     } else if (type === 'case') {
       setCCode(item.code || '');
       setCMobo(item.motherboard || '');
@@ -52,6 +55,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
       setCHdd2(item.hdd2 || '');
       setCRamType(item.ramType || 'DDR4');
       setCRamQty(item.ramQty || '8GB');
+      setCPower(item.power || '');
     } else if (type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard') {
       setEquipCode(item.code || '');
       setEquipModel(item.model || '');
@@ -75,6 +79,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
       data.title = pTitle;
       data.department = pDept;
       data.location = pLoc;
+      data.documentNumber = pDocNum;
     } else if (type === 'case') {
       data.code = cCode;
       data.oldCode = item.code; // Track old code if user modifies Case Code ID
@@ -85,6 +90,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
       data.hdd2 = cHdd2;
       data.ramType = cRamType;
       data.ramQty = cRamQty;
+      data.power = cPower;
       data.assignedTo = item.assignedTo;
       data.status = equipStatus;
       data.description = equipDesc;
@@ -161,6 +167,14 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
                   className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
                 />
               </div>
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700">شماره سند شناسنامه رسمی (۴ رقمی - اختیاری):</label>
+                <input 
+                  type="text" value={pDocNum} onChange={(e) => setPDocNum(e.target.value)}
+                  placeholder="مثال: 0001"
+                  className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+                />
+              </div>
             </div>
           )}
 
@@ -219,10 +233,17 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
                   className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:outline-none"
                 />
               </div>
-              <div className="space-y-1 md:col-span-2">
+              <div className="space-y-1">
                 <label className="font-bold text-slate-700">حافظه ثانویه HDD:</label>
                 <input 
                   type="text" value={cHdd2} onChange={(e) => setCHdd2(e.target.value)}
+                  className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:outline-none"
+                />
+              </div>
+              <div className="space-y-1 md:col-span-2">
+                <label className="font-bold text-slate-700">مدل منبع تغذیه (Power Supply - پاور):</label>
+                <input 
+                  type="text" value={cPower} onChange={(e) => setCPower(e.target.value)}
                   className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:outline-none"
                 />
               </div>

@@ -13,6 +13,7 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
   const [pTitle, setPTitle] = useState('');
   const [pDept, setPDept] = useState('');
   const [pLoc, setPLoc] = useState('');
+  const [pDocNum, setPDocNum] = useState('');
 
   // Case fields
   const [cCode, setCCode] = useState('');
@@ -23,6 +24,7 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
   const [cHdd2, setCHdd2] = useState('');
   const [cRamType, setCRamType] = useState('DDR4');
   const [cRamQty, setCRamQty] = useState('8GB');
+  const [cPower, setCPower] = useState('');
 
   // Monitor fields
   const [mCode, setMCode] = useState('');
@@ -45,8 +47,8 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
   const [equipDesc, setEquipDesc] = useState('');
 
   const handleResetForm = () => {
-    setPName(''); setPCode(''); setPTitle(''); setPDept(''); setPLoc('');
-    setCCode(''); setCMobo(''); setCCpu(''); setCVga(''); setCHdd1(''); setCHdd2(''); setCRamType('DDR4'); setCRamQty('8GB');
+    setPName(''); setPCode(''); setPTitle(''); setPDept(''); setPLoc(''); setPDocNum('');
+    setCCode(''); setCMobo(''); setCCpu(''); setCVga(''); setCHdd1(''); setCHdd2(''); setCRamType('DDR4'); setCRamQty('8GB'); setCPower('');
     setMCode(''); setMModel('');
     setPrCode(''); setPrModel('');
     setMouCode(''); setMouModel('');
@@ -65,7 +67,7 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
         alert('وارد کردن نام کامل و کد پرسنلی الزامی است.');
         return;
       }
-      data = { name: pName, code: pCode, title: pTitle, department: pDept, location: pLoc };
+      data = { name: pName, code: pCode, title: pTitle, department: pDept, location: pLoc, documentNumber: pDocNum };
     } else if (activeType === 'case') {
       if (!cCode.trim()) {
         alert('وارد کردن کد کیس (اموال) الزامی است.');
@@ -80,6 +82,7 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
         hdd2: cHdd2,
         ramType: cRamType,
         ramQty: cRamQty,
+        power: cPower,
         status: equipStatus,
         description: equipDesc
       };
@@ -192,6 +195,14 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
                 className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
               />
             </div>
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700">شماره سند شناسنامه رسمی (۴ رقمی - اختیاری):</label>
+              <input 
+                type="text" value={pDocNum} onChange={(e) => setPDocNum(e.target.value)}
+                placeholder="مثال: 0001 (در صورت خالی بودن، به ترتیب تخصیص می‌یابد)"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+              />
+            </div>
           </div>
         )}
 
@@ -262,6 +273,14 @@ export default function AddNewTab({ onSave }: AddNewTabProps) {
               <input 
                 type="text" value={cHdd2} onChange={(e) => setCHdd2(e.target.value)}
                 placeholder="مثال: HDD 1TB WD Blue"
+                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1.5 md:col-span-2">
+              <label className="font-semibold text-slate-700">مدل منبع تغذیه (Power Supply - پاور):</label>
+              <input 
+                type="text" value={cPower} onChange={(e) => setCPower(e.target.value)}
+                placeholder="مثال: Green GP400A-ECO 400W"
                 className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
               />
             </div>

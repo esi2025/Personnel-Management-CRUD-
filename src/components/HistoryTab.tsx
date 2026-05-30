@@ -81,22 +81,22 @@ export default function HistoryTab({ assignments }: HistoryTabProps) {
       {/* Main Table listings */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-right border-collapse text-xs md:text-sm">
+          <table className="w-full text-right border-collapse text-[11px] md:text-xs">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-700">
-                <th className="p-3.5 font-bold">رده کالا</th>
-                <th className="p-3.5 font-bold">کد اموال سخت‌افزار</th>
-                <th className="p-3.5 font-bold">تحویل‌گیرنده کارتابل</th>
-                <th className="p-3.5 font-bold">کد پرسنلی</th>
-                <th className="p-3.5 font-bold">تاریخ تحویل (شروع)</th>
-                <th className="p-3.5 font-bold">تاریخ پایان (استرداد)</th>
-                <th className="p-3.5 font-bold text-center">سررسید و وضعیت</th>
+              <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 whitespace-nowrap">
+                <th className="p-2.5 font-bold">رده کالا</th>
+                <th className="p-2.5 font-bold">کد اموال سخت‌افزار</th>
+                <th className="p-2.5 font-bold">تحویل‌گیرنده کارتابل</th>
+                <th className="p-2.5 font-bold">کد پرسنلی</th>
+                <th className="p-2.5 font-bold">تاریخ تحویل (شروع)</th>
+                <th className="p-2.5 font-bold">تاریخ پایان (استرداد)</th>
+                <th className="p-2.5 font-bold text-center">سررسید و وضعیت</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-400">
+                  <td colSpan={7} className="p-6 text-center text-slate-400">
                     رکوردی ثبت نشده یا فاقد شرایط منطبق با فیلتر است.
                   </td>
                 </tr>
@@ -104,24 +104,26 @@ export default function HistoryTab({ assignments }: HistoryTabProps) {
                 filtered.map((ass) => {
                   const isCurrent = !ass.endDate || ass.endDate === '';
                   return (
-                    <tr key={ass.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition">
-                      <td className="p-3.5">
+                    <tr key={ass.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition whitespace-nowrap">
+                      <td className="p-2.5">
                         {ass.equipmentType === 'case' && <span className="text-blue-600 font-bold">🖥️ کیس رایانه</span>}
                         {ass.equipmentType === 'monitor' && <span className="text-emerald-600 font-bold">📺 مانیتور</span>}
                         {ass.equipmentType === 'printer' && <span className="text-amber-600 font-bold">🖨️ پرینتر</span>}
+                        {ass.equipmentType === 'mouse' && <span className="text-pink-600 font-bold">🖱️ ماوس</span>}
+                        {ass.equipmentType === 'keyboard' && <span className="text-purple-600 font-bold">⌨️ کیبورد</span>}
                       </td>
-                      <td className="p-3.5 font-mono font-bold text-slate-900">{ass.equipmentCode}</td>
-                      <td className="p-3.5 font-semibold text-slate-800">{ass.personnelName || 'انبار مرکزی کارگاه'}</td>
-                      <td className="p-3.5 font-mono text-slate-500">{ass.personnelCode || '-'}</td>
-                      <td className="p-3.5 text-slate-600">{ass.startDate}</td>
-                      <td className="p-3.5 text-slate-600">{isCurrent ? '-' : ass.endDate}</td>
-                      <td className="p-3.5 text-center">
+                      <td className="p-2.5 font-mono font-bold text-slate-900">{ass.equipmentCode}</td>
+                      <td className="p-2.5 font-semibold text-slate-800">{ass.personnelName || 'انبار مرکزی کارگاه'}</td>
+                      <td className="p-2.5 font-mono text-slate-500">{ass.personnelCode || '-'}</td>
+                      <td className="p-2.5 text-slate-600">{ass.startDate}</td>
+                      <td className="p-2.5 text-slate-600">{isCurrent ? '-' : ass.endDate}</td>
+                      <td className="p-2.5 text-center">
                         {isCurrent ? (
-                          <span className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold inline-block">
+                          <span className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-block">
                             فعلی (تحت اختیار)
                           </span>
                         ) : (
-                          <span className="bg-red-50 border border-red-200 text-red-700 px-3 py-1 rounded-full text-xs font-medium inline-block">
+                          <span className="bg-red-50 border border-red-200 text-red-700 px-2.5 py-0.5 rounded-full text-[10px] font-medium inline-block">
                             استرداد شده
                           </span>
                         )}

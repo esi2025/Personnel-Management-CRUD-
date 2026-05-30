@@ -48,7 +48,7 @@ export default function QRCodeModal({
   const qrString = `[عمران آذرستان - واحد ICT]
 کد اموال: ${equipmentCode}
 نوع سخت‌افزار: ${getFarsiType(equipmentType)}
-مشخصات: ${'model' in equipmentData ? (equipmentData as any).model : `${(equipmentData as Case).cpu} | ${(equipmentData as Case).motherboard}`}
+مشخصات: ${'model' in equipmentData ? (equipmentData as any).model : `${(equipmentData as Case).cpu} | ${(equipmentData as Case).motherboard} | ${(equipmentData as Case).power || '—'}`}
 وضعیت تحویل: ${owner ? `تحویل به ${owner.name} (${owner.code})` : 'مستقر در انبار کارگاه'}`;
 
   // Helper to convert to Persian digits
@@ -153,6 +153,10 @@ export default function QRCodeModal({
                     <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-100">
                       {(equipmentData as Case).ramType} - {(equipmentData as Case).ramQty}
                     </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">منبع تغذیه (پاور):</span>
+                    <span className="font-bold font-mono">{(equipmentData as Case).power || "—"}</span>
                   </div>
                   <div className="flex justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-200/60 font-mono">
                     <span>ذخیره‌سازی HDD-SSD:</span>

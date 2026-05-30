@@ -12,6 +12,7 @@ const CATEGORIES = {
   motherboard: { label: 'مادربرد (Motherboard)', icon: '🔌' },
   vga: { label: 'کارت گرافیک (GPU)', icon: '🎮' },
   ramType: { label: 'نوع رم (RAM)', icon: '⚡' },
+  power: { label: 'منبع تغذیه (Power Supply)', icon: '🔋' },
   monitorBrand: { label: 'برند و سایز مانیتور', icon: '📺' },
   printerBrand: { label: 'مارک پرینتر', icon: '🖨️' },
   printerFeature: { label: 'قابلیت و تنوع چاپ (تک/چند کاره)', icon: '📄' }

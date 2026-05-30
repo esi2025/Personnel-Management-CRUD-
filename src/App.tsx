@@ -54,6 +54,7 @@ const INITIAL_DEMO_DATA = {
       hdd2: "HDD 1TB WD Blue",
       ramType: "DDR4",
       ramQty: "16GB",
+      power: "Green GP400A-ECO 400W",
       assignedTo: "1001"
     },
     {
@@ -65,6 +66,7 @@ const INITIAL_DEMO_DATA = {
       hdd2: "-",
       ramType: "DDR5",
       ramQty: "32GB",
+      power: "Cooler Master MWE 550W Bronz",
       assignedTo: null
     }
   ],
@@ -123,6 +125,8 @@ const INITIAL_DEMO_DATA = {
     { id: "pc5", category: "vga" as const, name: "NVIDIA GeForce RTX 3050 8GB", description: "Dedicated GDDR6 Graphics Card" },
     { id: "pc6", category: "ramType" as const, name: "DDR4", description: "DDR4 Desktop Memory SDRAM" },
     { id: "pc7", category: "ramType" as const, name: "DDR5", description: "DDR5 Next-Gen High Speed Memory" },
+    { id: "pc_p1", category: "power" as const, name: "Green GP400A-ECO 400W", description: "Standard 80Plus Eco Power Supply" },
+    { id: "pc_p2", category: "power" as const, name: "Cooler Master MWE 550W", description: "550W 80Plus Bronze Power Supply" },
     { id: "pc8", category: "monitorBrand" as const, name: "LG 22MP400 (22 Inch)", description: "22-Inch Full HD (1920x1080) IPS Monitor" },
     { id: "pc9", category: "monitorBrand" as const, name: "Samsung LF24T350 (24 Inch)", description: "24-Inch Full HD IPS 75Hz Bezel-less Monitor" },
     { id: "pc10", category: "printerBrand" as const, name: "HP LaserJet Pro M402dn", description: "Monochrome Laser Printer, Auto Duplex" },
@@ -227,7 +231,9 @@ export default function App() {
   // Fetch all databases from Express server imitation with robust localStorage fallback
   const loadDatabase = async () => {
     try {
-      setLoading(true);
+      if (personnel.length === 0 && cases.length === 0) {
+        setLoading(true);
+      }
       setError(null);
       const res = await fetch('/api/data');
       if (!res.ok) throw new Error('NOT_OK');
@@ -713,6 +719,7 @@ export default function App() {
       c.code.toLowerCase().includes(q) || 
       c.cpu.toLowerCase().includes(q) || 
       c.motherboard.toLowerCase().includes(q) ||
+      (c.power && c.power.toLowerCase().includes(q)) ||
       (c.assignedTo && c.assignedTo.includes(q))
     );
   };
@@ -758,7 +765,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col p-4 md:p-8 font-sans max-w-7xl mx-auto print:p-0 print:max-w-none" dir="rtl">
+    <div className="min-h-screen flex flex-col p-4 md:p-8 font-sans max-w-[1600px] w-full mx-auto print:p-0 print:max-w-none" dir="rtl">
       
       {/* 1. System Header component */}
       <Header isDark={darkMode} onToggleTheme={() => setDarkMode(!darkMode)} />
@@ -966,6 +973,7 @@ export default function App() {
               keyboards={keyboards}
               assignments={assignments}
               prefilledPersonnelCode={prefilledPersCode}
+              onSaveItem={handleSaveItem}
             />
           )}
 

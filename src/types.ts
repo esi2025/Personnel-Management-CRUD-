@@ -5,6 +5,7 @@ export interface Personnel {
   title: string; // سمت
   department: string; // واحد خدمتی
   location: string; // موقعیت استقرار
+  documentNumber?: string; // شماره سند خروجی (یکتا و توالی)
 }
 
 export interface Case {
@@ -16,6 +17,7 @@ export interface Case {
   hdd2: string; // دیسک دوم
   ramType: string; // نوع رم (e.g. DDR4)
   ramQty: string; // مقدار رم (e.g. 16GB)
+  power: string; // پاور (منبع تغذیه)
   assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
   status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
   description?: string; // توضیحات تکمیلی
@@ -55,7 +57,7 @@ export interface Keyboard {
 
 export interface CatalogItem {
   id: string;
-  category: 'cpu' | 'motherboard' | 'vga' | 'ramType' | 'monitorBrand' | 'printerBrand' | 'printerFeature';
+  category: 'cpu' | 'motherboard' | 'vga' | 'ramType' | 'power' | 'monitorBrand' | 'printerBrand' | 'printerFeature';
   name: string; // نام قطعه / برند / مدل دقیق
   description: string; // توضیحات، ویژگی‌ها یا سایز
 }

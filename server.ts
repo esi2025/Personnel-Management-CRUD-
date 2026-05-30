@@ -88,6 +88,7 @@ function initializeDatabase() {
         hdd2: "HDD 1TB WD Blue",
         ramType: "DDR4",
         ramQty: "16GB",
+        power: "Green GP400A-ECO 400W",
         assignedTo: "1001"
       },
       {
@@ -99,6 +100,7 @@ function initializeDatabase() {
         hdd2: "-",
         ramType: "DDR5",
         ramQty: "32GB",
+        power: "Cooler Master MWE 550W Bronz",
         assignedTo: null
       }
     ];
@@ -220,6 +222,8 @@ function initializeDatabase() {
       { id: "pc5", category: "vga", name: "NVIDIA GeForce RTX 3050 8GB", description: "Dedicated GDDR6 Graphics Card" },
       { id: "pc6", category: "ramType", name: "DDR4", description: "DDR4 Desktop Memory SDRAM" },
       { id: "pc7", category: "ramType", name: "DDR5", description: "DDR5 Next-Gen High Speed Memory" },
+      { id: "pc_p1", category: "power", name: "Green GP400A-ECO 400W", description: "Standard 80Plus Eco Power Supply" },
+      { id: "pc_p2", category: "power", name: "Cooler Master MWE 550W", description: "550W 80Plus Bronze Power Supply" },
       { id: "pc8", category: "monitorBrand", name: "LG 22MP400 (22 Inch)", description: "22-Inch Full HD (1920x1080) IPS Monitor" },
       { id: "pc9", category: "monitorBrand", name: "Samsung LF24T350 (24 Inch)", description: "24-Inch Full HD IPS 75Hz Bezel-less Monitor" },
       { id: "pc10", category: "printerBrand", name: "HP LaserJet Pro M402dn", description: "Monochrome Laser Printer, Auto Duplex" },
@@ -302,6 +306,7 @@ async function startServer() {
         return res.status(400).json({ error: "کد پرسنلی تکراری است." });
       }
 
+      const existingItem = isEdit ? personnel.find((p) => p.id === id) : null;
       const item = {
         id: isEdit ? id : `p_${Date.now()}`,
         name,
@@ -309,6 +314,7 @@ async function startServer() {
         title: title || "-",
         department: department || "-",
         location: location || "کارگاه بوشهر",
+        documentNumber: fields.documentNumber !== undefined ? fields.documentNumber : (existingItem ? existingItem.documentNumber : ""),
       };
 
       if (isEdit) {
@@ -391,6 +397,7 @@ async function startServer() {
         hdd2: fields.hdd2?.trim() || "-",
         ramType: fields.ramType?.trim() || "DDR4",
         ramQty: fields.ramQty?.trim() || "8GB",
+        power: fields.power?.trim() || "-",
         assignedTo: fields.assignedTo || null,
         status: fields.status || "working",
         description: fields.description?.trim() || "",

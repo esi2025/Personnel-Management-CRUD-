@@ -13,6 +13,7 @@ interface ReportingTabProps {
   keyboards?: Keyboard[];
   assignments: Assignment[];
   prefilledPersonnelCode?: string;
+  onSaveItem?: (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'catalog', data: any) => Promise<boolean>;
 }
 
 export default function ReportingTab({
@@ -23,7 +24,8 @@ export default function ReportingTab({
   mice = [],
   keyboards = [],
   assignments,
-  prefilledPersonnelCode
+  prefilledPersonnelCode,
+  onSaveItem
 }: ReportingTabProps) {
   // Checkbox states
   const [secPers, setSecPers] = useState(true);
@@ -78,6 +80,68 @@ export default function ReportingTab({
   const [reportType, setReportType] = useState<'none' | 'general' | 'certificate'>('none');
   const [certificatePers, setCertificatePers] = useState<Personnel | null>(null);
 
+  // Helper to format sequence to 4 digits padded
+  const padZero = (num: number, size = 4) => {
+    let s = num + "";
+    while (s.length < size) s = "0" + s;
+    return s;
+  };
+
+  // Next sequence state
+  const [nextDocSeq, setNextDocSeq] = useState<number>(() => {
+    const saved = localStorage.getItem('next_document_sequence');
+    return saved ? parseInt(saved, 10) : 1;
+  });
+
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [editingDocPersonnelId, setEditingDocPersonnelId] = useState<string | null>(null);
+  const [editingDocNumVal, setEditingDocNumVal] = useState<string>('');
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+  const [seqStartInputValue, setSeqStartInputValue] = useState<string>('');
+
+  // Handle self-healing/updating sequence counter from maximum custom number
+  useEffect(() => {
+    const assignedNums = personnel
+      .map(p => p.documentNumber ? parseInt(p.documentNumber.replace(/\D/g, ''), 10) : 0)
+      .filter(num => !isNaN(num) && num > 0);
+    const maxAssigned = assignedNums.length > 0 ? Math.max(...assignedNums) : 0;
+    
+    const saved = localStorage.getItem('next_document_sequence');
+    const currentStoredSeq = saved ? parseInt(saved, 10) : 1;
+    
+    const resolvedNext = Math.max(currentStoredSeq, maxAssigned + 1);
+    if (resolvedNext !== currentStoredSeq) {
+      localStorage.setItem('next_document_sequence', String(resolvedNext));
+      setNextDocSeq(resolvedNext);
+    }
+  }, [personnel]);
+
+  // Find live personnel object in props to ensure documentNumber update displays instantly!
+  const liveCertificatePers = certificatePers 
+    ? (personnel.find(p => p.code === certificatePers.code) || certificatePers) 
+    : null;
+
+  // Auto-allocate next sequence number if user views their certificate and has no document number
+  useEffect(() => {
+    if (reportType === 'certificate' && liveCertificatePers && !liveCertificatePers.documentNumber && onSaveItem && !isProcessing) {
+      const assignedNum = padZero(nextDocSeq);
+      const updatedPers = { ...liveCertificatePers, documentNumber: assignedNum };
+      
+      setIsProcessing(true);
+      onSaveItem('personnel', updatedPers).then(success => {
+        if (success) {
+          const nextVal = nextDocSeq + 1;
+          localStorage.setItem('next_document_sequence', String(nextVal));
+          setNextDocSeq(nextVal);
+        }
+        setIsProcessing(false);
+      }).catch(err => {
+        console.error(err);
+        setIsProcessing(false);
+      });
+    }
+  }, [reportType, liveCertificatePers, nextDocSeq, onSaveItem, isProcessing]);
+
   // Auto-fill and generate report when a prefilled personnel code is passed
   useEffect(() => {
     if (prefilledPersonnelCode) {
@@ -124,6 +188,78 @@ export default function ReportingTab({
       keyboards: userKeyboards,
       totalCount: userCases.length + userMonitors.length + userPrinters.length + userMice.length + userKeyboards.length
     };
+  };
+
+  const handleBatchAllocate = async () => {
+    if (!onSaveItem) return;
+    const unassigned = personnel.filter(p => !p.documentNumber);
+    if (unassigned.length === 0) {
+      alert("تمامی پرسنل دارای شماره سند هستند.");
+      return;
+    }
+    if (!confirm(`آیا مایلید به تعداد ${unassigned.length} پرسنل فاقد شماره سند، به صورت خودکار از شماره ${padZero(nextDocSeq)} عدددهی انجام شود؟`)) {
+      return;
+    }
+    
+    setIsProcessing(true);
+    let currentSeq = nextDocSeq;
+    const sorted = [...unassigned].sort((a, b) => a.code.localeCompare(b.code));
+    
+    try {
+      for (const p of sorted) {
+        const docNum = padZero(currentSeq);
+        await onSaveItem('personnel', { ...p, documentNumber: docNum });
+        currentSeq++;
+      }
+      localStorage.setItem('next_document_sequence', String(currentSeq));
+      setNextDocSeq(currentSeq);
+      alert("تخصیص خودکار شماره اسناد با موفقیت پایان یافت.");
+    } catch (e) {
+      console.error(e);
+      alert("خطایی در حین فرآیند رخ داد.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleResetAll = async () => {
+    if (!onSaveItem) return;
+    if (!confirm("⚠️ هشدار جدی: آیا مطمئن هستید که می‌خواهید شماره سند تمام پرسنل را پاک کنید و توالی را از 0001 مجدداً شروع کنید؟")) {
+      return;
+    }
+    
+    setIsProcessing(true);
+    try {
+      for (const p of personnel) {
+        if (p.documentNumber) {
+          await onSaveItem('personnel', { ...p, documentNumber: "" });
+        }
+      }
+      localStorage.setItem('next_document_sequence', "1");
+      setNextDocSeq(1);
+      alert("تمامی شماره سندها پاکسازی شده و توالی به 0001 بازنشانی شد.");
+    } catch (e) {
+      console.error(e);
+      alert("خطایی رخ داد.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleSaveInlineDocNum = async (p: Personnel) => {
+    if (!onSaveItem) return;
+    setIsProcessing(true);
+    try {
+      await onSaveItem('personnel', { ...p, documentNumber: editingDocNumVal.trim() });
+      setEditingDocPersonnelId(null);
+      setEditingDocNumVal('');
+      alert(`شماره سند جدید برای ${p.name} با موفقیت ثبت شد.`);
+    } catch (e) {
+      console.error(e);
+      alert("خطا در ذخیره‌سازی شماره سند رخ داد.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -254,6 +390,143 @@ export default function ReportingTab({
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Controls Block B.2: Document Sequence & Serial Admin Panel */}
+        <div className="border-t border-slate-100 pt-4 space-y-3">
+          <button
+            onClick={() => setIsAdminPanelOpen(!isAdminPanelOpen)}
+            className="w-full flex justify-between items-center bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 text-slate-700 text-xs font-bold transition select-none cursor-pointer text-right"
+          >
+            <span className="flex items-center gap-1.5">⚙️ مدیریت شماره اسناد (ادمین)</span>
+            <span className="font-mono text-xs text-slate-500">{isAdminPanelOpen ? '▼' : '▲'}</span>
+          </button>
+
+          {isAdminPanelOpen && (
+            <div className="bg-slate-50/50 p-3 rounded-lg border border-slate-200 text-xs space-y-4">
+              
+              {/* Part 1: Change next Start index */}
+              <div className="space-y-1 bg-white p-2 rounded-md border border-slate-100">
+                <label className="font-bold text-slate-700 block text-[11px]">عدد شروع توالی بعدی:</label>
+                <div className="flex gap-1">
+                  <input
+                    type="number"
+                    min="1"
+                    value={seqStartInputValue}
+                    onChange={(e) => setSeqStartInputValue(e.target.value)}
+                    placeholder={`فعلی: ${padZero(nextDocSeq)}`}
+                    className="w-24 text-center p-1.5 border border-slate-200 bg-white rounded font-mono text-[11px] focus:outline-none focus:border-indigo-500"
+                  />
+                  <button
+                    onClick={() => {
+                      const val = parseInt(seqStartInputValue, 10);
+                      if (!isNaN(val) && val > 0) {
+                        localStorage.setItem('next_document_sequence', String(val));
+                        setNextDocSeq(val);
+                        alert(`توالی مجاز بعدی روی ${padZero(val)} با موفقیت تنظیم شد.`);
+                        setSeqStartInputValue('');
+                      } else {
+                        alert('لطفاً یک عدد معتبر بزرگتر از صفر وارد کنید.');
+                      }
+                    }}
+                    className="flex-1 bg-slate-800 hover:bg-slate-900 text-white px-2.5 py-1.5 rounded font-bold transition cursor-pointer text-[11px]"
+                  >
+                    ثبت شروع بعدی
+                  </button>
+                </div>
+              </div>
+
+              {/* Part 2: Quick ops */}
+              <div className="grid grid-cols-2 gap-2 text-[10px]">
+                <button
+                  disabled={isProcessing}
+                  onClick={handleBatchAllocate}
+                  className="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 p-2 rounded font-bold transition cursor-pointer text-center flex flex-col justify-center items-center gap-0.5 disabled:opacity-50"
+                >
+                  <span>🔢 تولید شماره برای بقیه</span>
+                  <span className="text-[9px] text-indigo-500 font-normal">(فاقد شماره سند)</span>
+                </button>
+                <button
+                  disabled={isProcessing}
+                  onClick={handleResetAll}
+                  className="bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 p-2 rounded font-bold transition cursor-pointer text-center flex flex-col justify-center items-center gap-0.5 disabled:opacity-50"
+                >
+                  <span>⚠️ ریست کامل شماره‌ها</span>
+                  <span className="text-[9px] text-red-500 font-normal">(پاکسازی و شروع مجدد)</span>
+                </button>
+              </div>
+
+              {/* Part 3: Compact scrollable personnel editor */}
+              <div className="space-y-1.5">
+                <span className="font-bold text-slate-800 block text-[11px]">جدول تعیین مستقیم شماره سند:</span>
+                <div className="border border-slate-250 bg-white rounded-lg max-h-[160px] overflow-y-auto divide-y divide-slate-100 text-[11px] shadow-inner">
+                  {personnel.map(p => {
+                    const mappedPers = personnel.find(prs => prs.code === p.code) || p;
+                    return (
+                      <div key={p.id} className="p-2 flex justify-between items-center gap-1 hover:bg-slate-50/50">
+                        <div className="truncate flex-1">
+                          <strong className="text-slate-900 block truncate">{mappedPers.name}</strong>
+                          <span className="text-slate-400 font-mono text-[9px]">کد پرسنلی: {mappedPers.code}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-1">
+                          {editingDocPersonnelId === p.id ? (
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="text"
+                                value={editingDocNumVal}
+                                onChange={(e) => setEditingDocNumVal(e.target.value)}
+                                placeholder="مثال: 0001"
+                                className="w-16 p-1 border border-indigo-500 rounded text-center font-mono text-[10px]"
+                                autoFocus
+                              />
+                              <button
+                                onClick={() => handleSaveInlineDocNum(mappedPers)}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded p-1 w-6 h-6 flex items-center justify-center font-bold cursor-pointer transition text-xs"
+                                title="ذخیره"
+                              >
+                                ✓
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingDocPersonnelId(null);
+                                  setEditingDocNumVal('');
+                                }}
+                                className="bg-slate-200 hover:bg-slate-300 text-slate-700 rounded p-1 w-6 h-6 flex items-center justify-center font-bold cursor-pointer transition text-xs"
+                                title="انصراف"
+                              >
+                                ✗
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 px-1 py-0.5 rounded">
+                              <span className="font-mono font-bold text-indigo-700 text-[10px]" dir="ltr">
+                                {mappedPers.documentNumber ? `CERT-${mappedPers.documentNumber}` : 'ثبت نشده 🛑'}
+                              </span>
+                              <button
+                                onClick={() => {
+                                  setEditingDocPersonnelId(p.id || null);
+                                  setEditingDocNumVal(mappedPers.documentNumber || '');
+                                }}
+                                className="text-slate-400 hover:text-indigo-600 font-medium p-0.5 rounded cursor-pointer transition text-[10px]"
+                                title="ویرایش مستقیم"
+                              >
+                                ✏️
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {personnel.length === 0 && (
+                    <div className="p-3 text-center text-slate-400 text-[10px]">هیچ پرسنلی ثبت نشده است.</div>
+                  )}
+                </div>
+              </div>
+
+            </div>
+          )}
         </div>
 
         {/* Controls Block C: Interactive Stats */}
@@ -387,6 +660,7 @@ export default function ReportingTab({
                         <th className="border border-slate-300 p-2 font-bold">نوع رم</th>
                         <th className="border border-slate-300 p-2 font-bold">گرافیک</th>
                         <th className="border border-slate-300 p-2 font-bold">ذخیره سازی</th>
+                        <th className="border border-slate-300 p-2 font-bold">پاور (PSU)</th>
                         <th className="border border-slate-300 p-2 font-bold">وضعیت سلامت</th>
                         <th className="border border-slate-300 p-2 font-bold">کاربر تحویل گیرنده</th>
                       </tr>
@@ -394,7 +668,7 @@ export default function ReportingTab({
                     <tbody>
                       {filteredCases.length === 0 ? (
                         <tr>
-                          <td colSpan={8} className="border border-slate-300 p-4 text-center text-slate-400">موردی با این مشخصات یافت نشد.</td>
+                          <td colSpan={9} className="border border-slate-300 p-4 text-center text-slate-400">موردی با این مشخصات یافت نشد.</td>
                         </tr>
                       ) : (
                         filteredCases.map(c => (
@@ -405,6 +679,7 @@ export default function ReportingTab({
                             <td className="border border-slate-300 p-2 font-mono">{c.ramType} / {c.ramQty}</td>
                             <td className="border border-slate-300 p-2">{c.vga}</td>
                             <td className="border border-slate-300 p-2">{c.hdd1} | {c.hdd2}</td>
+                            <td className="border border-slate-300 p-2">{c.power || "—"}</td>
                             <td className="border border-slate-300 p-2">
                               {c.status === 'repair' ? '⚠️ نیاز به تعمیر' : c.status === 'retired' ? '❌ اسقاط شده' : '✅ سالم'}
                             </td>
@@ -531,8 +806,10 @@ export default function ReportingTab({
           )}
 
           {/* Render 2: Official System Profile Certificate (سه برگی) */}
-          {reportType === 'certificate' && certificatePers && (
-            <div className="space-y-6 text-black font-sans print:p-0">
+          {reportType === 'certificate' && liveCertificatePers && (() => {
+            const certificatePers = liveCertificatePers;
+            return (
+              <div className="space-y-6 text-black font-sans print:p-0">
               
               {/* Header Certificate corporate titles */}
               <div className="grid grid-cols-3 items-center border-b-2 border-black pb-4">
@@ -550,7 +827,7 @@ export default function ReportingTab({
                 {/* Left side: Code & Document metadata */}
                 <div className="text-left text-[10px] md:text-xs space-y-1">
                   <div>کد سند: <span dir="ltr" className="font-mono font-bold select-all">37-FO-IT-01-01</span></div>
-                  <div>شماره سند: <strong className="font-mono">ICT-CERT-{certificatePers.code}</strong></div>
+                  <div>شماره سند: <strong className="font-mono text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">ICT-CERT-{certificatePers.documentNumber || "----"}</strong></div>
                   <div>تاریخ صدور سند: <span className="font-mono">۱۴۰۵/۰۳/۰۳</span></div>
                 </div>
               </div>
@@ -624,6 +901,14 @@ export default function ReportingTab({
                             <td className="border border-black p-2">{c.hdd1}</td>
                             <td className="border border-black p-2 bg-slate-50 font-bold">هارد ثانویه:</td>
                             <td className="border border-black p-2">{c.hdd2}</td>
+                          </tr>
+                          <tr>
+                            <td className="border border-black p-2 bg-slate-50 font-bold">منبع تغذیه (پاور):</td>
+                            <td className="border border-black p-2 font-mono">{c.power || "—"}</td>
+                            <td className="border border-black p-2 bg-slate-50 font-bold">وضعیت سلامت:</td>
+                            <td className="border border-black p-2">
+                              {c.status === 'repair' ? 'نیاز به تعمیر (کارگاهی)' : c.status === 'retired' ? 'اسقاط شده' : 'سالم و فعال'}
+                            </td>
                           </tr>
                         </tbody>
                       </table>
@@ -700,7 +985,8 @@ export default function ReportingTab({
               </div>
 
             </div>
-          )}
+          );
+        })()}
         </div>
       </div>
 
