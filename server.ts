@@ -1056,8 +1056,9 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Express custom server running on http://localhost:${PORT}`);
+  const HOST = process.env.HOST || "0.0.0.0";
+  app.listen(PORT, HOST, () => {
+    console.log(`Express custom server running on http://${HOST === "0.0.0.0" ? "localhost" : HOST}:${PORT}`);
   });
 }
 
