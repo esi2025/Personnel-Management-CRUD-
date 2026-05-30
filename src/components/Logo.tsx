@@ -82,18 +82,18 @@ export default function Logo({ className = '', size = 'h-12' }: LogoProps) {
         <div className="relative group flex items-center justify-center">
           <img 
             src={logoUrl} 
-            className={`${size} object-contain max-w-[180px] drop-shadow-sm transition-transform duration-200 group-hover:scale-105`} 
+            className={`${size} object-contain max-w-[240px] drop-shadow-sm transition-transform duration-200 group-hover:scale-105`} 
             alt="لوگوی شرکت" 
           />
           {/* Quick inline delete button - only visible on screen hover */}
           <button
             type="button"
             onClick={handleDelete}
-            className="no-print absolute -top-1.5 -left-1.5 bg-red-650 hover:bg-red-700 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md cursor-pointer flex items-center justify-center"
+            className="no-print absolute -top-1.5 -left-1.5 bg-red-650 hover:bg-red-700 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md cursor-pointer flex items-center justify-center"
             style={{ backgroundColor: '#dc2626' }}
             title="حذف لوگو"
           >
-            <X size={12} className="stroke-[3px]" />
+            <X size={14} className="stroke-[3px]" />
           </button>
         </div>
       ) : (
@@ -103,11 +103,11 @@ export default function Logo({ className = '', size = 'h-12' }: LogoProps) {
         <button
           type="button"
           onClick={triggerUploadClick}
-          className="no-print group flex items-center gap-1.5 border border-dashed border-slate-600/50 hover:border-blue-500 hover:bg-blue-50/10 text-[10px] text-slate-400 hover:text-blue-400 px-3 py-1.5 rounded-lg transition-all cursor-pointer font-sans"
+          className="no-print group flex items-center gap-2 border-2 border-dashed border-slate-600/50 hover:border-blue-500 hover:bg-blue-50/10 text-xs text-slate-400 hover:text-blue-400 px-4.5 py-2.5 rounded-xl transition-all cursor-pointer font-sans shadow-sm"
           title="بارگذاری لوگوی جدید شرکت"
         >
-          <Upload size={12} className="group-hover:animate-bounce shrink-0" />
-          <span>افزودن لوگوی شرکت</span>
+          <Upload size={14} className="group-hover:animate-bounce shrink-0" />
+          <span>افزودن لوگوی شرکت (۳۰٪ بزرگتر)</span>
         </button>
       )}
     </div>

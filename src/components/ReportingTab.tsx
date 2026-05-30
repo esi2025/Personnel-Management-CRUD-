@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard } from '../types';
 import Logo from './Logo';
 import EquipmentPieChart from './EquipmentPieChart';
+import EquipmentStatusBarChart from './EquipmentStatusBarChart';
 
 interface ReportingTabProps {
   personnel: Personnel[];
@@ -260,6 +261,15 @@ export default function ReportingTab({
           casesCount={cases.length} 
           monitorsCount={monitors.length} 
           printersCount={printers.length} 
+        />
+
+        {/* Controls Block D: Interactive Status Distribution */}
+        <EquipmentStatusBarChart 
+          cases={cases}
+          monitors={monitors}
+          printers={printers}
+          mice={mice}
+          keyboards={keyboards}
         />
 
       </div>
@@ -528,7 +538,7 @@ export default function ReportingTab({
               <div className="grid grid-cols-3 items-center border-b-2 border-black pb-4">
                 {/* Right side: Logo */}
                 <div className="flex justify-start">
-                  <Logo size="h-12" />
+                  <Logo size="h-[62px]" />
                 </div>
                 
                 {/* Center: Corporate Titles (Centered) */}
