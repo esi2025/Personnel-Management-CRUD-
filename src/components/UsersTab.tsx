@@ -121,7 +121,11 @@ export default function UsersTab({ currentUser }: UsersTabProps) {
     try {
       const response = await fetch('/api/users/save', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-operator-username': currentUser?.username || 'admin',
+          'x-operator-name': encodeURIComponent(currentUser?.name || '')
+        },
         body: JSON.stringify({
           id: editingId,
           username: username.trim(),
@@ -163,7 +167,11 @@ export default function UsersTab({ currentUser }: UsersTabProps) {
     try {
       const response = await fetch('/api/users/delete', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-operator-username': currentUser?.username || 'admin',
+          'x-operator-name': encodeURIComponent(currentUser?.name || '')
+        },
         body: JSON.stringify({ id })
       });
 
@@ -298,7 +306,7 @@ export default function UsersTab({ currentUser }: UsersTabProps) {
             </div>
 
             {/* Permissions Checkboxes block */}
-            <div className="bg-slate-50 dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-xl p-3.5 space-y-2.5">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 space-y-2.5 shadow-sm">
               <span className="text-[11px] font-bold text-slate-400 block border-b border-slate-200/50 pb-1.5">تعیین دقیق سطوح دسترسی (سخت‌افزار و عملیات):</span>
               
               <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-700">
@@ -398,7 +406,7 @@ export default function UsersTab({ currentUser }: UsersTabProps) {
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-right border-collapse">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100 dark:border-slate-800 text-slate-500 font-bold">
+                  <tr className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-bold">
                     <th className="p-3">پرسنل سیستم</th>
                     <th className="p-3">نام کاربری</th>
                     <th className="p-3">کلمه عبور</th>

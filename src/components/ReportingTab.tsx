@@ -1516,34 +1516,33 @@ export default function ReportingTab({
                   }
 
                   return (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 print:grid-cols-4 gap-3 print:gap-2">
                       {assignedList.map(item => (
                         <div 
-                          key={item.code} 
-                          className="bg-white border-2 border-black rounded-xl p-3 flex flex-col items-center justify-between text-center relative overflow-hidden break-inside-avoid shadow-sm"
-                          style={{ minHeight: '170px' }}
+                           key={item.code} 
+                           className="bg-white border-2 border-black rounded-xl p-2.5 print:p-2 flex flex-col items-center justify-between text-center relative overflow-hidden break-inside-avoid shadow-sm min-h-[145px]"
                         >
-                          <div className="bg-slate-100 text-[9px] font-black py-0.5 rounded w-full text-slate-700 truncate leading-none">
-                            {item.categoryName}
-                          </div>
+                           <div className="bg-slate-100 text-[8px] print:text-[7.5px] font-black py-0.5 rounded w-full text-slate-700 truncate leading-none">
+                             {item.categoryName}
+                           </div>
 
-                          {/* Quick standard QR generator */}
-                          <div className="my-2 p-1 bg-white border border-slate-200 rounded">
-                            <QRCodeSVG
-                              value={`ITEM|${item.type}|${item.code}`}
-                              size={85}
-                              level="H"
-                            />
-                          </div>
+                           {/* Quick standard QR generator */}
+                           <div className="my-1.5 p-1 bg-white border border-slate-150 rounded">
+                             <QRCodeSVG
+                               value={`ITEM|${item.type}|${item.code}`}
+                               size={72}
+                               level="H"
+                             />
+                           </div>
 
-                          <div className="w-full">
-                            <span className="font-mono block text-[10px] font-black tracking-widest text-[#84141A] border-t border-dashed border-slate-300 pt-1 pb-0.5">
-                              {item.code}
-                            </span>
-                            <span className="text-[8px] text-slate-500 font-bold block truncate">
-                              {item.brand} {item.model}
-                            </span>
-                          </div>
+                           <div className="w-full">
+                             <span className="font-mono block text-[9px] print:text-[8.5px] font-black tracking-widest text-[#84141A] border-t border-dashed border-slate-300 pt-0.5 pb-0.5">
+                               {item.code}
+                             </span>
+                             <span className="text-[7.5px] print:text-[7px] text-slate-500 font-bold block truncate">
+                               {item.brand} {item.model}
+                             </span>
+                           </div>
                         </div>
                       ))}
                     </div>

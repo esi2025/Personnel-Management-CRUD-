@@ -300,6 +300,57 @@ function writeDb(file: string, data: any[]) {
   }
 }
 
+const activeUsers = new Map<string, { username: string; name: string; lastSeen: number }>();
+
+function addAuditLog(username: string, name: string, ip: string, action: string, targetType: string, targetId: string, details: string) {
+  const logsFile = path.join(DATA_DIR, "logs.json");
+  let logs: any[] = [];
+  if (fs.existsSync(logsFile)) {
+    try {
+      logs = JSON.parse(fs.readFileSync(logsFile, "utf-8"));
+    } catch (e) {
+      logs = [];
+    }
+  }
+  
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  const dateStr = getPersianDateString(now);
+  const timestamp = `${dateStr} ساعت ${timeStr}`;
+
+  let decodedName = username || "سیستم";
+  if (name && name !== "undefined" && name !== "unknown") {
+    try {
+      decodedName = decodeURIComponent(name);
+    } catch (e) {
+      decodedName = name;
+    }
+  }
+
+  const newLog = {
+    id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    username: username || "system",
+    name: decodedName,
+    ip: ip || "-",
+    action,
+    targetType,
+    targetId,
+    details,
+    timestamp
+  };
+  
+  logs.unshift(newLog); // newer logs at top
+  if (logs.length > 2000) {
+    logs = logs.slice(0, 2000);
+  }
+  
+  try {
+    fs.writeFileSync(logsFile, JSON.stringify(logs, null, 2), "utf-8");
+  } catch (err) {
+    console.error("Error writing logs:", err);
+  }
+}
+
 async function startServer() {
   initializeDatabase();
 
@@ -368,6 +419,17 @@ async function startServer() {
 
     // Return profile without leaking plain-text passwords
     const { password: _, ...userInfo } = user;
+    
+    // Log successful login
+    addAuditLog(user.username, user.name, clientIp, "login", "auth", user.id, `ورود موفقیت‌آمیز به سامانه`);
+    
+    // Register active session
+    activeUsers.set(user.username.toLowerCase(), {
+      username: user.username.toLowerCase(),
+      name: user.name,
+      lastSeen: Date.now()
+    });
+
     res.json({ success: true, user: userInfo, ip: clientIp });
   });
 
@@ -413,6 +475,17 @@ async function startServer() {
     }
 
     writeDb("users.json", users);
+    
+    // Log User Creation/Edit
+    const opUser = req.headers["x-operator-username"] as string || "admin";
+    const opName = req.headers["x-operator-name"] as string || "مدیریت کل";
+    const clientIp = getClientIp(req);
+    if (isEditing) {
+      addAuditLog(opUser, opName, clientIp, "edit", "user", updatedUser.id, `ویرایش مشخصات کاربر: ${updatedUser.name} (${updatedUser.username})`);
+    } else {
+      addAuditLog(opUser, opName, clientIp, "create", "user", updatedUser.id, `افزودن کاربر سیستمی جدید: ${updatedUser.name} (${updatedUser.username}) با نقش ${updatedUser.role}`);
+    }
+
     res.json({ success: true, user: updatedUser });
   });
 
@@ -436,6 +509,13 @@ async function startServer() {
 
     users.splice(userIndex, 1);
     writeDb("users.json", users);
+
+    // Log User Deletion
+    const opUser = req.headers["x-operator-username"] as string || "admin";
+    const opName = req.headers["x-operator-name"] as string || "مدیریت کل";
+    const clientIp = getClientIp(req);
+    addAuditLog(opUser, opName, clientIp, "delete", "user", id, `حذف کاربر سیستم: ${user.name} (${user.username})`);
+
     res.json({ success: true });
   });
 
@@ -457,14 +537,19 @@ async function startServer() {
   app.post("/api/logo", (req, res) => {
     const { logo } = req.body; // base64 string or null
     const logoFile = path.join(DATA_DIR, "logo.txt");
+    const opUser = req.headers["x-operator-username"] as string || "admin";
+    const opName = req.headers["x-operator-name"] as string || "مدیریت کل";
+    const clientIp = getClientIp(req);
     try {
       if (!logo) {
         if (fs.existsSync(logoFile)) {
           fs.unlinkSync(logoFile);
         }
+        addAuditLog(opUser, opName, clientIp, "edit", "logo", "-", "حذف تصویر لوگوی اختصاصی بارگذاری‌شده");
         return res.json({ success: true, logo: null });
       }
       fs.writeFileSync(logoFile, logo, "utf-8");
+      addAuditLog(opUser, opName, clientIp, "edit", "logo", "-", "بارگذاری و تغییر تصویر لوگوی اختصاصی شرکت");
       return res.json({ success: true, logo });
     } catch (e) {
       return res.status(500).json({ error: "خطا در ذخیره لوگو روی سرور" });
@@ -480,6 +565,9 @@ async function startServer() {
     }
 
     const trimmedCode = code.trim();
+    const opUser = req.headers["x-operator-username"] as string || "system";
+    const opName = req.headers["x-operator-name"] as string || "سیستم";
+    const clientIp = getClientIp(req);
 
     if (type === "personnel") {
       const personnel = readDb("personnel.json");
@@ -662,6 +750,13 @@ async function startServer() {
       }
 
       writeDb("personnel.json", personnel);
+      
+      if (isEditing) {
+        addAuditLog(opUser, opName, clientIp, "edit", "personnel", trimmedCode, `ویرایش پرونده پرسنلی: ${name} (${trimmedCode}) - دپارتمان ${department || '-'}`);
+      } else {
+        addAuditLog(opUser, opName, clientIp, "create", "personnel", trimmedCode, `ایجاد پرونده پرسنلی جدید: ${name} (${trimmedCode}) - دپارتمان ${department || '-'}`);
+      }
+
       return res.json({ success: true, item });
     }
 
@@ -697,6 +792,13 @@ async function startServer() {
       }
 
       writeDb("cases.json", cases);
+      
+      if (isEdit) {
+        addAuditLog(opUser, opName, clientIp, "edit", "case", trimmedCode, `ویرایش مشخصات سخت‌افزاری کیس: مادربرد ${fields.motherboard || '-'}، پردازنده ${fields.cpu || '-'}`);
+      } else {
+        addAuditLog(opUser, opName, clientIp, "create", "case", trimmedCode, `ثبت کیس کامپیوتر جدید در کارگاه: مادربرد ${fields.motherboard || '-'}، پردازنده ${fields.cpu || '-'}`);
+      }
+
       return res.json({ success: true, item });
     }
 
@@ -725,6 +827,13 @@ async function startServer() {
       }
 
       writeDb("monitors.json", monitors);
+      
+      if (isEdit) {
+        addAuditLog(opUser, opName, clientIp, "edit", "monitor", trimmedCode, `ویرایش مشخصات مانیتور: مدل ${fields.model || 'سایر'}`);
+      } else {
+        addAuditLog(opUser, opName, clientIp, "create", "monitor", trimmedCode, `ثبت مانیتور جدید در سامانه: مدل ${fields.model || 'سایر'}`);
+      }
+
       return res.json({ success: true, item });
     }
 
@@ -753,6 +862,13 @@ async function startServer() {
       }
 
       writeDb("printers.json", printers);
+      
+      if (isEdit) {
+        addAuditLog(opUser, opName, clientIp, "edit", "printer", trimmedCode, `ویرایش مشخصات چاپگر: مدل ${fields.model || 'سایر'}`);
+      } else {
+        addAuditLog(opUser, opName, clientIp, "create", "printer", trimmedCode, `ثبت چاپگر جدید در سامانه: مدل ${fields.model || 'سایر'}`);
+      }
+
       return res.json({ success: true, item });
     }
 
@@ -781,6 +897,13 @@ async function startServer() {
       }
 
       writeDb("mice.json", mice);
+      
+      if (isEdit) {
+        addAuditLog(opUser, opName, clientIp, "edit", "mouse", trimmedCode, `ویرایش مشخصات ماوس کابل‌دار/بیسیم: مدل ${fields.model || 'سایر'}`);
+      } else {
+        addAuditLog(opUser, opName, clientIp, "create", "mouse", trimmedCode, `ثبت ماوس جدید در انبار: مدل ${fields.model || 'سایر'}`);
+      }
+
       return res.json({ success: true, item });
     }
 
@@ -809,6 +932,13 @@ async function startServer() {
       }
 
       writeDb("keyboards.json", keyboards);
+      
+      if (isEdit) {
+        addAuditLog(opUser, opName, clientIp, "edit", "keyboard", trimmedCode, `ویرایش مشخصات کیبورد: مدل ${fields.model || 'سایر'}`);
+      } else {
+        addAuditLog(opUser, opName, clientIp, "create", "keyboard", trimmedCode, `ثبت کیبورد جدید در انبار: مدل ${fields.model || 'سایر'}`);
+      }
+
       return res.json({ success: true, item });
     }
 
@@ -831,6 +961,13 @@ async function startServer() {
       }
 
       writeDb("parts_catalog.json", catalog);
+      
+      if (isEdit) {
+        addAuditLog(opUser, opName, clientIp, "edit", "catalog", itemId, `ویرایش قطعه مرجع کارگاه: ${fields.name} (دسته‌بندی ${fields.category})`);
+      } else {
+        addAuditLog(opUser, opName, clientIp, "create", "catalog", itemId, `تعریف قطعه مرجع هوشمند جدید: ${fields.name} (دسته‌بندی ${fields.category})`);
+      }
+
       return res.json({ success: true, item });
     }
 
@@ -845,6 +982,10 @@ async function startServer() {
     if (!type || !id) {
       return res.status(400).json({ error: "شناسه یا مانیفست حذف ارسال نگردیده." });
     }
+
+    const opUser = req.headers["x-operator-username"] as string || "system";
+    const opName = req.headers["x-operator-name"] as string || "سیستم";
+    const clientIp = getClientIp(req);
 
     if (type === "personnel") {
       const personnel = readDb("personnel.json");
@@ -904,6 +1045,7 @@ async function startServer() {
         writeDb("assignments.json", assignments);
       }
 
+      addAuditLog(opUser, opName, clientIp, "delete", "personnel", codeToClear, `حذف پرونده کارمند: شماره پرسنلی ${codeToClear} و آزادسازی کلیه تجهیزات تحت تصرف وی`);
       return res.json({ success: true });
     }
 
@@ -923,6 +1065,7 @@ async function startServer() {
       });
       writeDb("assignments.json", assignments);
 
+      addAuditLog(opUser, opName, clientIp, "delete", "case", id, `حذف کامل دارایی کیس کامپیوتر با شماره اموال ${id}`);
       return res.json({ success: true });
     }
 
@@ -942,6 +1085,7 @@ async function startServer() {
       });
       writeDb("assignments.json", assignments);
 
+      addAuditLog(opUser, opName, clientIp, "delete", "monitor", id, `حذف مانیتور از سامانه با کد اموال ${id}`);
       return res.json({ success: true });
     }
 
@@ -961,6 +1105,7 @@ async function startServer() {
       });
       writeDb("assignments.json", assignments);
 
+      addAuditLog(opUser, opName, clientIp, "delete", "printer", id, `حذف چاپگر با شماره پرونده اموال ${id}`);
       return res.json({ success: true });
     }
 
@@ -980,6 +1125,7 @@ async function startServer() {
       });
       writeDb("assignments.json", assignments);
 
+      addAuditLog(opUser, opName, clientIp, "delete", "mouse", id, `حذف فیزیکی ماوس با شماره پرونده اموال ${id}`);
       return res.json({ success: true });
     }
 
@@ -999,6 +1145,7 @@ async function startServer() {
       });
       writeDb("assignments.json", assignments);
 
+      addAuditLog(opUser, opName, clientIp, "delete", "keyboard", id, `حذف فیزیکی کیبورد با شماره پرونده اموال ${id}`);
       return res.json({ success: true });
     }
 
@@ -1010,6 +1157,7 @@ async function startServer() {
       catalog.splice(idx, 1);
       writeDb("parts_catalog.json", catalog);
 
+      addAuditLog(opUser, opName, clientIp, "delete", "catalog", id, `حذف دائمی قطعه مرجع از کاتالوگ قطعات کارگاه بوشهر`);
       return res.json({ success: true });
     }
 
@@ -1020,6 +1168,9 @@ async function startServer() {
   app.post("/api/transfer", (req, res) => {
     const { equipmentCode, targetPersonnelCode, today } = req.body;
     const dateStr = today || getPersianDateString();
+    const opUser = req.headers["x-operator-username"] as string || "system";
+    const opName = req.headers["x-operator-name"] as string || "سیستم";
+    const clientIp = getClientIp(req);
 
     if (!equipmentCode) {
       return res.status(400).json({ error: "کد سخت‌افزار ارسالی الزامی است." });
@@ -1164,6 +1315,11 @@ async function startServer() {
 
     writeDb("assignments.json", assignments);
 
+    const actionDetails = targetCode 
+      ? `تحویل تجهیز ${equipType} (${equipmentCode}) به پرسنل: ${targetName} (${targetCode})`
+      : `عودت هوشمند تجهیز ${equipType} (${equipmentCode}) به انبار مرکزی کارگاه`;
+    addAuditLog(opUser, opName, clientIp, "transfer", equipType!, equipmentCode, actionDetails);
+
     return res.json({
       success: true,
       equipmentType: equipType,
@@ -1208,6 +1364,69 @@ async function startServer() {
     return res.json({
       success: true,
       message: "بازیابی اطلاعات به طور کامل در سرور شبیه‌ساز صورت پذیرفت.",
+    });
+  });
+
+  // API: Get Security Audit Logs (Admin Only)
+  app.get("/api/logs", (req, res) => {
+    const logsFile = path.join(DATA_DIR, "logs.json");
+    if (!fs.existsSync(logsFile)) {
+      return res.json([]);
+    }
+    try {
+      const logs = JSON.parse(fs.readFileSync(logsFile, "utf-8"));
+      return res.json(logs);
+    } catch (e) {
+      return res.json([]);
+    }
+  });
+
+  // API: Clear Logs (Admin Only)
+  app.post("/api/logs/clear", (req, res) => {
+    const logsFile = path.join(DATA_DIR, "logs.json");
+    try {
+      fs.writeFileSync(logsFile, JSON.stringify([], null, 2), "utf-8");
+      const opUser = req.headers["x-operator-username"] as string || "admin";
+      const opName = req.headers["x-operator-name"] as string || "مدیریت کل";
+      const clientIp = getClientIp(req);
+      addAuditLog(opUser, opName, clientIp, "delete", "logs", "-", "پاکسازی و تخلیه کل تاریخچه لاگ‌های امنیتی سیستم");
+      return res.json({ success: true });
+    } catch (e) {
+      return res.status(500).json({ error: "خطا در پاکسازی لاگ‌ها" });
+    }
+  });
+
+  // API: User Session Heartbeat
+  app.post("/api/active-ping", (req, res) => {
+    const { username, name } = req.body;
+    if (username && username !== "undefined") {
+      activeUsers.set(username.toLowerCase(), {
+        username: username.toLowerCase(),
+        name: name || username,
+        lastSeen: Date.now()
+      });
+    }
+    res.json({ success: true });
+  });
+
+  // API: Get Active/Online Users
+  app.get("/api/online-users", (req, res) => {
+    const now = Date.now();
+    const list: any[] = [];
+    for (const [key, val] of activeUsers.entries()) {
+      if (now - val.lastSeen < 65000) { // slightly over 1 minute threshold
+        list.push({
+          username: val.username,
+          name: val.name,
+          lastSeen: val.lastSeen
+        });
+      } else {
+        activeUsers.delete(key);
+      }
+    }
+    res.json({
+      count: list.length,
+      users: list
     });
   });
 

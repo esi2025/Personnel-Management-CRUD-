@@ -288,8 +288,8 @@ export default function BulkQRTab({ cases, monitors, printers, mice, keyboards, 
         </div>
 
         {/* 3. List of Items */}
-        <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-          <div className="bg-slate-50 dark:bg-slate-900 border-b border-slate-250 p-3 flex justify-between items-center text-xs text-slate-500 font-bold">
+        <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-950">
+          <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-805 p-3 flex justify-between items-center text-xs text-slate-500 font-bold">
             <div>
               <span>نمایش {filteredHardwares.length} کالا بر اساس فیلترهای بالا</span>
               <span className="mr-2 text-blue-600">({selectedCodes.size} مورد انتخاب شده)</span>
@@ -360,7 +360,7 @@ export default function BulkQRTab({ cases, monitors, printers, mice, keyboards, 
       </div>
 
       {/* 4. Display of Labels for Print Preview (Shows both on screen as live preview, and prints cleanly) */}
-      <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 no-print">
+      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 no-print shadow-sm">
         <h4 className="text-xs md:text-sm font-black text-slate-800 flex items-center gap-1.5 border-b pb-2">
           <span>👀 پیش‌نمایش برچسب‌های چاپی قبل از پرینت (Live Label Layout)</span>
         </h4>

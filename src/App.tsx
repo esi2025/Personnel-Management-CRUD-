@@ -14,6 +14,7 @@ import QRCodeModal from './components/QRCodeModal';
 import LoginScreen from './components/LoginScreen';
 import UsersTab from './components/UsersTab';
 import BulkQRTab from './components/BulkQRTab';
+import LogsTab from './components/LogsTab';
 import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard, CatalogItem } from './types';
 import { getPersianDateString } from './utils/date';
 
@@ -236,6 +237,34 @@ export default function App() {
   const [qrCode, setQrCode] = useState('');
   const [qrType, setQrType] = useState<'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard'>('case');
   const [qrData, setQrData] = useState<any>(null);
+  const [onlineUsersData, setOnlineUsersData] = useState<{ count: number; users: { username: string; name: string }[] }>({ count: 1, users: [] });
+
+  useEffect(() => {
+    if (!currentUser || isOfflineMode) return;
+
+    const pingServer = async () => {
+      try {
+        await fetch('/api/active-ping', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: currentUser.username, name: currentUser.name })
+        });
+        
+        const res = await fetch('/api/online-users');
+        if (res.ok) {
+          const data = await res.json();
+          setOnlineUsersData(data);
+        }
+      } catch (e) {
+        console.warn('Live session check issue:', e);
+      }
+    };
+
+    pingServer();
+    const interval = setInterval(pingServer, 15000);
+
+    return () => clearInterval(interval);
+  }, [currentUser, isOfflineMode]);
 
   const handleShowQR = (code: string, type: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard', data: any) => {
     setQrCode(code);
@@ -343,7 +372,11 @@ export default function App() {
       try {
         const res = await fetch('/api/save', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-operator-username': currentUser?.username || 'system',
+            'x-operator-name': encodeURIComponent(currentUser?.name || '')
+          },
           body: JSON.stringify({ type, ...data })
         });
         const contentType = res.headers.get('content-type') || '';
@@ -600,7 +633,11 @@ export default function App() {
       try {
         const res = await fetch('/api/delete', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-operator-username': currentUser?.username || 'system',
+            'x-operator-name': encodeURIComponent(currentUser?.name || '')
+          },
           body: JSON.stringify({ type, id, today: getPersianDateString() })
         });
         const contentType = res.headers.get('content-type') || '';
@@ -684,7 +721,11 @@ export default function App() {
       try {
         const res = await fetch('/api/transfer', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-operator-username': currentUser?.username || 'system',
+            'x-operator-name': encodeURIComponent(currentUser?.name || '')
+          },
           body: JSON.stringify({ equipmentCode, targetPersonnelCode, today })
         });
         const contentType = res.headers.get('content-type') || '';
@@ -916,17 +957,29 @@ export default function App() {
       <Header isDark={darkMode} onToggleTheme={() => setDarkMode(!darkMode)} />
 
       {/* Welcome & logout bar */}
-      <div className="no-print mt-4 mb-2 flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs shadow-sm">
-        <div className="flex items-center gap-2">
-          <span className="text-sm">🗣️</span>
-          <span>
-            کاربر جاری سیستم: <strong className="text-indigo-650 dark:text-indigo-400 font-bold">{currentUser.name}</strong> 
-            <span className="text-slate-555 dark:text-slate-400 font-medium mr-2">({currentUser.role === 'admin' ? 'مدير ارشد سیستم (ادمین)' : currentUser.role === 'editor_equipment' ? 'اپراتور سخت‌افزار' : 'ناظر سیستم'})</span>
-          </span>
+      <div className="no-print mt-4 mb-2 flex flex-col md:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs shadow-sm">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="text-sm">🗣️</span>
+            <span>
+              کاربر جاری سیستم: <strong className="text-indigo-655 dark:text-indigo-400 font-bold">{currentUser.name}</strong> 
+              <span className="text-slate-500 dark:text-slate-400 font-medium mr-2">({currentUser.role === 'admin' ? 'مدير ارشد سیستم (ادمین)' : currentUser.role === 'editor_equipment' ? 'اپراتور سخت‌افزار' : 'ناظر سیستم'})</span>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-400 px-2.5 py-1 rounded-lg border border-emerald-200/50">
+            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shrink-0" />
+            <span className="font-bold">تعداد کاربران آنلاین: {onlineUsersData.count} نفر</span>
+            {currentUser.role === 'admin' && onlineUsersData.users.length > 0 && (
+              <span className="border-r border-emerald-300 dark:border-emerald-800/80 pr-2 mr-2 text-[10px] font-medium">
+                اسامی: {onlineUsersData.users.map(u => u.name).join('، ')}
+              </span>
+            )}
+          </div>
         </div>
         <button 
           onClick={handleLogout}
-          className="bg-red-50 hover:bg-red-100 dark:bg-red-950/20 text-red-650 hover:text-red-750 text-[11px] font-black px-4 py-1.5 rounded-lg border border-red-200/50 cursor-pointer transition flex items-center gap-1.5 animate-pulse"
+          className="bg-red-50 hover:bg-red-100 dark:bg-red-950/20 text-red-650 hover:text-red-750 text-[11px] font-black px-4 py-1.5 rounded-lg border border-red-200/50 cursor-pointer transition flex items-center gap-1.5"
           style={{ color: '#dc2626' }}
         >
           🚪 خروج امن از سیستم
@@ -991,6 +1044,7 @@ export default function App() {
           { id: 'bulk-qr-tab', label: '🖨️ چاپ گروهی بارکد', show: currentUser?.canExport || currentUser?.role === 'admin' },
           { id: 'systems-tree-tab', label: '🌳 نمودار درختی سیستم‌ها', show: true },
           { id: 'users-tab', label: '🛡️ مدیریت کاربران', show: currentUser?.role === 'admin' },
+          { id: 'logs-tab', label: '🪵 لاگ امنیتی سیستم', show: currentUser?.role === 'admin' },
           { id: 'backup-tab', label: '⚙️ پشتیبان‌گیری و سورس', show: currentUser?.canBackup || currentUser?.role === 'admin' },
           { id: 'add-new-tab', label: '➕ ثبت جدید', show: currentUser?.canEditPersonnel || currentUser?.canEditEquipment || currentUser?.role === 'admin' }
         ].filter(t => t.show).map((tab) => (
@@ -1172,6 +1226,10 @@ export default function App() {
 
           {activeTab === 'users-tab' && (
             <UsersTab currentUser={currentUser} />
+          )}
+
+          {activeTab === 'logs-tab' && (
+            <LogsTab currentUser={currentUser} />
           )}
 
           {activeTab === 'bulk-qr-tab' && (

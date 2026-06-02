@@ -1123,7 +1123,7 @@ export default function SystemsTreeTab({
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
         
         {/* SVG Drawing Zone (Takes 3 columns on wide desktop) */}
-        <div className="lg:col-span-3 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-slate-100/30 dark:bg-slate-950/50 relative">
+        <div className="lg:col-span-3 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-950/50 relative">
           
           {/* Legend indicator badges */}
           <div className="absolute top-3 right-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-3 rounded-xl border border-slate-200/60 dark:border-slate-800 text-[10px] space-y-1.5 z-10 shadow-sm pointer-events-none">
@@ -1159,7 +1159,7 @@ export default function SystemsTreeTab({
           {/* The drawing box */}
           <div 
             ref={containerRef} 
-            className="w-full h-[580px] overflow-hidden bg-slate-50 dark:bg-slate-950"
+            className="w-full h-[580px] overflow-hidden bg-white dark:bg-slate-950"
             onClick={handleClearSelection}
           >
             <svg 
@@ -1170,7 +1170,7 @@ export default function SystemsTreeTab({
         </div>
 
         {/* Sidebar displaying details of selected node */}
-        <div className="lg:col-span-1 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-slate-50/50 dark:bg-slate-800/40">
+        <div className="lg:col-span-1 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-950/40 shadow-sm">
           <h3 className="text-xs font-bold text-slate-800 dark:text-slate-300 border-b pb-2 mb-3 flex items-center justify-between">
             <span>🔍 جزییات و متادیتای تجهیز انتخاب‌شده</span>
             <span className="text-blue-500 block font-normal text-[10px]">کلیک کنید</span>
