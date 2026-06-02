@@ -97,4 +97,29 @@ export interface SystemUser {
   allowedIPs?: string;
 }
 
+export interface RepairNeededPart {
+  id: string;
+  name: string;
+  source: 'warehouse' | 'salvage';
+  salvageEquipmentCode?: string;
+  cost: number;
+}
+
+export interface Repair {
+  id: string;
+  equipmentCode: string;
+  equipmentType: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard';
+  requestDate: string;
+  requesterName: string;
+  reportedIssue: string;
+  diagnosis: string;
+  status: 'pending_diagnosis' | 'parts_requested' | 'parts_procured' | 'completed' | 'unrepairable_salvage';
+  neededParts: RepairNeededPart[];
+  repairFee: number;
+  totalCost: number;
+  assignedTechnician: string;
+  completedDate: string;
+  remarks: string;
+}
+
 

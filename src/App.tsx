@@ -15,7 +15,8 @@ import LoginScreen from './components/LoginScreen';
 import UsersTab from './components/UsersTab';
 import BulkQRTab from './components/BulkQRTab';
 import LogsTab from './components/LogsTab';
-import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard, CatalogItem } from './types';
+import RepairsTab from './components/RepairsTab';
+import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard, CatalogItem, Repair } from './types';
 import { getPersianDateString } from './utils/date';
 
 export interface BackupData {
@@ -220,6 +221,7 @@ export default function App() {
   const [keyboards, setKeyboards] = useState<Keyboard[]>([]);
   const [partsCatalog, setPartsCatalog] = useState<CatalogItem[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [repairs, setRepairs] = useState<Repair[]>([]);
 
   // Search filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -297,6 +299,7 @@ export default function App() {
       setKeyboards(data.keyboards || []);
       setPartsCatalog(data.partsCatalog || []);
       setAssignments(data.assignments || []);
+      setRepairs(data.repairs || []);
 
       // Cache locally
       localStorage.setItem('azarestan_ict_db', JSON.stringify({
@@ -307,7 +310,8 @@ export default function App() {
         mice: data.mice || [],
         keyboards: data.keyboards || [],
         partsCatalog: data.partsCatalog || [],
-        assignments: data.assignments || []
+        assignments: data.assignments || [],
+        repairs: data.repairs || []
       }));
       setIsOfflineMode(false);
     } catch (err) {
@@ -335,6 +339,7 @@ export default function App() {
       setKeyboards(localDb.keyboards || []);
       setPartsCatalog(localDb.partsCatalog || []);
       setAssignments(localDb.assignments || []);
+      setRepairs(localDb.repairs || []);
       
       setIsOfflineMode(true);
       setError(null); // Bypass red screen of death completely
@@ -1041,6 +1046,7 @@ export default function App() {
           { id: 'transfer-tab', label: '🔄 جابجایی هوشمند', show: currentUser?.canEditEquipment || currentUser?.role === 'admin' },
           { id: 'history-tab', label: '📜 تاریخچه لجستیک', show: true },
           { id: 'reports-tab', label: '📋 گزارش و شناسنامه', show: currentUser?.canExport || currentUser?.role === 'admin' },
+          { id: 'repairs-tab', label: '🛠️ تعمیرات و اسقاط', show: true },
           { id: 'bulk-qr-tab', label: '🖨️ چاپ گروهی بارکد', show: currentUser?.canExport || currentUser?.role === 'admin' },
           { id: 'systems-tree-tab', label: '🌳 نمودار درختی سیستم‌ها', show: true },
           { id: 'users-tab', label: '🛡️ مدیریت کاربران', show: currentUser?.role === 'admin' },
@@ -1193,6 +1199,20 @@ export default function App() {
               assignments={assignments}
               prefilledPersonnelCode={prefilledPersCode}
               onSaveItem={handleSaveItem}
+            />
+          )}
+
+          {activeTab === 'repairs-tab' && (
+            <RepairsTab 
+              repairs={repairs}
+              onRefresh={loadDatabase}
+              currentUser={currentUser}
+              cases={cases}
+              monitors={monitors}
+              printers={printers}
+              keyboards={keyboards}
+              mice={mice}
+              personnel={personnel}
             />
           )}
 

@@ -54,6 +54,61 @@ function initializeDatabase() {
   const keyboardsFile = path.join(DATA_DIR, "keyboards.json");
   const partsCatalogFile = path.join(DATA_DIR, "parts_catalog.json");
   const assignmentsFile = path.join(DATA_DIR, "assignments.json");
+  const repairsFile = path.join(DATA_DIR, "repairs.json");
+
+  if (!fs.existsSync(repairsFile)) {
+    const demoRepairs = [
+      {
+        id: "rep_1",
+        equipmentCode: "C-201",
+        equipmentType: "case",
+        requestDate: "1405/03/02",
+        requesterName: "علی علوی",
+        reportedIssue: "سیستم روشن نمی‌شود و بوی سوختگی جزئی احساس می‌شود.",
+        diagnosis: "سوختگی خازن‌های فیلترینگ منبع تغذیه (پاور) بر اثر نوسان برق کارگاه",
+        status: "completed",
+        neededParts: [
+          {
+            id: "part_1",
+            name: "منبع تغذیه Green GP400A-ECO",
+            source: "warehouse",
+            salvageEquipmentCode: "",
+            cost: 1550000
+          }
+        ],
+        repairFee: 350000,
+        totalCost: 1900000,
+        assignedTechnician: "زهرا حسینی",
+        completedDate: "1405/03/04",
+        remarks: "پاور جدید از انبار مرکزی قطعات تامین و تعویض شد. سیستم به مدت ۲۴ ساعت تحت تست استرس قرار گرفت."
+      },
+      {
+        id: "rep_2",
+        equipmentCode: "C-202",
+        equipmentType: "case",
+        requestDate: "1405/03/05",
+        requesterName: "زهرا حسینی",
+        reportedIssue: "فن سی‌پی‌یو نویز شدیدی ایجاد می‌کند و کارکرد سیستم بسیار کند شده است.",
+        diagnosis: "شکستگی پره‌های خنک‌کننده پردازنده و نیاز مبرم به تعویض فن سی‌پی‌یو",
+        status: "parts_requested",
+        neededParts: [
+          {
+            id: "part_2",
+            name: "فن خنک‌کننده پردازنده Intel LGA1750",
+            source: "salvage",
+            salvageEquipmentCode: "C-109",
+            cost: 0
+          }
+        ],
+        repairFee: 150000,
+        totalCost: 150000,
+        assignedTechnician: "علی علوی",
+        completedDate: "",
+        remarks: "فن سالم از کیس مستعمل و غیرقابل استفاده C-109 استخراج فرعی شده و آماده مونتاژ است."
+      }
+    ];
+    fs.writeFileSync(repairsFile, JSON.stringify(demoRepairs, null, 2), "utf-8");
+  }
 
   if (!fs.existsSync(personnelFile)) {
     const demoPersonnel = [
@@ -302,7 +357,7 @@ function writeDb(file: string, data: any[]) {
 
 const activeUsers = new Map<string, { username: string; name: string; lastSeen: number }>();
 
-function addAuditLog(username: string, name: string, ip: string, action: string, targetType: string, targetId: string, details: string) {
+function addAuditLog(username: string, name: string, ip: string, action: string, targetType: string, targetId: string, details: string, before: any = null, after: any = null) {
   const logsFile = path.join(DATA_DIR, "logs.json");
   let logs: any[] = [];
   if (fs.existsSync(logsFile)) {
@@ -336,7 +391,9 @@ function addAuditLog(username: string, name: string, ip: string, action: string,
     targetType,
     targetId,
     details,
-    timestamp
+    timestamp,
+    before,
+    after
   };
   
   logs.unshift(newLog); // newer logs at top
@@ -383,6 +440,7 @@ async function startServer() {
       keyboards: readDb("keyboards.json"),
       partsCatalog: readDb("parts_catalog.json"),
       assignments: readDb("assignments.json"),
+      repairs: readDb("repairs.json")
     });
   });
 
@@ -1428,6 +1486,101 @@ async function startServer() {
       count: list.length,
       users: list
     });
+  });
+
+  // API: Save or Update Repair Task
+  app.post("/api/repairs/save", (req, res) => {
+    const { 
+      id, 
+      equipmentCode, 
+      equipmentType, 
+      requestDate, 
+      requesterName, 
+      reportedIssue, 
+      diagnosis, 
+      status, 
+      neededParts, 
+      repairFee, 
+      totalCost, 
+      assignedTechnician, 
+      completedDate, 
+      remarks 
+    } = req.body;
+
+    if (!equipmentCode || !equipmentType || !reportedIssue) {
+      return res.status(400).json({ error: "کد تجهیز، نوع تجهیز و شرح ایراد الزامی است." });
+    }
+
+    const repairs = readDb("repairs.json");
+    const existingIndex = id ? repairs.findIndex(r => r.id === id) : -1;
+    const isEditing = existingIndex > -1;
+
+    const opUser = req.headers["x-operator-username"] as string || "system";
+    const opName = req.headers["x-operator-name"] as string || "سیستم";
+    const clientIp = getClientIp(req);
+
+    const oldRecord = isEditing ? repairs[existingIndex] : null;
+
+    const updatedRepair = {
+      id: id || `rep_${Date.now()}`,
+      equipmentCode: equipmentCode.trim(),
+      equipmentType,
+      requestDate: requestDate || getPersianDateString(),
+      requesterName: (requesterName || "").trim(),
+      reportedIssue: (reportedIssue || "").trim(),
+      diagnosis: (diagnosis || "").trim(),
+      status: status || "pending_diagnosis",
+      neededParts: Array.isArray(neededParts) ? neededParts : [],
+      repairFee: Number(repairFee) || 0,
+      totalCost: Number(totalCost) || 0,
+      assignedTechnician: (assignedTechnician || "").trim(),
+      completedDate: (completedDate || "").trim(),
+      remarks: (remarks || "").trim()
+    };
+
+    if (isEditing) {
+      repairs[existingIndex] = updatedRepair;
+    } else {
+      repairs.push(updatedRepair);
+    }
+
+    writeDb("repairs.json", repairs);
+
+    // Audit Log with detailed before and after payloads
+    if (isEditing) {
+      addAuditLog(opUser, opName, clientIp, "edit", "repair", updatedRepair.equipmentCode, `ویرایش پرونده تعمیراتی تجهیز ${updatedRepair.equipmentCode}: ${updatedRepair.reportedIssue.substring(0, 40)}... (وضعیت: ${updatedRepair.status})`, oldRecord, updatedRepair);
+    } else {
+      addAuditLog(opUser, opName, clientIp, "create", "repair", updatedRepair.equipmentCode, `ثبت درخواست جدید تعمیرات برای تجهیز ${updatedRepair.equipmentCode}: ${updatedRepair.reportedIssue.substring(0, 40)}...`, null, updatedRepair);
+    }
+
+    res.json({ success: true, item: updatedRepair });
+  });
+
+  // API: Delete Repair Task
+  app.post("/api/repairs/delete", (req, res) => {
+    const { id } = req.body;
+    if (!id) {
+      return res.status(400).json({ error: "شناسه پرونده تعمیراتی الزامی است." });
+    }
+
+    const repairs = readDb("repairs.json");
+    const idx = repairs.findIndex(r => r.id === id);
+    if (idx === -1) {
+      return res.status(404).json({ error: "پرونده تعمیراتی یافت نشد." });
+    }
+
+    const item = repairs[idx];
+
+    const opUser = req.headers["x-operator-username"] as string || "system";
+    const opName = req.headers["x-operator-name"] as string || "سیستم";
+    const clientIp = getClientIp(req);
+
+    repairs.splice(idx, 1);
+    writeDb("repairs.json", repairs);
+
+    addAuditLog(opUser, opName, clientIp, "delete", "repair", item.equipmentCode, `حذف پرونده تعمیراتی تجهیز با کد اموال ${item.equipmentCode}`, item, null);
+
+    res.json({ success: true });
   });
 
   // API: ZIP generation - Bundles /php/ directory files
