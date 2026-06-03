@@ -956,43 +956,13 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col p-4 md:p-8 font-sans max-w-[1600px] w-full mx-auto print:p-0 print:max-w-none" dir="rtl">
+    <div className="h-screen max-h-screen flex flex-col p-4 md:p-6 font-sans max-w-[1600px] w-full mx-auto overflow-hidden print:h-auto print:max-h-none print:overflow-visible" dir="rtl">
       
       {/* 1. System Header component */}
       <Header isDark={darkMode} onToggleTheme={() => setDarkMode(!darkMode)} />
 
-      {/* Welcome & logout bar */}
-      <div className="no-print mt-4 mb-2 flex flex-col md:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs shadow-sm">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-sm">🗣️</span>
-            <span>
-              کاربر جاری سیستم: <strong className="text-indigo-655 dark:text-indigo-400 font-bold">{currentUser.name}</strong> 
-              <span className="text-slate-500 dark:text-slate-400 font-medium mr-2">({currentUser.role === 'admin' ? 'مدير ارشد سیستم (ادمین)' : currentUser.role === 'editor_equipment' ? 'اپراتور سخت‌افزار' : 'ناظر سیستم'})</span>
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-400 px-2.5 py-1 rounded-lg border border-emerald-200/50">
-            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shrink-0" />
-            <span className="font-bold">تعداد کاربران آنلاین: {onlineUsersData.count} نفر</span>
-            {currentUser.role === 'admin' && onlineUsersData.users.length > 0 && (
-              <span className="border-r border-emerald-300 dark:border-emerald-800/80 pr-2 mr-2 text-[10px] font-medium">
-                اسامی: {onlineUsersData.users.map(u => u.name).join('، ')}
-              </span>
-            )}
-          </div>
-        </div>
-        <button 
-          onClick={handleLogout}
-          className="bg-red-50 hover:bg-red-100 dark:bg-red-950/20 text-red-650 hover:text-red-750 text-[11px] font-black px-4 py-1.5 rounded-lg border border-red-200/50 cursor-pointer transition flex items-center gap-1.5"
-          style={{ color: '#dc2626' }}
-        >
-          🚪 خروج امن از سیستم
-        </button>
-      </div>
-
       {isOfflineMode && (
-        <div className="no-print mb-6 bg-yellow-500/10 border border-yellow-500/20 text-yellow-800 dark:text-yellow-300 p-4 rounded-xl text-xs flex flex-col sm:flex-row items-center justify-between gap-3 font-medium">
+        <div className="no-print my-3 bg-yellow-500/10 border border-yellow-500/20 text-yellow-800 dark:text-yellow-300 p-3.5 rounded-xl text-xs flex flex-col sm:flex-row items-center justify-between gap-3 font-medium shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-base animate-pulse">⚡</span>
             <span>
@@ -1009,83 +979,101 @@ export default function App() {
         </div>
       )}
 
-      {/* 2. Global search bar (hides in print mode) */}
-      <div className="no-print bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
-        <div className="flex-1 w-full max-w-lg">
-          <label className="text-xs font-bold text-slate-700 block mb-1">جستجوی هوشمند در کل آلبوم‌ها:</label>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="بر اساس نام شخص، شماره اموال، مدل پردازنده، مانیتور و..."
-            className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs md:text-sm focus:border-blue-500 focus:outline-none"
-          />
-        </div>
+      {/* 2. Main Responsive Split Container (RTL Flows Right Sidebar to Left Content) */}
+      <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-4 mt-3 w-full items-stretch overflow-hidden">
         
-        {/* Active searches stats indicators */}
-        <div className="text-xs text-slate-500 flex gap-2.5 flex-wrap self-end md:self-center font-medium">
-          <span className="bg-slate-100 px-2.5 py-1 rounded">👤 پرسنل: {personnel.length}</span>
-          <span className="bg-slate-100 px-2.5 py-1 rounded">🖥️ کیس: {cases.length}</span>
-          <span className="bg-slate-100 px-2.5 py-1 rounded">📺 مانیتور: {monitors.length}</span>
-          <span className="bg-slate-100 px-2.5 py-1 rounded">🖨️ چاپگر: {printers.length}</span>
-          <span className="bg-slate-100 px-2.5 py-1 rounded">🖱️ ماوس: {mice.length}</span>
-          <span className="bg-slate-100 px-2.5 py-1 rounded">⌨️ کیبورد: {keyboards.length}</span>
-        </div>
-      </div>
+        {/* Right Sidebar - Main Navigation Keys (hides in print) */}
+        <aside className="no-print w-full lg:w-[176px] shrink-0 flex flex-col gap-3 overflow-y-auto h-full pr-1 pb-2 scrollbar-none">
+          <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-3 rounded-xl border border-slate-800 shadow-xs">
+            <h2 className="text-[10px] font-bold tracking-wide text-indigo-400">سامانه املاک و تجهیزات</h2>
+            <p className="text-[9px] text-slate-300 mt-0.5 leading-relaxed">کلیدهای دسترسی واحد ICT</p>
+          </div>
 
-      {/* 3. Navigation tabs bar (hides in print) */}
-      <nav className="no-print flex flex-wrap gap-1.5 border-b border-slate-200 pb-3 mb-6">
-        {[
-          { id: 'personnel-tab', label: '👥 لیست پرسنل', show: true },
-          { id: 'cases-tab', label: '🖥️ کیس‌های کارگاه', show: true },
-          { id: 'monitors-tab', label: '📺 مانیتورها', show: true },
-          { id: 'printers-tab', label: '🖨️ پرینترها', show: true },
-          { id: 'mice-tab', label: '🖱️ ماوس‌ها', show: true },
-          { id: 'keyboards-tab', label: '⌨️ کیبوردها', show: true },
-          { id: 'catalog-tab', label: '🛠️ قطعات مرجع', show: true },
-          { id: 'transfer-tab', label: '🔄 جابجایی هوشمند', show: currentUser?.canEditEquipment || currentUser?.role === 'admin' },
-          { id: 'history-tab', label: '📜 تاریخچه لجستیک', show: true },
-          { id: 'reports-tab', label: '📋 گزارش و شناسنامه', show: currentUser?.canExport || currentUser?.role === 'admin' },
-          { id: 'repairs-tab', label: '🛠️ تعمیرات و اسقاط', show: true },
-          { id: 'bulk-qr-tab', label: '🖨️ چاپ گروهی بارکد', show: currentUser?.canExport || currentUser?.role === 'admin' },
-          { id: 'systems-tree-tab', label: '🌳 نمودار درختی سیستم‌ها', show: true },
-          { id: 'users-tab', label: '🛡️ مدیریت کاربران', show: currentUser?.role === 'admin' },
-          { id: 'logs-tab', label: '🪵 لاگ امنیتی سیستم', show: currentUser?.role === 'admin' },
-          { id: 'backup-tab', label: '⚙️ پشتیبان‌گیری و سورس', show: currentUser?.canBackup || currentUser?.role === 'admin' },
-          { id: 'add-new-tab', label: '➕ ثبت جدید', show: currentUser?.canEditPersonnel || currentUser?.canEditEquipment || currentUser?.role === 'admin' }
-        ].filter(t => t.show).map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => { setActiveTab(tab.id); }}
-            className={`px-4 py-2 text-xs md:text-sm font-bold rounded-lg transition cursor-pointer ${
-              activeTab === tab.id 
-                ? 'bg-blue-600 text-white shadow-sm' 
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
+          <nav className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-1.5 shadow-xs flex flex-col gap-1">
+            {[
+              { id: 'personnel-tab', label: '👥 لیست پرسنل', show: true },
+              { id: 'cases-tab', label: '🖥️ لیست کیس‌ها', show: true },
+              { id: 'monitors-tab', label: '📺 لیست مانیتورها', show: true },
+              { id: 'printers-tab', label: '🖨️ لیست پرینترها', show: true },
+              { id: 'mice-tab', label: '🖱️ لیست ماوس‌ها', show: true },
+              { id: 'keyboards-tab', label: '⌨️ لیست کیبوردها', show: true },
+              { id: 'catalog-tab', label: '🛠️ قطعات مرجع', show: true },
+              { id: 'transfer-tab', label: '🔄 جابجایی هوشمند', show: currentUser?.canEditEquipment || currentUser?.role === 'admin' },
+              { id: 'history-tab', label: '📜 تاریخچه لجستیک', show: true },
+              { id: 'reports-tab', label: '📋 گزارش و شناسنامه', show: currentUser?.canExport || currentUser?.role === 'admin' },
+              { id: 'repairs-tab', label: '🛠️ تعمیرات و اسقاط', show: true },
+              { id: 'bulk-qr-tab', label: '🖨️ چاپ گروهی بارکد', show: currentUser?.canExport || currentUser?.role === 'admin' },
+              { id: 'systems-tree-tab', label: '🌳 نمودار درختی', show: true },
+              { id: 'users-tab', label: '🛡️ مدیریت کاربران', show: currentUser?.role === 'admin' },
+              { id: 'logs-tab', label: '🪵 لاگ امنیتی سیستم', show: currentUser?.role === 'admin' },
+              { id: 'backup-tab', label: '⚙️ پشتیبان‌گیری', show: currentUser?.canBackup || currentUser?.role === 'admin' },
+              { id: 'add-new-tab', label: '➕ ثبت جدید', show: currentUser?.canEditPersonnel || currentUser?.canEditEquipment || currentUser?.role === 'admin' }
+            ].filter(t => t.show).map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => { setActiveTab(tab.id); }}
+                className={`w-full text-right flex items-center justify-between px-2.5 py-1.5 text-[11px] font-extrabold rounded-lg transition-all cursor-pointer border ${
+                  activeTab === tab.id 
+                    ? 'bg-blue-600 border-blue-600 text-white shadow-xs' 
+                    : 'border-transparent text-slate-700 dark:text-slate-350 hover:bg-slate-100/70 hover:text-slate-900 dark:hover:bg-slate-900/60 dark:hover:text-white'
+                }`}
+              >
+                <span className="truncate">{tab.label}</span>
+                {activeTab === tab.id && <span className="text-[10px] text-blue-200 shrink-0">◀</span>}
+              </button>
+            ))}
+          </nav>
+        </aside>
 
-      {/* 4. Display Loading/Errors */}
-      {loading && (
-        <div className="bg-white border rounded-lg p-12 text-center text-slate-500">
-          <span className="text-2xl block mb-2">🔄</span>
-          در حال بارگذاری اطلاعات پایگاه داده کارگاه بوشهر...
-        </div>
-      )}
+        {/* Left Side Main Workspace Area */}
+        <div className="flex-1 w-full min-w-0 flex flex-col h-full overflow-hidden space-y-4 print:w-full print:block print:h-auto print:overflow-visible">
+          
+          {/* Global search bar (hides in print mode) */}
+          {['personnel-tab', 'cases-tab', 'monitors-tab', 'printers-tab', 'mice-tab', 'keyboards-tab'].includes(activeTab) && (
+            <div className="no-print bg-white dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
+              <div className="flex-1 w-full max-w-lg">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">جستجوی هوشمند در کل آلبوم‌ها:</label>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="بر اساس نام شخص، شماره اموال، مدل پردازنده، مانیتور و..."
+                  className="w-full text-right p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs md:text-sm focus:border-blue-500 focus:outline-none dark:text-white"
+                />
+              </div>
+              
+              {/* Active searches stats indicators */}
+              <div className="text-xs text-slate-500 dark:text-slate-400 flex gap-2.5 flex-wrap self-end md:self-center font-medium">
+                <span className="bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded">👤 پرسنل: {personnel.length}</span>
+                <span className="bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded">🖥️ کیس: {cases.length}</span>
+                <span className="bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded">📺 مانیتور: {monitors.length}</span>
+                <span className="bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded">🖨️ چاپگر: {printers.length}</span>
+                <span className="bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded">🖱️ ماوس: {mice.length}</span>
+                <span className="bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded">⌨️ کیبورد: {keyboards.length}</span>
+              </div>
+            </div>
+          )}
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg text-center font-bold">
-          ⚠️ {error}
-          <button onClick={loadDatabase} className="mt-4 block mx-auto bg-red-600 text-white px-4 py-2 rounded text-xs">تلاش مجدد اتصال</button>
-        </div>
-      )}
+          {/* Scrollable Container for Dashboard Data */}
+          <div className="flex-1 min-h-0 overflow-y-auto pb-4 pr-0.5 custom-scrollbar">
+            {/* Display Loading/Errors */}
+            {loading && (
+              <div className="bg-white dark:bg-slate-950 border border-slate-250 dark:border-slate-800 rounded-lg p-12 text-center text-slate-500 dark:text-slate-400">
+                <span className="text-2xl block mb-2">🔄</span>
+                در حال بارگذاری اطلاعات پایگاه داده کارگاه بوشهر...
+              </div>
+            )}
 
-      {/* 5. Main Panels layout workspace */}
-      {!loading && !error && (
-        <main className="flex-1">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg text-center font-bold">
+                ⚠️ {error}
+                <button onClick={loadDatabase} className="mt-4 block mx-auto bg-red-600 text-white px-4 py-2 rounded text-xs">تلاش مجدد اتصال</button>
+              </div>
+            )}
+
+            {/* Main Panels layout workspace */}
+            {!loading && !error && (
+              <main className="w-full">
           {activeTab === 'personnel-tab' && (
             <PersonnelTab 
               personnel={getFilteredPersonnel()} 
@@ -1268,6 +1256,10 @@ export default function App() {
           )}
         </main>
       )}
+          </div>
+
+        </div>
+      </div>
 
       {/* 6. Edit Modal */}
       {editItem && editType && (
@@ -1290,15 +1282,51 @@ export default function App() {
       />
 
       {/* 7. Corporate footer (hides in print) */}
-      <footer className="no-print mt-12 bg-slate-900 border-t border-slate-800 text-slate-500 py-6 text-center text-xs space-y-2 rounded-xl">
-        <div>سامانه هوشمند و آفلاین شناسنامه واحد ICT کارگاه بوشهر شرکت عمران آذرستان</div>
-        <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 text-[11px] text-slate-400">
-          <span>برنامه نویس: <span className="font-bold text-slate-300">مهدی اسماعیلی</span></span>
-          <span className="text-slate-700">|</span>
-          <span>نسخه برنامه: <span className="font-mono font-bold text-blue-400">v1.2.5</span></span>
+      <footer className="no-print mt-3 bg-slate-900 border-t border-slate-800 text-slate-400 p-3 text-center text-xs space-y-2 rounded-xl shrink-0">
+        
+        {/* Line 1: Current User + Online count + Secure logout button */}
+        <div className="grid grid-cols-1 md:grid-cols-3 items-center bg-slate-950/50 p-2 px-4 rounded-lg border border-slate-800/80 gap-3 w-full">
+          {/* Right Corner (RTL start / rightwards) - Online Users count */}
+          <div className="flex items-center justify-center md:justify-start">
+            <div className="flex items-center gap-1.5 bg-emerald-950/20 text-emerald-400 px-2 rounded-md border border-emerald-900/30 py-0.5">
+              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shrink-0" />
+              <span className="font-bold text-[10.5px]">تعداد کاربران آنلاین: {onlineUsersData.count} نفر</span>
+              {currentUser.role === 'admin' && onlineUsersData.users.length > 0 && (
+                <span className="border-r border-emerald-900 pr-1.5 mr-1.5 text-[9.5px] font-medium hidden lg:inline">
+                  {onlineUsersData.users.map(u => u.name).join('، ')}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Center (Middle column) - Current User */}
+          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-350">
+            <span className="text-xs">🗣️</span>
+            <span>
+              کاربر جاری سیستم: <strong className="text-indigo-400 font-extrabold text-[11px]">{currentUser.name}</strong> 
+              <span className="text-slate-500 font-medium mr-1.5 text-[10px]">({currentUser.role === 'admin' ? 'مدير ارشد سیستم' : currentUser.role === 'editor_equipment' ? 'اپراتور سخت‌افزار' : 'ناظر سیستم'})</span>
+            </span>
+          </div>
+
+          {/* Left Corner (RTL end / leftwards) - Secure Logout */}
+          <div className="flex items-center justify-center md:justify-end">
+            <button 
+              onClick={handleLogout}
+              className="bg-red-955/20 hover:bg-red-900/30 text-red-400 hover:text-red-300 text-[10.5px] font-black px-3.5 py-1.5 rounded-lg border border-red-900/40 cursor-pointer transition flex items-center gap-1.5 shrink-0"
+              style={{ color: '#f87171' }}
+            >
+              🚪 خروج امن
+            </button>
+          </div>
         </div>
-        <div className="font-mono text-[10px] text-slate-600">
-          تمامی حقوق محفوظ است © ۱۴۰۵ | پورت آفلاین بر پایه فایل‌های محلی JSON فاقد پایگاه‌داده خارجی
+
+        {/* Line 2: System info + developer info + copyrights */}
+        <div className="flex flex-col md:flex-row justify-between items-center text-slate-500 text-[10px] sm:text-[11.5px] gap-2 pt-1 border-t border-slate-850">
+          <span>سامانه هوشمند و آفلاین شناسنامه واحد ICT کارگاه بوشهر شرکت عمران آذرستان</span>
+          <span className="font-medium text-slate-400">
+            برنامه نویس: <span className="font-bold text-slate-300">مهدی اسماعیلی</span> | نسخه برنامه: <span className="font-mono font-bold text-blue-400">v1.2.5</span>
+          </span>
+          <span>تمامی حقوق محفوظ است © ۱۴۰۵ | پورت آفلاین بر پایه فایلهای محلی JSON فاقد پایگاهداده خارجی</span>
         </div>
       </footer>
 
