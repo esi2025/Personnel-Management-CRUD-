@@ -196,21 +196,11 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
 
-  // Theme states (persisted via localStorage)
-  const [darkMode, setDarkMode] = useState<boolean>(() => {
-    const saved = localStorage.getItem('theme');
-    return saved === 'dark';
-  });
-
+  // Force light theme setup for the app (except header/footer which are styled dark)
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [darkMode]);
+    document.documentElement.classList.remove('dark');
+    localStorage.setItem('theme', 'light');
+  }, []);
 
   // Database States
   const [personnel, setPersonnel] = useState<Personnel[]>([]);
@@ -959,7 +949,7 @@ export default function App() {
     <div className="h-screen max-h-screen flex flex-col p-4 md:p-6 font-sans max-w-[1600px] w-full mx-auto overflow-hidden print:h-auto print:max-h-none print:overflow-visible" dir="rtl">
       
       {/* 1. System Header component */}
-      <Header isDark={darkMode} onToggleTheme={() => setDarkMode(!darkMode)} />
+      <Header />
 
       {isOfflineMode && (
         <div className="no-print my-3 bg-yellow-500/10 border border-yellow-500/20 text-yellow-800 dark:text-yellow-300 p-3.5 rounded-xl text-xs flex flex-col sm:flex-row items-center justify-between gap-3 font-medium shrink-0">
@@ -1034,7 +1024,7 @@ export default function App() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="بر اساس نام شخص، شماره اموال، مدل پردازنده، مانیتور و..."
-                  className="w-full text-right p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs md:text-sm focus:border-blue-500 focus:outline-none dark:text-white"
+                  className="w-full text-right py-1.5 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs focus:border-blue-500 focus:outline-none dark:text-white"
                 />
               </div>
               
@@ -1146,6 +1136,60 @@ export default function App() {
             />
           )}
 
+          {activeTab === 'catalog-tab' && (
+            <PartsCatalogTab 
+              catalog={partsCatalog}
+              onSave={handleSaveItem}
+              onDelete={handleDeleteItem}
+            />
+          )}
+
+          {activeTab === 'transfer-tab' && (
+            <TransferTab 
+              cases={cases}
+              monitors={monitors}
+              printers={printers}
+              mice={mice}
+              keyboards={keyboards}
+              personnel={personnel}
+              onTransfer={handleTransferItem}
+              prefilledEquipmentCode={prefilledEquipCode}
+              prefilledPersonnelCode={prefilledPersCode}
+            />
+          )}
+
+          {activeTab === 'history-tab' && (
+            <HistoryTab assignments={assignments} />
+          )}
+
+          {activeTab === 'reports-tab' && (
+            <ReportingTab 
+              personnel={personnel}
+              cases={cases}
+              monitors={monitors}
+              printers={printers}
+              mice={mice}
+              keyboards={keyboards}
+              assignments={assignments}
+              prefilledPersonnelCode={prefilledPersCode}
+              onSaveItem={handleSaveItem}
+            />
+          )}
+
+          {activeTab === 'repairs-tab' && (
+            <RepairsTab 
+              repairs={repairs}
+              onRefresh={loadDatabase}
+              currentUser={currentUser}
+              cases={cases}
+              monitors={monitors}
+              printers={printers}
+              keyboards={keyboards}
+              mice={mice}
+              personnel={personnel}
+            />
+          )}
+
           {activeTab === 'systems-tree-tab' && (
             <SystemsTreeTab 
               personnel={personnel}
@@ -1212,16 +1256,39 @@ export default function App() {
           onSave={handleSaveItem}
         />
       )}
-
-      {/* QR Code Modal for Equipment scanning */}
       <QRCodeModal 
         isOpen={qrModalOpen} 
-        onClose=          {/* Center (Middle column) - Current User */}
-          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-700 dark:text-slate-200">
+        onClose={() => setQrModalOpen(false)} 
+        equipmentCode={qrCode} 
+        equipmentType={qrType} 
+        equipmentData={qrData} 
+        personnel={personnel}
+      />
+
+      {/* 7. Corporate footer (hides in print) */}
+      <footer className="no-print mt-3 bg-slate-900 border-t border-slate-800 text-slate-300 p-3 text-center text-xs space-y-2 rounded-xl shrink-0">
+        
+        {/* Line 1: Current User + Online count + Secure logout button */}
+        <div className="grid grid-cols-1 md:grid-cols-3 items-center bg-slate-950/50 p-2 px-4 rounded-lg border border-slate-800 gap-3 w-full">
+          {/* Right Corner (RTL start / rightwards) - Online Users count */}
+          <div className="flex items-center justify-center md:justify-start">
+            <div className="flex items-center gap-1.5 bg-emerald-950/20 text-emerald-400 px-2 rounded-md border border-emerald-900/30 py-0.5">
+              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shrink-0" />
+              <span className="font-bold text-[10.5px]">تعداد کاربران آنلاین: {onlineUsersData.count} نفر</span>
+              {currentUser.role === 'admin' && onlineUsersData.users.length > 0 && (
+                <span className="border-r border-emerald-900 pr-1.5 mr-1.5 text-[9.5px] font-medium hidden lg:inline">
+                  {onlineUsersData.users.map(u => u.name).join('، ')}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Center (Middle column) - Current User */}
+          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-200">
             <span className="text-xs">🗣️</span>
             <span>
-              کاربر جاری سیستم: <strong className="text-indigo-700 dark:text-indigo-400 font-extrabold text-[11px]">{currentUser.name}</strong> 
-              <span className="text-slate-500 dark:text-slate-400 font-medium mr-1.5 text-[10px]">({currentUser.role === 'admin' ? 'مدير ارشد سیستم' : currentUser.role === 'editor_equipment' ? 'اپراتور سخت‌افزار' : 'ناظر سیستم'})</span>
+              کاربر جاری سیستم: <strong className="text-blue-400 font-extrabold text-[11px]">{currentUser.name}</strong> 
+              <span className="text-slate-400 font-medium mr-1.5 text-[10px]">({currentUser.role === 'admin' ? 'مدير ارشد سیستم' : currentUser.role === 'editor_equipment' ? 'اپراتور سخت‌افزار' : 'ناظر سیستم'})</span>
             </span>
           </div>
 
@@ -1229,7 +1296,7 @@ export default function App() {
           <div className="flex items-center justify-center md:justify-end">
             <button 
               onClick={handleLogout}
-              className="bg-red-50 hover:bg-red-100 text-red-650 dark:bg-red-955/20 dark:hover:bg-red-900/30 dark:text-red-400 dark:hover:text-red-300 text-[10.5px] font-black px-3.5 py-1.5 rounded-lg border border-red-200/60 dark:border-red-900/40 cursor-pointer transition flex items-center gap-1.5 shrink-0"
+              className="bg-red-955/20 hover:bg-red-900/30 text-red-400 hover:text-red-350 text-[10.5px] font-black px-3.5 py-1.5 rounded-lg border border-red-900/40 cursor-pointer transition flex items-center gap-1.5 shrink-0"
             >
               🚪 خروج امن
             </button>
@@ -1237,40 +1304,7 @@ export default function App() {
         </div>
 
         {/* Line 2: System info + developer info + copyrights */}
-        <div className="flex flex-col md:flex-row justify-between items-center text-slate-500 dark:text-slate-450 text-[10px] sm:text-[11.5px] gap-2 pt-1 border-t border-slate-200 dark:border-slate-800">
-          <span>سامانه هوشمند و آفلاین شناسنامه واحد ICT کارگاه بوشهر شرکت عمران آذرستان</span>
-          <span className="font-medium text-slate-500 dark:text-slate-400">
-            برنامه نویس: <span className="font-bold text-slate-700 dark:text-slate-300">مهدی اسماعیلی</span> | نسخه برنامه: <span className="font-mono font-bold text-blue-600 dark:text-blue-400">v1.2.5</span>
-          </span>
-          <span>تمامی حقوق محفوظ است © ۱۴۰۵ | پورت آفلاین بر پایه فایلهای محلی JSON فاقد پایگاهداده خارجی</span>
-        </div>
-      </footer>
-
-    </div>
-  );
-}�قد پایگاهداده خارجی</span>
-        </div>
-      </footer>🗣️</span>
-            <span>
-              کاربر جاری سیستم: <strong className="text-indigo-400 font-extrabold text-[11px]">{currentUser.name}</strong> 
-              <span className="text-slate-500 font-medium mr-1.5 text-[10px]">({currentUser.role === 'admin' ? 'مدير ارشد سیستم' : currentUser.role === 'editor_equipment' ? 'اپراتور سخت‌افزار' : 'ناظر سیستم'})</span>
-            </span>
-          </div>
-
-          {/* Left Corner (RTL end / leftwards) - Secure Logout */}
-          <div className="flex items-center justify-center md:justify-end">
-            <button 
-              onClick={handleLogout}
-              className="bg-red-955/20 hover:bg-red-900/30 text-red-400 hover:text-red-300 text-[10.5px] font-black px-3.5 py-1.5 rounded-lg border border-red-900/40 cursor-pointer transition flex items-center gap-1.5 shrink-0"
-              style={{ color: '#f87171' }}
-            >
-              🚪 خروج امن
-            </button>
-          </div>
-        </div>
-
-        {/* Line 2: System info + developer info + copyrights */}
-        <div className="flex flex-col md:flex-row justify-between items-center text-slate-500 text-[10px] sm:text-[11.5px] gap-2 pt-1 border-t border-slate-850">
+        <div className="flex flex-col md:flex-row justify-between items-center text-slate-400 text-[10px] sm:text-[11.5px] gap-2 pt-1 border-t border-slate-800">
           <span>سامانه هوشمند و آفلاین شناسنامه واحد ICT کارگاه بوشهر شرکت عمران آذرستان</span>
           <span className="font-medium text-slate-400">
             برنامه نویس: <span className="font-bold text-slate-300">مهدی اسماعیلی</span> | نسخه برنامه: <span className="font-mono font-bold text-blue-400">v1.2.5</span>

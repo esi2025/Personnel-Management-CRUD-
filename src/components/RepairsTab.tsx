@@ -698,21 +698,21 @@ export default function RepairsTab({
               exit={{ scale: 0.95, opacity: 0, y: 30 }}
               className="absolute bottom-0 sm:bottom-auto w-full sm:max-w-3xl sm:h-auto max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-950 rounded-b-none sm:rounded-2xl border-t sm:border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4"
             >
-              <div className="flex justify-between items-center border-b pb-3">
+              <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
                 <h3 className="text-sm font-black text-slate-800 dark:text-white flex items-center gap-1.5">
                   <Wrench className="w-4 h-4 text-blue-500" />
                   <span>{editingId ? 'بروزرسانی مشخصات و زنجیره قطعات تعمیرات' : 'ثبت برگه جدید ورود تجهیز به کارگاه تعمیرات'}</span>
                 </h3>
                 <button 
                   onClick={() => setIsFormOpen(false)}
-                  className="p-1 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 block text-xs cursor-pointer"
+                  className="p-1 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-850 text-slate-400 hover:text-slate-600 dark:text-slate-350 block text-xs cursor-pointer"
                 >
                   انصراف
                 </button>
               </div>
 
               {formError && (
-                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold rounded-xl flex items-center gap-1.5 leading-relaxed">
+                <div className="p-3 bg-rose-50 border border-rose-200 dark:bg-rose-955/20 dark:border-rose-900/60 text-rose-700 dark:text-rose-400 text-xs font-bold rounded-xl flex items-center gap-1.5 leading-relaxed">
                   <AlertTriangle className="w-4 h-4 shrink-0" />
                   <span>{formError}</span>
                 </div>
@@ -725,7 +725,7 @@ export default function RepairsTab({
                   
                   {/* Equipment Code input with list recommendations */}
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 block">کد اموال یا شناسه بازسازی:</label>
+                    <label className="text-[11px] font-bold text-slate-505 dark:text-slate-400 block font-sans">کد اموال یا شناسه بازسازی:</label>
                     <div className="relative">
                       <input
                         type="text"
@@ -734,7 +734,7 @@ export default function RepairsTab({
                         value={formEqCode}
                         onChange={(e) => handleEqCodeChange(e.target.value)}
                         list="avail-equipment"
-                        className="w-full pr-3 pl-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 uppercase"
+                        className="w-full pr-3 pl-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 uppercase focus:outline-none focus:ring-1 focus:ring-indigo-500"
                       />
                       <datalist id="avail-equipment">
                         {allEquipment.map(eq => (
@@ -746,30 +746,30 @@ export default function RepairsTab({
 
                   {/* Auto assigned type */}
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 block">نوع وسیله سخت‌افزاری:</label>
+                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block font-sans">نوع وسیله سخت‌افزاری:</label>
                     <select
                       value={formEqType}
                       onChange={(e) => setFormEqType(e.target.value as any)}
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold cursor-pointer"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold cursor-pointer text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     >
-                      <option value="case">کیس کامپیوتر</option>
-                      <option value="monitor">مانیتور نمایشگر</option>
-                      <option value="printer">چاپگر / چندکاره</option>
-                      <option value="mouse">ماوس کابل‌دار/بیسیم</option>
-                      <option value="keyboard">کیبورد کارگاهی</option>
+                      <option className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200" value="case">کیس کامپیوتر</option>
+                      <option className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200" value="monitor">مانیتور نمایشگر</option>
+                      <option className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200" value="printer">چاپگر / چندکاره</option>
+                      <option className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200" value="mouse">ماوس کابل‌دار/بیسیم</option>
+                      <option className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200" value="keyboard">کیبورد کارگاهی</option>
                     </select>
                   </div>
 
                   {/* Requester name */}
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 block">تحویل‌دهنده / متقاضی:</label>
+                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block font-sans">تحویل‌دهنده / متقاضی:</label>
                     <input
                       type="text"
                       placeholder="نام پرسنل یا واحد کارگاه"
                       value={formReqName}
                       onChange={(e) => setFormReqName(e.target.value)}
                       list="personnel-list"
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
                     />
                     <datalist id="personnel-list">
                       {personnel.map(p => (
@@ -785,42 +785,42 @@ export default function RepairsTab({
                   
                   {/* Request Date */}
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 block">تاریخ تحویل پرونده (خورشیدی):</label>
+                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">تاریخ تحویل پرونده (خورشیدی):</label>
                     <input
                       type="text"
                       required
                       placeholder="۱۴۰۵/۰۳/۰۹"
                       value={formReqDate}
                       onChange={(e) => setFormReqDate(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono text-slate-850 dark:text-slate-200 focus:outline-none"
                     />
                   </div>
 
                   {/* Current assigned technician */}
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 block">تکنسین مسئول تعمیر:</label>
+                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">تکنسین مسئول تعمیر:</label>
                     <input
                       type="text"
                       placeholder="نام متخصص فنی"
                       value={formTech}
                       onChange={(e) => setFormTech(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-850 dark:text-slate-200 focus:outline-none"
                     />
                   </div>
 
                   {/* Status SELECT */}
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-indigo-500 block font-black">وضعیت پیشرفت فرایند:</label>
+                    <label className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 block font-black">وضعیت پیشرفت فرایند:</label>
                     <select
                       value={formStatus}
                       onChange={(e) => setFormStatus(e.target.value as any)}
-                      className="w-full px-3 py-2 bg-indigo-50/50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-900 rounded-xl text-xs font-bold text-indigo-900 dark:text-indigo-300 cursor-pointer"
+                      className="w-full px-3 py-2 bg-indigo-50/50 dark:bg-slate-900 border border-indigo-200 dark:border-indigo-900 rounded-xl text-xs font-bold text-indigo-900 dark:text-indigo-300 cursor-pointer focus:outline-none"
                     >
-                      <option value="pending_diagnosis">در انتظار عیب‌یابی اولیه</option>
-                      <option value="parts_requested">درخواست خرید قطعات</option>
-                      <option value="parts_procured">تامین قطعه سالم از انبار قطعات</option>
-                      <option value="completed">تعمیر کامل و ترخیص شده (موفق)</option>
-                      <option value="unrepairable_salvage">غیرقابل تعمیر (اسقاط و اوراق)</option>
+                      <option className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200" value="pending_diagnosis">در انتظار عیب‌یابی اولیه</option>
+                      <option className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200" value="parts_requested">درخواست خرید قطعات</option>
+                      <option className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200" value="parts_procured">تامین قطعه سالم از انبار قطعات</option>
+                      <option className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200" value="completed">تعمیر کامل و ترخیص شده (موفق)</option>
+                      <option className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200" value="unrepairable_salvage">غیرقابل تعمیر (اسقاط و اوراق)</option>
                     </select>
                   </div>
 
@@ -830,25 +830,25 @@ export default function RepairsTab({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 block">⚠️ شرح دقیق عیب گزارش شدهتوسط کاربر:</label>
+                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block font-sans">⚠️ شرح دقیق عیب گزارش شده توسط کاربر:</label>
                     <textarea
                       required
                       rows={3}
                       placeholder="سیستم روشن نمی‌شود، نویز فن شدید است، مکرراً خاموش می‌شود و ..."
                       value={formIssue}
                       onChange={(e) => setFormIssue(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs resize-none"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white resize-none focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 block">🩺 تشخیص مهندسی و اقدامات فنی:</label>
+                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block font-sans">🩺 تشخیص مهندسی و اقدامات فنی:</label>
                     <textarea
                       rows={3}
                       placeholder="خازن‌های فیلترینگ آسیب دیده، نیاز به تعویض پاور، نیاز به خمیر سیلیکون نو و ..."
                       value={formDiagnosis}
                       onChange={(e) => setFormDiagnosis(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs resize-none"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white resize-none focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
 
