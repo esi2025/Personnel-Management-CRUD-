@@ -983,11 +983,7 @@ export default function App() {
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-4 mt-3 w-full items-stretch overflow-hidden">
         
         {/* Right Sidebar - Main Navigation Keys (hides in print) */}
-        <aside className="no-print w-full lg:w-[176px] shrink-0 flex flex-col gap-3 overflow-y-auto h-full pr-1 pb-2 scrollbar-none">
-          <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-3 rounded-xl border border-slate-800 shadow-xs">
-            <h2 className="text-[10px] font-bold tracking-wide text-indigo-400">سامانه املاک و تجهیزات</h2>
-            <p className="text-[9px] text-slate-300 mt-0.5 leading-relaxed">کلیدهای دسترسی واحد ICT</p>
-          </div>
+        <aside className="no-print w-full lg:w-[145px] shrink-0 flex flex-col gap-3 overflow-y-auto h-full pr-1 pb-2 scrollbar-none">
 
           <nav className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-1.5 shadow-xs flex flex-col gap-1">
             {[
@@ -1118,7 +1114,7 @@ export default function App() {
             <PrintersSubTab 
               printers={getFilteredPrinters()} 
               personnel={personnel}
-              onEdit={(pr) => handleEditTrigger(pr, 'printer')}
+              onEdit={(p) => handleEditTrigger(p, 'printer')}
               onDelete={(code) => handleDeleteItem('printer', code)}
               onTransfer={handleTriggerTransfer}
               onTabChange={setActiveTab}
@@ -1147,60 +1143,6 @@ export default function App() {
               onTransfer={handleTriggerTransfer}
               onTabChange={setActiveTab}
               onShowQR={handleShowQR}
-            />
-          )}
-
-          {activeTab === 'catalog-tab' && (
-            <PartsCatalogTab 
-              catalog={partsCatalog}
-              onSave={handleSaveItem}
-              onDelete={handleDeleteItem}
-            />
-          )}
-
-          {activeTab === 'transfer-tab' && (
-            <TransferTab 
-              cases={cases}
-              monitors={monitors}
-              printers={printers}
-              mice={mice}
-              keyboards={keyboards}
-              personnel={personnel}
-              onTransfer={handleTransferItem}
-              prefilledEquipmentCode={prefilledEquipCode}
-              prefilledPersonnelCode={prefilledPersCode}
-            />
-          )}
-
-          {activeTab === 'history-tab' && (
-            <HistoryTab assignments={assignments} />
-          )}
-
-          {activeTab === 'reports-tab' && (
-            <ReportingTab 
-              personnel={personnel}
-              cases={cases}
-              monitors={monitors}
-              printers={printers}
-              mice={mice}
-              keyboards={keyboards}
-              assignments={assignments}
-              prefilledPersonnelCode={prefilledPersCode}
-              onSaveItem={handleSaveItem}
-            />
-          )}
-
-          {activeTab === 'repairs-tab' && (
-            <RepairsTab 
-              repairs={repairs}
-              onRefresh={loadDatabase}
-              currentUser={currentUser}
-              cases={cases}
-              monitors={monitors}
-              printers={printers}
-              keyboards={keyboards}
-              mice={mice}
-              personnel={personnel}
             />
           )}
 
@@ -1274,34 +1216,41 @@ export default function App() {
       {/* QR Code Modal for Equipment scanning */}
       <QRCodeModal 
         isOpen={qrModalOpen} 
-        onClose={() => setQrModalOpen(false)} 
-        equipmentCode={qrCode} 
-        equipmentType={qrType} 
-        equipmentData={qrData} 
-        personnel={personnel}
-      />
-
-      {/* 7. Corporate footer (hides in print) */}
-      <footer className="no-print mt-3 bg-slate-900 border-t border-slate-800 text-slate-400 p-3 text-center text-xs space-y-2 rounded-xl shrink-0">
-        
-        {/* Line 1: Current User + Online count + Secure logout button */}
-        <div className="grid grid-cols-1 md:grid-cols-3 items-center bg-slate-950/50 p-2 px-4 rounded-lg border border-slate-800/80 gap-3 w-full">
-          {/* Right Corner (RTL start / rightwards) - Online Users count */}
-          <div className="flex items-center justify-center md:justify-start">
-            <div className="flex items-center gap-1.5 bg-emerald-950/20 text-emerald-400 px-2 rounded-md border border-emerald-900/30 py-0.5">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shrink-0" />
-              <span className="font-bold text-[10.5px]">تعداد کاربران آنلاین: {onlineUsersData.count} نفر</span>
-              {currentUser.role === 'admin' && onlineUsersData.users.length > 0 && (
-                <span className="border-r border-emerald-900 pr-1.5 mr-1.5 text-[9.5px] font-medium hidden lg:inline">
-                  {onlineUsersData.users.map(u => u.name).join('، ')}
-                </span>
-              )}
-            </div>
+        onClose=          {/* Center (Middle column) - Current User */}
+          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-700 dark:text-slate-200">
+            <span className="text-xs">🗣️</span>
+            <span>
+              کاربر جاری سیستم: <strong className="text-indigo-700 dark:text-indigo-400 font-extrabold text-[11px]">{currentUser.name}</strong> 
+              <span className="text-slate-500 dark:text-slate-400 font-medium mr-1.5 text-[10px]">({currentUser.role === 'admin' ? 'مدير ارشد سیستم' : currentUser.role === 'editor_equipment' ? 'اپراتور سخت‌افزار' : 'ناظر سیستم'})</span>
+            </span>
           </div>
 
-          {/* Center (Middle column) - Current User */}
-          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-350">
-            <span className="text-xs">🗣️</span>
+          {/* Left Corner (RTL end / leftwards) - Secure Logout */}
+          <div className="flex items-center justify-center md:justify-end">
+            <button 
+              onClick={handleLogout}
+              className="bg-red-50 hover:bg-red-100 text-red-650 dark:bg-red-955/20 dark:hover:bg-red-900/30 dark:text-red-400 dark:hover:text-red-300 text-[10.5px] font-black px-3.5 py-1.5 rounded-lg border border-red-200/60 dark:border-red-900/40 cursor-pointer transition flex items-center gap-1.5 shrink-0"
+            >
+              🚪 خروج امن
+            </button>
+          </div>
+        </div>
+
+        {/* Line 2: System info + developer info + copyrights */}
+        <div className="flex flex-col md:flex-row justify-between items-center text-slate-500 dark:text-slate-450 text-[10px] sm:text-[11.5px] gap-2 pt-1 border-t border-slate-200 dark:border-slate-800">
+          <span>سامانه هوشمند و آفلاین شناسنامه واحد ICT کارگاه بوشهر شرکت عمران آذرستان</span>
+          <span className="font-medium text-slate-500 dark:text-slate-400">
+            برنامه نویس: <span className="font-bold text-slate-700 dark:text-slate-300">مهدی اسماعیلی</span> | نسخه برنامه: <span className="font-mono font-bold text-blue-600 dark:text-blue-400">v1.2.5</span>
+          </span>
+          <span>تمامی حقوق محفوظ است © ۱۴۰۵ | پورت آفلاین بر پایه فایلهای محلی JSON فاقد پایگاهداده خارجی</span>
+        </div>
+      </footer>
+
+    </div>
+  );
+}�قد پایگاهداده خارجی</span>
+        </div>
+      </footer>🗣️</span>
             <span>
               کاربر جاری سیستم: <strong className="text-indigo-400 font-extrabold text-[11px]">{currentUser.name}</strong> 
               <span className="text-slate-500 font-medium mr-1.5 text-[10px]">({currentUser.role === 'admin' ? 'مدير ارشد سیستم' : currentUser.role === 'editor_equipment' ? 'اپراتور سخت‌افزار' : 'ناظر سیستم'})</span>
