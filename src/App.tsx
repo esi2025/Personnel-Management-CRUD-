@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import PersonnelTab from './components/PersonnelTab';
-import { CasesSubTab, MonitorsSubTab, PrintersSubTab, MiceSubTab, KeyboardsSubTab } from './components/EquipmentTabs';
+import { CasesSubTab, MonitorsSubTab, PrintersSubTab, MiceSubTab, KeyboardsSubTab, RadiosSubTab } from './components/EquipmentTabs';
 import PartsCatalogTab from './components/PartsCatalogTab';
 import TransferTab from './components/TransferTab';
 import HistoryTab from './components/HistoryTab';
@@ -16,7 +16,7 @@ import UsersTab from './components/UsersTab';
 import BulkQRTab from './components/BulkQRTab';
 import LogsTab from './components/LogsTab';
 import RepairsTab from './components/RepairsTab';
-import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard, CatalogItem, Repair } from './types';
+import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard, CatalogItem, Repair, Radio } from './types';
 import { getPersianDateString } from './utils/date';
 
 export interface BackupData {
@@ -174,7 +174,8 @@ const INITIAL_DEMO_DATA = {
       startDate: "1405/02/01",
       endDate: null
     }
-  ]
+  ],
+  radios: []
 };
 
 export default function App() {
@@ -196,11 +197,21 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
 
-  // Force light theme setup for the app (except header/footer which are styled dark)
+  // Theme states (persisted via localStorage)
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('theme');
+    return saved === 'dark';
+  });
+
   useEffect(() => {
-    document.documentElement.classList.remove('dark');
-    localStorage.setItem('theme', 'light');
-  }, []);
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
 
   // Database States
   const [personnel, setPersonnel] = useState<Personnel[]>([]);
@@ -209,6 +220,7 @@ export default function App() {
   const [printers, setPrinters] = useState<Printer[]>([]);
   const [mice, setMice] = useState<Mouse[]>([]);
   const [keyboards, setKeyboards] = useState<Keyboard[]>([]);
+  const [radios, setRadios] = useState<Radio[]>([]);
   const [partsCatalog, setPartsCatalog] = useState<CatalogItem[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [repairs, setRepairs] = useState<Repair[]>([]);
@@ -218,7 +230,7 @@ export default function App() {
 
   // Editing state
   const [editItem, setEditItem] = useState<any>(null);
-  const [editType, setEditType] = useState<'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'catalog' | null>(null);
+  const [editType, setEditType] = useState<'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'catalog' | null>(null);
 
   // Transfer prefill
   const [prefilledEquipCode, setPrefilledEquipCode] = useState('');
@@ -227,7 +239,7 @@ export default function App() {
   // QR Code Modal State
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [qrCode, setQrCode] = useState('');
-  const [qrType, setQrType] = useState<'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard'>('case');
+  const [qrType, setQrType] = useState<'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio'>('case');
   const [qrData, setQrData] = useState<any>(null);
   const [onlineUsersData, setOnlineUsersData] = useState<{ count: number; users: { username: string; name: string }[] }>({ count: 1, users: [] });
 
@@ -258,7 +270,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, [currentUser, isOfflineMode]);
 
-  const handleShowQR = (code: string, type: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard', data: any) => {
+  const handleShowQR = (code: string, type: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio', data: any) => {
     setQrCode(code);
     setQrType(type);
     setQrData(data);
@@ -287,6 +299,7 @@ export default function App() {
       setPrinters(data.printers || []);
       setMice(data.mice || []);
       setKeyboards(data.keyboards || []);
+      setRadios(data.radios || []);
       setPartsCatalog(data.partsCatalog || []);
       setAssignments(data.assignments || []);
       setRepairs(data.repairs || []);
@@ -299,6 +312,7 @@ export default function App() {
         printers: data.printers || [],
         mice: data.mice || [],
         keyboards: data.keyboards || [],
+        radios: data.radios || [],
         partsCatalog: data.partsCatalog || [],
         assignments: data.assignments || [],
         repairs: data.repairs || []
@@ -327,6 +341,7 @@ export default function App() {
       setPrinters(localDb.printers || []);
       setMice(localDb.mice || []);
       setKeyboards(localDb.keyboards || []);
+      setRadios(localDb.radios || []);
       setPartsCatalog(localDb.partsCatalog || []);
       setAssignments(localDb.assignments || []);
       setRepairs(localDb.repairs || []);
@@ -342,8 +357,118 @@ export default function App() {
     loadDatabase();
   }, []);
 
+  // Save Bulk Items
+  const handleSaveBulkItems = async (items: any[]) => {
+    if (!currentUser?.canEditEquipment && currentUser?.role !== 'admin') {
+      alert("دسترسی غیرمجاز! شما صلاحیت افزودن یا ویرایش تجهیزات را ندارید.");
+      return { success: false, savedCount: 0, skipped: [] };
+    }
+
+    if (!isOfflineMode) {
+      try {
+        const res = await fetch('/api/save-bulk', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-operator-username': currentUser?.username || 'system',
+            'x-operator-name': encodeURIComponent(currentUser?.name || '')
+          },
+          body: JSON.stringify({ items })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          await loadDatabase();
+          return { success: true, savedCount: data.savedCount, skipped: data.skippedCodes || [] };
+        } else {
+          alert(data.error || "خطا در ثبت گروهی اطلاعات بر روی سرور.");
+          return { success: false, savedCount: 0, skipped: [] };
+        }
+      } catch (err) {
+        console.warn('API save-bulk failed. Switching to Local fallback.', err);
+      }
+    }
+
+    // Local / Offline mutate simulation
+    const rawDb = localStorage.getItem('azarestan_ict_db');
+    let db = rawDb ? JSON.parse(rawDb) : { ...INITIAL_DEMO_DATA };
+
+    let savedCount = 0;
+    const skipped: string[] = [];
+
+    const keyMap: Record<string, string> = {
+      case: 'cases',
+      monitor: 'monitors',
+      printer: 'printers',
+      mouse: 'mice',
+      keyboard: 'keyboards',
+      radio: 'radios'
+    };
+
+    items.forEach((rawItem: any) => {
+      const type = rawItem.type;
+      const dbKey = keyMap[type];
+      if (!dbKey) return;
+
+      db[dbKey] = db[dbKey] || [];
+      const trimmedCode = String(rawItem.code).trim().toUpperCase();
+      if (!trimmedCode) return;
+
+      const exists = db[dbKey].some((x: any) => String(x.code).toUpperCase() === trimmedCode);
+      if (exists) {
+        skipped.push(trimmedCode);
+        return;
+      }
+
+      let itemObj: any = {
+        code: trimmedCode,
+        assignedTo: null,
+        status: rawItem.status || "working",
+        description: rawItem.description?.trim() || "ایمپورت گروهی به انبار"
+      };
+
+      if (type === 'case') {
+        itemObj = {
+          ...itemObj,
+          motherboard: rawItem.motherboard || "Gigabyte",
+          cpu: rawItem.cpu || "Intel Core i5",
+          vga: rawItem.vga || "Onboard",
+          hdd1: rawItem.hdd1 || "256GB SSD",
+          hdd2: rawItem.hdd2 || "1TB HDD",
+          ramType: rawItem.ramType || "DDR4",
+          ramQty: rawItem.ramQty || "8GB",
+          power: rawItem.power || "Green 400W"
+        };
+      } else if (type === 'radio') {
+        itemObj = {
+          ...itemObj,
+          model: rawItem.model || "Motorola GP338",
+          frequencyRange: rawItem.frequencyRange || "UHF",
+          ipRating: rawItem.ipRating || "IP54"
+        };
+      } else {
+        itemObj = {
+          ...itemObj,
+          model: rawItem.model || "سایر"
+        };
+      }
+
+      db[dbKey].push(itemObj);
+      savedCount++;
+    });
+
+    localStorage.setItem('azarestan_ict_db', JSON.stringify(db));
+    setCases(db.cases || []);
+    setMonitors(db.monitors || []);
+    setPrinters(db.printers || []);
+    setMice(db.mice || []);
+    setKeyboards(db.keyboards || []);
+    setRadios(db.radios || []);
+
+    return { success: true, savedCount, skipped };
+  };
+
   // Save/Edit entity
-  const handleSaveItem = async (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'catalog', data: any) => {
+  const handleSaveItem = async (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'catalog', data: any) => {
     // Permission validation checks
     if (type === 'personnel') {
       if (!currentUser?.canEditPersonnel && currentUser?.role !== 'admin') {
@@ -414,7 +539,7 @@ export default function App() {
       if (data.status === 'terminated') {
         const today = getPersianDateString();
         const trimmedCode = data.code.trim();
-        const returnedHardware: { code: string; type: "case" | "monitor" | "printer" | "mouse" | "keyboard" }[] = [];
+        const returnedHardware: { code: string; type: "case" | "monitor" | "printer" | "mouse" | "keyboard" | "radio" }[] = [];
 
         // Cases
         db.cases = (db.cases || []).map((c: any) => {
@@ -459,6 +584,15 @@ export default function App() {
             return { ...k, assignedTo: null };
           }
           return k;
+        });
+
+        // Radios
+        db.radios = (db.radios || []).map((r: any) => {
+          if (r.assignedTo === trimmedCode) {
+            returnedHardware.push({ code: r.code, type: 'radio' });
+            return { ...r, assignedTo: null };
+          }
+          return r;
         });
 
         if (returnedHardware.length > 0) {
@@ -580,6 +714,24 @@ export default function App() {
       }
       db.keyboards = list;
     }
+    else if (type === 'radio') {
+      let list = db.radios || [];
+      if (!data.code) {
+        alert("کد بی‌سیم الزامی است.");
+        return false;
+      }
+      const index = list.findIndex((r: any) => r.code === data.code);
+      if (index > -1) {
+        list[index] = { ...list[index], ...data };
+      } else {
+        if (list.some((r: any) => r.code === data.code)) {
+          alert("کد بی‌سیم تکراری است.");
+          return false;
+        }
+        list.push({ ...data, assignedTo: null });
+      }
+      db.radios = list;
+    }
     else if (type === 'catalog') {
       let list = db.partsCatalog || [];
       const index = list.findIndex((c: any) => c.id === data.id);
@@ -598,7 +750,7 @@ export default function App() {
   };
 
   // Delete entity
-  const handleDeleteItem = async (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'catalog', id: string) => {
+  const handleDeleteItem = async (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'catalog', id: string) => {
     // Permission validation checks for deletion
     if (type === 'personnel') {
       if (!currentUser?.canEditPersonnel && currentUser?.role !== 'admin') {
@@ -666,6 +818,7 @@ export default function App() {
           (db.printers || []).forEach((p: any) => { if (p.assignedTo === codeToClear) p.assignedTo = null; });
           (db.mice || []).forEach((m: any) => { if (m.assignedTo === codeToClear) m.assignedTo = null; });
           (db.keyboards || []).forEach((k: any) => { if (k.assignedTo === codeToClear) k.assignedTo = null; });
+          (db.radios || []).forEach((r: any) => { if (r.assignedTo === codeToClear) r.assignedTo = null; });
 
           (db.assignments || []).forEach((ass: any) => {
             if (ass.personnelCode === codeToClear && ass.endDate === null) {
@@ -681,6 +834,7 @@ export default function App() {
         'printer': 'printers',
         'mouse': 'mice',
         'keyboard': 'keyboards',
+        'radio': 'radios',
         'catalog': 'partsCatalog'
       };
       const listKey = keyMap[type];
@@ -739,11 +893,11 @@ export default function App() {
     const dateStr = today;
 
     // Locate Equipment
-    let equipType: "case" | "monitor" | "printer" | "mouse" | "keyboard" | null = null;
+    let equipType: "case" | "monitor" | "printer" | "mouse" | "keyboard" | "radio" | null = null;
     let equipItem: any = null;
 
-    const listKeys = ['cases', 'monitors', 'printers', 'mice', 'keyboards'] as const;
-    const typesMap = { cases: 'case', monitors: 'monitor', printers: 'printer', mice: 'mouse', keyboards: 'keyboard' } as const;
+    const listKeys = ['cases', 'monitors', 'printers', 'mice', 'keyboards', 'radios'] as const;
+    const typesMap = { cases: 'case', monitors: 'monitor', printers: 'printer', mice: 'mouse', keyboards: 'keyboard', radios: 'radio' } as const;
 
     for (const key of listKeys) {
       const idx = (db[key] || []).findIndex((x: any) => x.code === equipmentCode);
@@ -865,7 +1019,7 @@ export default function App() {
     setActiveTab('transfer-tab');
   };
 
-  const handleEditTrigger = (item: any, type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'catalog') => {
+  const handleEditTrigger = (item: any, type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'catalog') => {
     setEditItem(item);
     setEditType(type);
   };
@@ -934,6 +1088,16 @@ export default function App() {
     );
   };
 
+  const getFilteredRadios = () => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return radios;
+    return radios.filter(r => 
+      r.code.toLowerCase().includes(q) || 
+      r.model.toLowerCase().includes(q) || 
+      (r.assignedTo && r.assignedTo.includes(q))
+    );
+  };
+
   if (!currentUser) {
     return <LoginScreen onLoginSuccess={(u) => { setCurrentUser(u); }} />;
   }
@@ -946,120 +1110,220 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen max-h-screen flex flex-col p-4 md:p-6 font-sans max-w-[1600px] w-full mx-auto overflow-hidden print:h-auto print:max-h-none print:overflow-visible" dir="rtl">
+    <div className="min-h-screen flex flex-col p-4 md:p-8 font-sans max-w-[1600px] w-full mx-auto print:p-0 print:max-w-none" dir="rtl">
       
       {/* 1. System Header component */}
-      <Header />
+      <Header isDark={darkMode} onToggleTheme={() => setDarkMode(!darkMode)} />
 
-      {isOfflineMode && (
-        <div className="no-print my-3 bg-yellow-500/10 border border-yellow-500/20 text-yellow-800 dark:text-yellow-300 p-3.5 rounded-xl text-xs flex flex-col sm:flex-row items-center justify-between gap-3 font-medium shrink-0">
+      {/* Welcome & logout bar */}
+      <div className="no-print mt-4 mb-2 flex flex-col md:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs shadow-sm">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-base animate-pulse">⚡</span>
+            <span className="text-sm">🗣️</span>
             <span>
-              <strong>اجرای مستقل محلی (LocalStorage DB):</strong> مرورگر شما کوکی‌های امنیتی را در محیط فریم مسدود کرده است. تمامی قابلیت‌های مدیریت سخت‌افزار، گزارش‌ها و جابجایی فعال و روی مرورگر شما ذخیره و آپدیت می‌شوند.
+              کاربر جاری سیستم: <strong className="text-indigo-655 dark:text-indigo-400 font-bold">{currentUser.name}</strong> 
+              <span className="text-slate-500 dark:text-slate-400 font-medium mr-2">({currentUser.role === 'admin' ? 'مدير ارشد سیستم (ادمین)' : currentUser.role === 'editor_equipment' ? 'اپراتور سخت‌افزار' : 'ناظر سیستم'})</span>
             </span>
           </div>
-          <button 
-            type="button" 
-            onClick={() => window.open(window.location.href, '_blank')} 
-            className="shrink-0 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-1.5 px-3.5 rounded-lg text-[10px] transition cursor-pointer"
-          >
-            🌟 باز کردن در تب جدید جهت اتصال پایگاه ابر
-          </button>
+
+          <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-400 px-2.5 py-1 rounded-lg border border-emerald-200/50">
+            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shrink-0" />
+            <span className="font-bold">تعداد کاربران آنلاین: {onlineUsersData.count} نفر</span>
+            {currentUser.role === 'admin' && onlineUsersData.users.length > 0 && (
+              <span className="border-r border-emerald-300 dark:border-emerald-800/80 pr-2 mr-2 text-[10px] font-medium">
+                اسامی: {onlineUsersData.users.map(u => u.name).join('، ')}
+              </span>
+            )}
+          </div>
+        </div>
+        <button 
+          onClick={handleLogout}
+          className="bg-red-50 hover:bg-red-100 dark:bg-red-950/20 text-red-650 hover:text-red-750 text-[11px] font-black px-3 py-1 rounded-lg border border-red-200/50 cursor-pointer transition flex items-center gap-1"
+          style={{ color: '#dc2626' }}
+        >
+          🚪 خروج امن از سیستم
+        </button>
+      </div>
+
+      {/* 2. Global search bar (hides in print mode) */}
+      <div className="no-print bg-white dark:bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row justify-between items-center gap-2 mb-3 text-right">
+        <div className="flex-1 w-full max-w-md">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="🔎 جستجوی هوشمند در لیست پرسنل، شماره اموال، مدل سخت‌افزار و..."
+            className="w-full text-right py-1 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 focus:outline-none placeholder-slate-400 dark:text-slate-100"
+          />
+        </div>
+        
+        {/* Active searches stats indicators */}
+        <div className="text-[10px] sm:text-[11px] text-slate-505 dark:text-slate-400 flex gap-1.5 flex-wrap justify-center font-extrabold">
+          <span className="bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 px-1.5 py-0.5 rounded">👥 پرسنل: {personnel.length}</span>
+          <span className="bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 px-1.5 py-0.5 rounded">🖥️ کیس: {cases.length}</span>
+          <span className="bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 px-1.5 py-0.5 rounded">📺 مانیتور: {monitors.length}</span>
+          <span className="bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 px-1.5 py-0.5 rounded">🖨️ چاپگر: {printers.length}</span>
+          <span className="bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 px-1.5 py-0.5 rounded">🖱️ ماوس: {mice.length}</span>
+          <span className="bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 px-1.5 py-0.5 rounded">⌨️ کیبورد: {keyboards.length}</span>
+          <span className="bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-150/40 text-indigo-700 dark:text-indigo-400 px-1.5 py-0.5 rounded">📻 بی‌سیم: {radios.length}</span>
+        </div>
+      </div>
+
+      {/* 3. Navigation tabs bar (hides in print) */}
+      <div className="no-print bg-slate-100/50 dark:bg-slate-920/40 border border-slate-200/80 dark:border-slate-800/80 rounded-xl p-2.5 mb-3.5 shadow-sm text-right">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-1.5 mb-2 border-b border-slate-200 dark:border-slate-800 gap-1.5">
+          <div className="flex items-center gap-1.5">
+            <span className="text-base">🎛️</span>
+            <div>
+              <h4 className="text-xs md:text-xs font-black text-slate-850 dark:text-slate-100">میز کار و منوی ناوبری کارگاه بوشهر</h4>
+            </div>
+          </div>
+          {/* Active selection badge */}
+          <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 px-2.5 py-0.5 rounded-md text-[10px] font-black border border-blue-100/40 dark:border-blue-900/30">
+            <span className="text-slate-500 dark:text-slate-400 font-bold">بخش فعال:</span>
+            <span>
+              {
+                [
+                  { id: 'personnel-tab', label: '👥 لیست پرسنل' },
+                  { id: 'cases-tab', label: '🖥️ کیس‌های کارگاه' },
+                  { id: 'monitors-tab', label: '📺 مانیتورها' },
+                  { id: 'printers-tab', label: '🖨️ پرینترها' },
+                  { id: 'mice-tab', label: '🖱️ ماوس‌ها' },
+                  { id: 'keyboards-tab', label: '⌨️ کیبوردها' },
+                  { id: 'radios-tab', label: '📻 بی‌سیم‌ها دستی' },
+                  { id: 'catalog-tab', label: '🛠️ قطعات مرجع' },
+                  { id: 'transfer-tab', label: '🔄 جابجایی هوشمند' },
+                  { id: 'history-tab', label: '📜 تاریخچه لجستیک' },
+                  { id: 'reports-tab', label: '📋 گزارش و شناسنامه' },
+                  { id: 'repairs-tab', label: '🛠️ تعمیرات و اسقاط' },
+                  { id: 'bulk-qr-tab', label: '🖨️ چاپ گروهی بارکد' },
+                  { id: 'systems-tree-tab', label: '🌳 نمودار درختی سیستم‌ها' },
+                  { id: 'users-tab', label: '🛡️ مدیریت کاربران' },
+                  { id: 'logs-tab', label: '🪵 لاگ امنیتی سیستم' },
+                  { id: 'backup-tab', label: '⚙️ پشتیبان‌گیری و سورس' },
+                  { id: 'add-new-tab', label: '➕ ثبت و ایمپورت جدید' }
+                ].find(t => t.id === activeTab)?.label || '—'
+              }
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2.5">
+          {/* Column 1: Assets & Equipment */}
+          <div className="space-y-1">
+            <div className="flex items-center gap-1 px-1 text-[10px] font-black text-blue-650 dark:text-blue-400">
+              <span className="text-xs">📦</span>
+              <span>دفتر پرسنل و فهرست سخت‌افزارها</span>
+            </div>
+            <div className="flex flex-wrap gap-1 p-1.5 rounded-lg bg-white/80 dark:bg-slate-950/80 border border-slate-200/50 dark:border-slate-800/60 shadow-inner">
+              {[
+                { id: 'personnel-tab', label: 'لیست پرسنل', icon: '👥' },
+                { id: 'cases-tab', label: 'کیس‌های کارگاه', icon: '🖥️' },
+                { id: 'monitors-tab', label: 'مانیتورها', icon: '📺' },
+                { id: 'printers-tab', label: 'پرینترها', icon: '🖨️' },
+                { id: 'mice-tab', label: 'ماوس‌ها', icon: '🖱️' },
+                { id: 'keyboards-tab', label: 'کیبوردها', icon: '⌨️' },
+                { id: 'radios-tab', label: 'بی‌سیم‌های دستی', icon: '📻' },
+                { id: 'catalog-tab', label: 'قطعات مرجع', icon: '🛠️' }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => { setActiveTab(tab.id); }}
+                  className={`px-2 py-0.5 text-[11px] font-bold rounded-md transition-all duration-150 cursor-pointer flex items-center gap-1 border ${
+                    activeTab === tab.id 
+                      ? 'bg-blue-600 border-blue-600 text-white shadow-xs font-black' 
+                      : 'bg-slate-50 dark:bg-slate-900 border-slate-200/50 dark:border-slate-800 text-slate-650 dark:text-slate-300 hover:bg-slate-150 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-amber-400'
+                  }`}
+                >
+                  <span className="text-[10px] shrink-0">{tab.icon}</span>
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Column 2: Operations & Actions */}
+          <div className="space-y-1">
+            <div className="flex items-center gap-1 px-1 text-[10px] font-black text-emerald-650 dark:text-emerald-400">
+              <span className="text-xs">🔄</span>
+              <span>لجستیک، عملیات تحویل و اسناد</span>
+            </div>
+            <div className="flex flex-wrap gap-1 p-1.5 rounded-lg bg-white/80 dark:bg-slate-950/80 border border-slate-200/50 dark:border-slate-800/60 shadow-inner">
+              {[
+                { id: 'transfer-tab', label: 'جابجایی هوشمند', icon: '🔄', show: currentUser?.canEditEquipment || currentUser?.role === 'admin' },
+                { id: 'history-tab', label: 'تاریخچه لجستیک', icon: '📜', show: true },
+                { id: 'reports-tab', label: 'گزارش و شناسنامه', icon: '📋', show: currentUser?.canExport || currentUser?.role === 'admin' },
+                { id: 'repairs-tab', label: 'تعمیرات و اسقاط', icon: '🛠️', show: true },
+                { id: 'bulk-qr-tab', label: 'چاپ گروهی بارکد', icon: '🖨️', show: currentUser?.canExport || currentUser?.role === 'admin' },
+                { id: 'systems-tree-tab', label: 'نمودار درختی', icon: '🌳', show: true }
+              ].filter(t => t.show).map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => { setActiveTab(tab.id); }}
+                  className={`px-2 py-0.5 text-[11px] font-bold rounded-md transition-all duration-150 cursor-pointer flex items-center gap-1 border ${
+                    activeTab === tab.id 
+                      ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs font-black' 
+                      : 'bg-slate-50 dark:bg-slate-900 border-slate-200/50 dark:border-slate-800 text-slate-650 dark:text-slate-300 hover:bg-slate-150 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-amber-400'
+                  }`}
+                >
+                  <span className="text-[10px] shrink-0">{tab.icon}</span>
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Column 3: Secure Management & Backup */}
+          <div className="space-y-1">
+            <div className="flex items-center gap-1 px-1 text-[10px] font-black text-indigo-650 dark:text-indigo-400">
+              <span className="text-xs">🛡️</span>
+              <span>امنیت، سیستم و ثبت پنل</span>
+            </div>
+            <div className="flex flex-wrap gap-1 p-1.5 rounded-lg bg-white/80 dark:bg-slate-950/80 border border-slate-200/50 dark:border-slate-800/60 shadow-inner">
+              {[
+                { id: 'users-tab', label: 'مدیریت کاربران', icon: '🛡️', show: currentUser?.role === 'admin' },
+                { id: 'logs-tab', label: 'لاگ امنیتی سیستم', icon: '🪵', show: currentUser?.role === 'admin' },
+                { id: 'backup-tab', label: 'پشتیبان‌گیری و سورس', icon: '⚙️', show: currentUser?.canBackup || currentUser?.role === 'admin' },
+                { id: 'add-new-tab', label: 'ثبت جدید (تکی/گروهی)', icon: '➕', show: currentUser?.canEditPersonnel || currentUser?.canEditEquipment || currentUser?.role === 'admin', highlight: true }
+              ].filter(t => t.show).map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => { setActiveTab(tab.id); }}
+                  className={`px-2 py-0.5 text-[11px] font-bold rounded-md transition-all duration-150 cursor-pointer flex items-center gap-1 border ${
+                    activeTab === tab.id 
+                      ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs font-black' 
+                      : tab.highlight
+                        ? 'bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-900/50 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100/80'
+                        : 'bg-slate-50 dark:bg-slate-900 border-slate-200/50 dark:border-slate-800 text-slate-650 dark:text-slate-300 hover:bg-slate-150 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-amber-400'
+                  }`}
+                >
+                  <span className="text-[10px] shrink-0">{tab.icon}</span>
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Display Loading/Errors */}
+      {loading && (
+        <div className="bg-white border rounded-lg p-12 text-center text-slate-500">
+          <span className="text-2xl block mb-2">🔄</span>
+          در حال بارگذاری اطلاعات پایگاه داده کارگاه بوشهر...
         </div>
       )}
 
-      {/* 2. Main Responsive Split Container (RTL Flows Right Sidebar to Left Content) */}
-      <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-4 mt-3 w-full items-stretch overflow-hidden">
-        
-        {/* Right Sidebar - Main Navigation Keys (hides in print) */}
-        <aside className="no-print w-full lg:w-[145px] shrink-0 flex flex-col gap-3 overflow-y-auto h-full pr-1 pb-2 scrollbar-none">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg text-center font-bold">
+          ⚠️ {error}
+          <button onClick={loadDatabase} className="mt-4 block mx-auto bg-red-600 text-white px-4 py-2 rounded text-xs">تلاش مجدد اتصال</button>
+        </div>
+      )}
 
-          <nav className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-1.5 shadow-xs flex flex-col gap-1">
-            {[
-              { id: 'personnel-tab', label: '👥 لیست پرسنل', show: true },
-              { id: 'cases-tab', label: '🖥️ لیست کیس‌ها', show: true },
-              { id: 'monitors-tab', label: '📺 لیست مانیتورها', show: true },
-              { id: 'printers-tab', label: '🖨️ لیست پرینترها', show: true },
-              { id: 'mice-tab', label: '🖱️ لیست ماوس‌ها', show: true },
-              { id: 'keyboards-tab', label: '⌨️ لیست کیبوردها', show: true },
-              { id: 'catalog-tab', label: '🛠️ قطعات مرجع', show: true },
-              { id: 'transfer-tab', label: '🔄 جابجایی هوشمند', show: currentUser?.canEditEquipment || currentUser?.role === 'admin' },
-              { id: 'history-tab', label: '📜 تاریخچه لجستیک', show: true },
-              { id: 'reports-tab', label: '📋 گزارش و شناسنامه', show: currentUser?.canExport || currentUser?.role === 'admin' },
-              { id: 'repairs-tab', label: '🛠️ تعمیرات و اسقاط', show: true },
-              { id: 'bulk-qr-tab', label: '🖨️ چاپ گروهی بارکد', show: currentUser?.canExport || currentUser?.role === 'admin' },
-              { id: 'systems-tree-tab', label: '🌳 نمودار درختی', show: true },
-              { id: 'users-tab', label: '🛡️ مدیریت کاربران', show: currentUser?.role === 'admin' },
-              { id: 'logs-tab', label: '🪵 لاگ امنیتی سیستم', show: currentUser?.role === 'admin' },
-              { id: 'backup-tab', label: '⚙️ پشتیبان‌گیری', show: currentUser?.canBackup || currentUser?.role === 'admin' },
-              { id: 'add-new-tab', label: '➕ ثبت جدید', show: currentUser?.canEditPersonnel || currentUser?.canEditEquipment || currentUser?.role === 'admin' }
-            ].filter(t => t.show).map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => { setActiveTab(tab.id); }}
-                className={`w-full text-right flex items-center justify-between px-2.5 py-1.5 text-[11px] font-extrabold rounded-lg transition-all cursor-pointer border ${
-                  activeTab === tab.id 
-                    ? 'bg-blue-600 border-blue-600 text-white shadow-xs' 
-                    : 'border-transparent text-slate-700 dark:text-slate-350 hover:bg-slate-100/70 hover:text-slate-900 dark:hover:bg-slate-900/60 dark:hover:text-white'
-                }`}
-              >
-                <span className="truncate">{tab.label}</span>
-                {activeTab === tab.id && <span className="text-[10px] text-blue-200 shrink-0">◀</span>}
-              </button>
-            ))}
-          </nav>
-        </aside>
-
-        {/* Left Side Main Workspace Area */}
-        <div className="flex-1 w-full min-w-0 flex flex-col h-full overflow-hidden space-y-4 print:w-full print:block print:h-auto print:overflow-visible">
-          
-          {/* Global search bar (hides in print mode) */}
-          {['personnel-tab', 'cases-tab', 'monitors-tab', 'printers-tab', 'mice-tab', 'keyboards-tab'].includes(activeTab) && (
-            <div className="no-print bg-white dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
-              <div className="flex-1 w-full max-w-lg">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">جستجوی هوشمند در کل آلبوم‌ها:</label>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="بر اساس نام شخص، شماره اموال، مدل پردازنده، مانیتور و..."
-                  className="w-full text-right py-1.5 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs focus:border-blue-500 focus:outline-none dark:text-white"
-                />
-              </div>
-              
-              {/* Active searches stats indicators */}
-              <div className="text-xs text-slate-500 dark:text-slate-400 flex gap-2.5 flex-wrap self-end md:self-center font-medium">
-                <span className="bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded">👤 پرسنل: {personnel.length}</span>
-                <span className="bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded">🖥️ کیس: {cases.length}</span>
-                <span className="bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded">📺 مانیتور: {monitors.length}</span>
-                <span className="bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded">🖨️ چاپگر: {printers.length}</span>
-                <span className="bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded">🖱️ ماوس: {mice.length}</span>
-                <span className="bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded">⌨️ کیبورد: {keyboards.length}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Scrollable Container for Dashboard Data */}
-          <div className="flex-1 min-h-0 overflow-y-auto pb-4 pr-0.5 custom-scrollbar">
-            {/* Display Loading/Errors */}
-            {loading && (
-              <div className="bg-white dark:bg-slate-950 border border-slate-250 dark:border-slate-800 rounded-lg p-12 text-center text-slate-500 dark:text-slate-400">
-                <span className="text-2xl block mb-2">🔄</span>
-                در حال بارگذاری اطلاعات پایگاه داده کارگاه بوشهر...
-              </div>
-            )}
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg text-center font-bold">
-                ⚠️ {error}
-                <button onClick={loadDatabase} className="mt-4 block mx-auto bg-red-600 text-white px-4 py-2 rounded text-xs">تلاش مجدد اتصال</button>
-              </div>
-            )}
-
-            {/* Main Panels layout workspace */}
-            {!loading && !error && (
-              <main className="w-full">
+      {/* 5. Main Panels layout workspace */}
+      {!loading && !error && (
+        <main className="flex-1">
           {activeTab === 'personnel-tab' && (
             <PersonnelTab 
               personnel={getFilteredPersonnel()} 
@@ -1104,7 +1368,7 @@ export default function App() {
             <PrintersSubTab 
               printers={getFilteredPrinters()} 
               personnel={personnel}
-              onEdit={(p) => handleEditTrigger(p, 'printer')}
+              onEdit={(pr) => handleEditTrigger(pr, 'printer')}
               onDelete={(code) => handleDeleteItem('printer', code)}
               onTransfer={handleTriggerTransfer}
               onTabChange={setActiveTab}
@@ -1136,6 +1400,18 @@ export default function App() {
             />
           )}
 
+          {activeTab === 'radios-tab' && (
+            <RadiosSubTab 
+              radios={getFilteredRadios()} 
+              personnel={personnel}
+              onEdit={(r) => handleEditTrigger(r, 'radio')}
+              onDelete={(code) => handleDeleteItem('radio', code)}
+              onTransfer={handleTriggerTransfer}
+              onTabChange={setActiveTab}
+              onShowQR={handleShowQR}
+            />
+          )}
+
           {activeTab === 'catalog-tab' && (
             <PartsCatalogTab 
               catalog={partsCatalog}
@@ -1151,6 +1427,7 @@ export default function App() {
               printers={printers}
               mice={mice}
               keyboards={keyboards}
+              radios={radios}
               personnel={personnel}
               onTransfer={handleTransferItem}
               prefilledEquipmentCode={prefilledEquipCode}
@@ -1186,6 +1463,7 @@ export default function App() {
               printers={printers}
               keyboards={keyboards}
               mice={mice}
+              radios={radios}
               personnel={personnel}
             />
           )}
@@ -1233,19 +1511,16 @@ export default function App() {
               printers={printers}
               mice={mice}
               keyboards={keyboards}
+              radios={radios}
               personnel={personnel}
             />
           )}
 
           {activeTab === 'add-new-tab' && (
-            <AddNewTab onSave={handleSaveItem} />
+            <AddNewTab onSave={handleSaveItem} onSaveBulk={handleSaveBulkItems} />
           )}
         </main>
       )}
-          </div>
-
-        </div>
-      </div>
 
       {/* 6. Edit Modal */}
       {editItem && editType && (
@@ -1256,6 +1531,8 @@ export default function App() {
           onSave={handleSaveItem}
         />
       )}
+
+      {/* QR Code Modal for Equipment scanning */}
       <QRCodeModal 
         isOpen={qrModalOpen} 
         onClose={() => setQrModalOpen(false)} 
@@ -1266,50 +1543,17 @@ export default function App() {
       />
 
       {/* 7. Corporate footer (hides in print) */}
-      <footer className="no-print mt-3 bg-slate-900 border-t border-slate-800 text-slate-300 p-3 text-center text-xs space-y-2 rounded-xl shrink-0">
-        
-        {/* Line 1: Current User + Online count + Secure logout button */}
-        <div className="grid grid-cols-1 md:grid-cols-3 items-center bg-slate-950/50 p-2 px-4 rounded-lg border border-slate-800 gap-3 w-full">
-          {/* Right Corner (RTL start / rightwards) - Online Users count */}
-          <div className="flex items-center justify-center md:justify-start">
-            <div className="flex items-center gap-1.5 bg-emerald-950/20 text-emerald-400 px-2 rounded-md border border-emerald-900/30 py-0.5">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shrink-0" />
-              <span className="font-bold text-[10.5px]">تعداد کاربران آنلاین: {onlineUsersData.count} نفر</span>
-              {currentUser.role === 'admin' && onlineUsersData.users.length > 0 && (
-                <span className="border-r border-emerald-900 pr-1.5 mr-1.5 text-[9.5px] font-medium hidden lg:inline">
-                  {onlineUsersData.users.map(u => u.name).join('، ')}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Center (Middle column) - Current User */}
-          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-200">
-            <span className="text-xs">🗣️</span>
-            <span>
-              کاربر جاری سیستم: <strong className="text-blue-400 font-extrabold text-[11px]">{currentUser.name}</strong> 
-              <span className="text-slate-400 font-medium mr-1.5 text-[10px]">({currentUser.role === 'admin' ? 'مدير ارشد سیستم' : currentUser.role === 'editor_equipment' ? 'اپراتور سخت‌افزار' : 'ناظر سیستم'})</span>
-            </span>
-          </div>
-
-          {/* Left Corner (RTL end / leftwards) - Secure Logout */}
-          <div className="flex items-center justify-center md:justify-end">
-            <button 
-              onClick={handleLogout}
-              className="bg-red-955/20 hover:bg-red-900/30 text-red-400 hover:text-red-350 text-[10.5px] font-black px-3.5 py-1.5 rounded-lg border border-red-900/40 cursor-pointer transition flex items-center gap-1.5 shrink-0"
-            >
-              🚪 خروج امن
-            </button>
-          </div>
+      <footer className="no-print mt-6 bg-slate-900 border border-slate-800 text-slate-400 py-2.5 px-4 rounded-lg flex flex-col md:flex-row items-center justify-between gap-3 text-[11px] font-medium">
+        <div>سامانه شناسنامه هوشمند ICT کارگاه بوشهر - شرکت عمران آذرستان</div>
+        <div className="flex flex-wrap items-center gap-3">
+          <span>توسعه‌دهنده: <span className="font-bold text-slate-300">مهدی اسماعیلی</span></span>
+          <span className="text-slate-700">|</span>
+          <span>نسخه: <span className="font-mono font-bold text-blue-400">v1.2.5</span></span>
+          <span className="text-slate-700">|</span>
+          <span className="font-mono text-[10px] text-slate-500">پورت آفلاین محلی (LocalStorage JSON)</span>
         </div>
-
-        {/* Line 2: System info + developer info + copyrights */}
-        <div className="flex flex-col md:flex-row justify-between items-center text-slate-400 text-[10px] sm:text-[11.5px] gap-2 pt-1 border-t border-slate-800">
-          <span>سامانه هوشمند و آفلاین شناسنامه واحد ICT کارگاه بوشهر شرکت عمران آذرستان</span>
-          <span className="font-medium text-slate-400">
-            برنامه نویس: <span className="font-bold text-slate-300">مهدی اسماعیلی</span> | نسخه برنامه: <span className="font-mono font-bold text-blue-400">v1.2.5</span>
-          </span>
-          <span>تمامی حقوق محفوظ است © ۱۴۰۵ | پورت آفلاین بر پایه فایلهای محلی JSON فاقد پایگاهداده خارجی</span>
+        <div className="text-[10px] text-slate-500">
+          حقوق محفوظ است © ۱۴۰۵
         </div>
       </footer>
 

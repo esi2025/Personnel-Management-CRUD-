@@ -56,6 +56,16 @@ export interface Keyboard {
   description?: string; // توضیحات تکمیلی
 }
 
+export interface Radio {
+  code: string; // کد بی‌سیم (unique)
+  model: string; // مدل
+  assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
+  status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
+  description?: string; // توضیحات تکمیلی
+  frequencyRange?: string; // UHF/VHF
+  ipRating?: string; // درجه حفاظت فیزیکی IP
+}
+
 export interface CatalogItem {
   id: string;
   category: 'cpu' | 'motherboard' | 'vga' | 'ramType' | 'power' | 'monitorBrand' | 'printerBrand' | 'printerFeature';
@@ -66,7 +76,7 @@ export interface CatalogItem {
 export interface Assignment {
   id: string; // شناسه تاریخچه
   equipmentCode: string; // کد تجهیز
-  equipmentType: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard'; // نوع تجهیز
+  equipmentType: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio'; // نوع تجهیز
   personnelCode: string | null; // کد پرسنلی (یا null برای عودت به انبار)
   personnelName: string | null; // نام پرسنل
   startDate: string; // تاریخ شروع (خورشیدی)
@@ -80,6 +90,7 @@ export interface BackupData {
   printers: Printer[];
   mice?: Mouse[];
   keyboards?: Keyboard[];
+  radios?: Radio[];
   partsCatalog?: CatalogItem[];
   assignments: Assignment[];
 }
@@ -108,7 +119,7 @@ export interface RepairNeededPart {
 export interface Repair {
   id: string;
   equipmentCode: string;
-  equipmentType: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard';
+  equipmentType: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio';
   requestDate: string;
   requesterName: string;
   reportedIssue: string;

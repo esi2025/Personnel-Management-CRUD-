@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Printer, Search, CheckSquare, Square, RefreshCcw, Minus, Plus, Settings } from 'lucide-react';
-import { Case, Monitor, Printer as PrinterType, Mouse, Keyboard, Personnel } from '../types';
+import { Case, Monitor, Printer as PrinterType, Mouse, Keyboard, Personnel, Radio } from '../types';
 
 interface BulkQRTabProps {
   cases: Case[];
@@ -9,6 +9,7 @@ interface BulkQRTabProps {
   printers: PrinterType[];
   mice: Mouse[];
   keyboards: Keyboard[];
+  radios?: Radio[];
   personnel: Personnel[];
 }
 
@@ -23,7 +24,7 @@ interface PrintableItem {
   assignedToCode: string;
 }
 
-export default function BulkQRTab({ cases, monitors, printers, mice, keyboards, personnel }: BulkQRTabProps) {
+export default function BulkQRTab({ cases, monitors, printers, mice, keyboards, radios = [], personnel }: BulkQRTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set());
@@ -112,8 +113,22 @@ export default function BulkQRTab({ cases, monitors, printers, mice, keyboards, 
       });
     });
 
+    // Radios
+    radios.forEach(r => {
+      list.push({
+        id: `radio_${r.code}`,
+        type: 'radio',
+        categoryName: '📻 بی‌سیم کارگاهی',
+        code: r.code,
+        brand: r.frequencyRange ? `باند ${r.frequencyRange}` : 'صوتی',
+        model: r.model || '—',
+        assignedToName: r.assignedTo ? (personnelMap[r.assignedTo] || 'نامشخص') : 'موجود در انبار',
+        assignedToCode: r.assignedTo || ''
+      });
+    });
+
     return list;
-  }, [cases, monitors, printers, mice, keyboards, personnelMap]);
+  }, [cases, monitors, printers, mice, keyboards, radios, personnelMap]);
 
   // Apply filters and searches
   const filteredHardwares = useMemo(() => {
@@ -243,6 +258,7 @@ export default function BulkQRTab({ cases, monitors, printers, mice, keyboards, 
               <option value="printer">🖨️ پرینترها و چندکاره</option>
               <option value="mouse">🖱️ ماوس‌ها</option>
               <option value="keyboard">⌨️ کیبوردها</option>
+              <option value="radio">📻 بی‌سیم‌ها</option>
             </select>
           </div>
 

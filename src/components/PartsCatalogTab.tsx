@@ -82,11 +82,11 @@ export default function PartsCatalogTab({ catalog = [], onSave, onDelete }: Part
     : catalog.filter(item => item.category === selectedCategory);
 
   return (
-    <div className="space-y-6 text-right" dir="rtl">
+    <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h3 className="text-xl font-bold text-slate-800 dark:text-white">🛠️ کاتالوگ و معرفی قطعات اصلی (مرجع فناوری اطلاعات)</h3>
-          <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">بخش استانداردسازی و معرفی قطعات کارگاه بوشهر - شرکت عمران آذرستان</p>
+          <h3 className="text-xl font-bold text-slate-800">🛠️ کاتالوگ و معرفی قطعات اصلی (مرجع فناوری اطلاعات)</h3>
+          <p className="text-slate-500 text-xs mt-1">بخش استانداردسازی و معرفی قطعات کارگاه بوشهر - شرکت عمران آذرستان</p>
         </div>
         {!isAdding && (
           <button
@@ -99,20 +99,20 @@ export default function PartsCatalogTab({ catalog = [], onSave, onDelete }: Part
       </div>
 
       {isAdding && (
-        <form onSubmit={handleSubmit} className="bg-slate-50 dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-          <h4 className="text-sm font-bold text-slate-800 dark:text-white">
+        <form onSubmit={handleSubmit} className="bg-slate-50 p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+          <h4 className="text-sm font-bold text-slate-800">
             {editingId ? '✏️ ویرایش قطعه مرجع معرفی‌شده' : '➕ معرفی مشخصات قطعه جدید'}
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">دسته‌بندی قطعه/ویژگی:</label>
+              <label className="text-xs font-bold text-slate-700 block mb-1">دسته‌بندی قطعه/ویژگی:</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as any)}
-                className="w-full text-right p-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs md:text-sm text-slate-800 dark:text-white focus:border-blue-500 focus:outline-none"
+                className="w-full text-right p-2.5 bg-white border border-slate-200 rounded-lg text-xs md:text-sm focus:border-blue-500 focus:outline-none"
               >
                 {Object.entries(CATEGORIES).map(([key, cat]) => (
-                  <option key={key} value={key} className="bg-white dark:bg-slate-950 text-slate-800 dark:text-white">
+                  <option key={key} value={key}>
                     {cat.icon} {cat.label}
                   </option>
                 ))}
@@ -120,24 +120,24 @@ export default function PartsCatalogTab({ catalog = [], onSave, onDelete }: Part
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">نام دقیق قطعه / مارک / مدل:</label>
+              <label className="text-xs font-bold text-slate-700 block mb-1">نام دقیق قطعه / مارک / مدل:</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="مثلاً AMD Ryzen 5 5600X یا ASUS ROG STRIX B550"
-                className="w-full text-right p-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs md:text-sm text-slate-800 dark:text-white focus:border-blue-500 focus:outline-none"
+                className="w-full text-right p-2.5 bg-white border border-slate-200 rounded-lg text-xs md:text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">سایر مشخصات فنی / سایز / قابلیت‌ها:</label>
+              <label className="text-xs font-bold text-slate-700 block mb-1">سایر مشخصات فنی / سایز / قابلیت‌ها:</label>
               <input
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="مثلاً فرکانس 3.7GHz یا کپی/اسکن رنگی، سایز مانیتور ۲۴ اینچ و..."
-                className="w-full text-right p-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs md:text-sm text-slate-800 dark:text-white focus:border-blue-500 focus:outline-none"
+                className="w-full text-right p-2.5 bg-white border border-slate-200 rounded-lg text-xs md:text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
           </div>
@@ -152,7 +152,7 @@ export default function PartsCatalogTab({ catalog = [], onSave, onDelete }: Part
             <button
               type="button"
               onClick={handleResetForm}
-              className="bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 px-5 py-2 rounded-lg text-xs font-bold transition cursor-pointer"
+              className="bg-slate-200 hover:bg-slate-300 text-slate-700 px-5 py-2 rounded-lg text-xs font-bold transition cursor-pointer"
             >
               انصراف
             </button>
@@ -161,13 +161,13 @@ export default function PartsCatalogTab({ catalog = [], onSave, onDelete }: Part
       )}
 
       {/* Categories Filter Tabs */}
-      <div className="flex gap-1.5 overflow-x-auto pb-2 border-b border-slate-200 dark:border-slate-800">
+      <div className="flex gap-1.5 overflow-x-auto pb-2 border-b border-slate-200">
         <button
           onClick={() => setSelectedCategory('all')}
           className={`px-3 py-1.5 text-xs rounded-full font-bold whitespace-nowrap transition cursor-pointer ${
             selectedCategory === 'all' 
-              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950' 
-              : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800'
+              ? 'bg-slate-900 text-white' 
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
           }`}
         >
           📂 همه موارد ({catalog.length})
@@ -181,7 +181,7 @@ export default function PartsCatalogTab({ catalog = [], onSave, onDelete }: Part
               className={`px-3 py-1.5 text-xs rounded-full font-bold whitespace-nowrap transition cursor-pointer ${
                 selectedCategory === key 
                   ? 'bg-blue-600 text-white' 
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
               {cat.icon} {cat.label} ({count})
@@ -193,37 +193,37 @@ export default function PartsCatalogTab({ catalog = [], onSave, onDelete }: Part
       {/* Catalog Render Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredCatalog.length === 0 ? (
-          <div className="col-span-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-12 text-center text-slate-450 text-sm">
+          <div className="col-span-full bg-white border border-slate-200 rounded-xl p-12 text-center text-slate-400 text-sm">
             هیچ قطعه‌ای در این دسته‌بندی معرفی نگردیده است.
           </div>
         ) : (
           filteredCatalog.map((item) => {
             const catMeta = CATEGORIES[item.category] || { label: 'غیره', icon: '❓' };
             return (
-              <div key={item.id} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm hover:shadow transition relative group flex flex-col justify-between">
+              <div key={item.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow transition relative group flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-start mb-2">
-                    <span className="text-xs font-bold bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 px-2 py-1 rounded flex items-center gap-1">
+                    <span className="text-xs font-bold bg-slate-100 text-slate-700 px-2 py-1 rounded flex items-center gap-1">
                       <span>{catMeta.icon}</span>
                       <span>{catMeta.label}</span>
                     </span>
                   </div>
-                  <h5 className="font-bold text-slate-900 dark:text-white text-sm md:text-base mb-1">{item.name}</h5>
+                  <h5 className="font-bold text-slate-900 text-sm md:text-base mb-1">{item.name}</h5>
                   {item.description && (
-                    <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">{item.description}</p>
+                    <p className="text-slate-500 text-xs leading-relaxed">{item.description}</p>
                   )}
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-1.5">
+                <div className="mt-4 pt-3 border-t border-slate-100 flex justify-end gap-1.5">
                   <button
                     onClick={() => handleEditClick(item)}
-                    className="text-xs bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-850 dark:border-slate-800 dark:text-slate-300 px-2.5 py-1 rounded transition cursor-pointer"
+                    className="text-xs bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 px-2 py-1 rounded transition cursor-pointer"
                   >
                     ✏️ ویرایش
                   </button>
                   <button
                     onClick={() => handleDelete(item.id)}
-                    className="text-xs bg-red-50 hover:bg-red-100 text-red-605 dark:bg-red-955/20 dark:hover:bg-red-900/30 dark:text-red-400 px-2.5 py-1 rounded transition cursor-pointer"
+                    className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded transition cursor-pointer"
                   >
                     🗑️ حذف
                   </button>
@@ -235,7 +235,7 @@ export default function PartsCatalogTab({ catalog = [], onSave, onDelete }: Part
       </div>
 
       {/* Information Box */}
-      <div className="bg-blue-50/60 dark:bg-blue-955/20 border border-blue-200 dark:border-blue-900/40 rounded-xl p-5 text-xs text-blue-900 dark:text-blue-300 leading-relaxed mb-6">
+      <div className="bg-blue-50/60 border border-blue-200 rounded-xl p-5 text-xs text-blue-900 leading-relaxed mb-6">
         <h4 className="font-bold mb-1.5 flex items-center gap-1">
           <span>ℹ️</span>
           <span>راهنمای بخش قطعات مرجع کارگاه (سخت‌افزار استاندارد کارگاهی)</span>

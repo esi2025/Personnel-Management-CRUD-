@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Case, Monitor, Printer, Personnel, Mouse, Keyboard } from '../types';
+import { Case, Monitor, Printer, Personnel, Mouse, Keyboard, Radio } from '../types';
 
 export function StatusBadge({ status }: { status?: 'working' | 'repair' | 'retired' }) {
   const currentStatus = status || 'working';
@@ -876,6 +876,344 @@ export function KeyboardsSubTab({
           </table>
         </div>
       </div>
+    </div>
+  );
+}
+
+interface RadiosSubTabProps {
+  radios: Radio[];
+  personnel: Personnel[];
+  onEdit: (r: Radio) => void;
+  onDelete: (code: string) => void;
+  onTransfer: (code: string) => void;
+  onTabChange: (tabId: string) => void;
+  onShowQR: (code: string, type: 'radio', data: Radio) => void;
+}
+
+export function RadiosSubTab({
+  radios,
+  personnel,
+  onEdit,
+  onDelete,
+  onTransfer,
+  onTabChange,
+  onShowQR
+}: RadiosSubTabProps) {
+  const [subView, setSubView] = useState<'inventory' | 'delivery_stats'>('inventory');
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortAsc, setSortAsc] = useState<boolean>(true);
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortAsc(!sortAsc);
+    } else {
+      setSortField(field);
+      setSortAsc(true);
+    }
+  };
+
+  const getOwnerName = (assignedToCode: string | null) => {
+    if (!assignedToCode) return '';
+    const found = personnel.find(p => p.code === assignedToCode);
+    return found ? found.name : '';
+  };
+
+  const sortedRadios = useMemo(() => {
+    if (!sortField) return radios;
+    return [...radios].sort((a: any, b: any) => {
+      let valA = '';
+      let valB = '';
+
+      if (sortField === 'assignedTo') {
+        valA = getOwnerName(a.assignedTo);
+        valB = getOwnerName(b.assignedTo);
+      } else {
+        valA = String(a[sortField] || '');
+        valB = String(b[sortField] || '');
+      }
+
+      return sortAsc 
+        ? valA.localeCompare(valB, 'fa') 
+        : valB.localeCompare(valA, 'fa');
+    });
+  }, [radios, sortField, sortAsc, personnel]);
+
+  const renderSortIndicator = (field: string) => {
+    if (sortField !== field) return <span className="text-slate-300 mr-1 select-none text-[10px]">⇅</span>;
+    return sortAsc 
+      ? <span className="text-blue-600 mr-1 select-none">▲</span> 
+      : <span className="text-blue-600 mr-1 select-none">▼</span>;
+  };
+
+  // Delivery statistics calculation
+  const stats = useMemo(() => {
+    const total = radios.length;
+    const assigned = radios.filter(r => r.assignedTo !== null).length;
+    const inRepair = radios.filter(r => r.status === 'repair').length;
+    const warehouse = radios.filter(r => r.assignedTo === null && r.status !== 'retired').length;
+    const retired = radios.filter(r => r.status === 'retired').length;
+
+    // Personnel holding radios
+    const assignees = radios
+      .filter(r => r.assignedTo !== null)
+      .map(r => {
+        const pers = personnel.find(p => p.code === r.assignedTo);
+        return {
+          radioCode: r.code,
+          radioModel: r.model,
+          radioStatus: r.status,
+          persCode: r.assignedTo!,
+          persName: pers ? pers.name : 'کاربر نامعلوم',
+          persTitle: pers ? pers.title : 'پرسنل کارگاه',
+          persDept: pers ? pers.department : 'اجرایی/پیمانکاری',
+          persLoc: pers ? pers.location : 'کارگاه بوشهر'
+        };
+      });
+
+    return { total, assigned, inRepair, warehouse, retired, assignees };
+  }, [radios, personnel]);
+
+  return (
+    <div className="space-y-5 text-right font-sans" dir="rtl">
+      
+      {/* Upper header */}
+      <div className="bg-slate-100/50 p-4 rounded-xl border border-slate-200">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h4 className="text-sm md:text-base font-black text-slate-800 flex items-center gap-1.5">
+              <span>📻 مدیریت و فناوری تخصیص بی‌سیم کارگاهی</span>
+            </h4>
+            <p className="text-[11px] text-slate-500 mt-1">
+              ثبت بی‌سیم‌های دستی (موتورولا، کنوود)، ردیابی هوشمند تحویل به اکیپ‌های اجرایی کارگاه و ترخیص تعمیرگاهی مشابه پرینتر.
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => onTabChange('add-new-tab')}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap cursor-pointer shadow-sm scale-100 hover:scale-[1.02]"
+            >
+              ➕ ثبت بی‌سیم جدید
+            </button>
+          </div>
+        </div>
+
+        {/* View Switch / SubTabs */}
+        <div className="flex items-center gap-1.5 mt-4 border-t pt-3.5 border-slate-200 font-sans">
+          <button
+            onClick={() => setSubView('inventory')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+              subView === 'inventory'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600'
+            }`}
+          >
+            📋 لیست موجودی کل بی‌سیم‌ها ({radios.length})
+          </button>
+          <button
+            onClick={() => setSubView('delivery_stats')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+              subView === 'delivery_stats'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'bg-indigo-50/70 hover:bg-indigo-100/50 border border-indigo-100 text-indigo-700'
+            }`}
+          >
+            📜 آمار تحویل مجزای افراد اجرایی ({stats.assigned})
+          </button>
+        </div>
+      </div>
+
+      {subView === 'inventory' ? (
+        <div className="space-y-4">
+          {/* Grid Mini Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-slate-50/50 border border-slate-150 p-3 rounded-xl">
+              <span className="text-[10px] text-slate-400 font-bold block">کل دستگاه‌ها</span>
+              <span className="text-sm font-black text-slate-800 block mt-0.5">{stats.total} دستگاه</span>
+            </div>
+            <div className="bg-emerald-50/30 border border-emerald-100 p-3 rounded-xl text-emerald-800">
+              <span className="text-[10px] text-emerald-500 font-bold block">تحویل فعال</span>
+              <span className="text-sm font-black block mt-0.5">{stats.assigned} دستگاه</span>
+            </div>
+            <div className="bg-amber-50/30 border border-amber-100 p-3 rounded-xl text-amber-800">
+              <span className="text-[10px] text-amber-500 font-bold block">در انتظار تعمیر / تعمیرگاه</span>
+              <span className="text-sm font-black block mt-0.5">{stats.inRepair} دستگاه</span>
+            </div>
+            <div className="bg-slate-50/50 border border-slate-150 p-3 rounded-xl text-blue-800">
+              <span className="text-[10px] text-blue-500/85 font-bold block">موجود در انبار</span>
+              <span className="text-sm font-black block mt-0.5">{stats.warehouse} دستگاه</span>
+            </div>
+          </div>
+
+          {/* MAIN INVENTORY TABLE */}
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-right border-collapse text-[11px] md:text-xs">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 whitespace-nowrap">
+                    <th onClick={() => handleSort('code')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کد اموال بی‌سیم {renderSortIndicator('code')}</th>
+                    <th onClick={() => handleSort('model')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">برند و مدل دستگاه {renderSortIndicator('model')}</th>
+                    <th onClick={() => handleSort('status')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
+                    <th className="p-2.5 font-bold text-right select-none">یادداشت فنی / توضیحات</th>
+                    <th onClick={() => handleSort('assignedTo')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">تحویل‌گیرنده فعال {renderSortIndicator('assignedTo')}</th>
+                    <th className="p-2.5 text-center font-bold select-none">عملیات کنترلی</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedRadios.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="p-6 text-center text-slate-400">
+                         هیچ دستگاه بی‌سیمی در انبار ثبت نگردیده است.
+                      </td>
+                    </tr>
+                  ) : (
+                    sortedRadios.map((r) => {
+                      const owner = personnel.find(p => p.code === r.assignedTo);
+                      return (
+                        <tr 
+                          key={r.code} 
+                          className="border-b border-slate-100 hover:bg-slate-50/80 transition cursor-pointer group whitespace-nowrap"
+                          onClick={() => onShowQR(r.code, 'radio', r)}
+                          title="کلیک روی سطر جهت مشاهده برچسب بارکد اموال بی‌سیم"
+                        >
+                          <td className="p-2.5 font-mono font-bold text-slate-900">
+                            <div className="flex items-center gap-1.5 justify-start">
+                              <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none">
+                                📸 QR
+                              </span>
+                              <span>{r.code}</span>
+                            </div>
+                          </td>
+                          <td className="p-2.5 text-slate-600 font-bold">{r.model}</td>
+                          <td className="p-2.5">
+                            <StatusBadge status={r.status} />
+                          </td>
+                          <td className="p-2.5 text-slate-500 max-w-[150px] truncate" title={r.description || undefined}>
+                            {r.description || '—'}
+                          </td>
+                          <td className="p-2.5">
+                            {owner ? (
+                              <span className="bg-indigo-50 border border-indigo-200 text-indigo-800 px-2.5 py-1 rounded-lg text-[10px] md:text-xs font-semibold">
+                                👥 {owner.name} ({owner.code})
+                              </span>
+                            ) : (
+                              <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full text-[10px] md:text-xs font-medium">
+                                📦 مستقر در انبار مرکزی سخت‌افزار
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-center gap-1">
+                              <button 
+                                onClick={() => onEdit(r)}
+                                className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
+                              >
+                                ✏️ ویرایش
+                              </button>
+                              <button 
+                                onClick={() => onDelete(r.code)}
+                                className="bg-red-50 hover:bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
+                              >
+                                🗑️ حذف
+                              </button>
+                              <button 
+                                onClick={() => onTransfer(r.code)}
+                                className="bg-indigo-650 hover:bg-indigo-700 text-white px-2 py-0.5 rounded text-[10px] md:text-xs transition font-semibold cursor-pointer"
+                              >
+                                🔄 انتقال / تحویل
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* SEPARATE OPERATIONAL DELIVERY STATISTICS VIEW */
+        <div className="space-y-4 animate-fade-in text-xs md:text-sm">
+          
+          <div className="p-4 bg-indigo-50/45 border border-indigo-100/80 rounded-2xl">
+            <h4 className="text-xs font-black text-indigo-950 flex items-center gap-1.5">
+              <span>📌 شرح و فلسفه تفکیک آمار تحویلی بی‌سیم‌ها</span>
+            </h4>
+            <p className="text-[11px] text-indigo-900/80 leading-relaxed mt-1.5 leading-relaxed">
+              نفرات تحویل‌گیرنده بی‌سیم دستی اکثراً بقیه تجهیزات اداری (کیس، مانیتور و چاپگر) را به دلیل ماهیت کارگاه و عدم برخورداری از میز تحریر تحویل نگرفته‌اند. نیروهای اجرایی و عملیاتی، سرپرستان کارگاه، HSE و امور ماشین‌آلات به صورت سیار تحویل‌گیرنده این ابزار ارتباطی بسیار ارزشمند هستند. لیست زیر منحصراً نمایانگر زنجیره فعال تحویل بی‌سیم‌ها در کارگاه به پرسنل اجرایی است.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
+            <div className="overflow-x-auto">
+              <table className="w-full text-right border-collapse text-[11px] md:text-xs">
+                <thead>
+                  <tr className="bg-indigo-950/95 text-white whitespace-nowrap">
+                    <th className="p-3 font-extrabold">کد بی‌سیم</th>
+                    <th className="p-3 font-extrabold">برند و مدل بی‌سیم</th>
+                    <th className="p-3 font-extrabold">وضعیت سلامت</th>
+                    <th className="p-3 font-extrabold">نام تحویل‌گیرنده اجرایی</th>
+                    <th className="p-3 font-extrabold">شناسه پرسنلی</th>
+                    <th className="p-3 font-extrabold">مسئولیت / سمت سازمانی</th>
+                    <th className="p-3 font-extrabold">بخش خدمتی / کاربری</th>
+                    <th className="p-3 font-extrabold">انتقال فوری</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.assignees.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="p-8 text-center text-slate-400">
+                        در حال حاضر هیچ بی‌سیم فعالی به اکیپ‌های اجرایی واگذار نشده است.
+                      </td>
+                    </tr>
+                  ) : (
+                    stats.assignees.map((asgn) => {
+                      return (
+                        <tr key={asgn.radioCode} className="border-b border-indigo-50/70 hover:bg-indigo-50/20 transition whitespace-nowrap">
+                          <td className="p-3 font-mono font-black text-red-700">{asgn.radioCode}</td>
+                          <td className="p-3 text-slate-700 font-bold">{asgn.radioModel}</td>
+                          <td className="p-3">
+                            <StatusBadge status={asgn.radioStatus} />
+                          </td>
+                          <td className="p-3 font-black text-slate-900">{asgn.persName}</td>
+                          <td className="p-3 font-mono text-slate-500 font-bold">{asgn.persCode}</td>
+                          <td className="p-3 text-slate-600">{asgn.persTitle}</td>
+                          <td className="p-3">
+                            <span className="bg-indigo-50 border border-indigo-100 text-indigo-700 px-2.5 py-0.5 rounded text-[10px] font-bold">
+                              {asgn.persDept}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <button
+                              onClick={() => onTransfer(asgn.radioCode)}
+                              className="bg-indigo-650 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-[10px] transition font-bold cursor-pointer"
+                            >
+                              🔄 انتقالات
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="bg-slate-50 p-4 border rounded-xl flex flex-col sm:flex-row justify-between text-xs font-bold text-slate-600 gap-3">
+            <span>📊 سهم توزیع بی‌سیم کارگاهی بین اکیپ‌های فعال:</span>
+            <div className="flex flex-wrap gap-4 text-slate-500 text-[11px]">
+              <span>نیروهای HSE: <strong className="text-slate-800">{stats.assignees.filter(a => a.persDept.includes('HSE') || a.persDept.includes('ایمنی')).length} دستگاه</strong></span>
+              <span>امور فنی و برق عملیاتی: <strong className="text-slate-800">{stats.assignees.filter(a => a.persDept.includes('برق') || a.persDept.includes('پیمانکار') || a.persDept.includes('اجرایی')).length} دستگاه</strong></span>
+              <span>سایر اکیپ‌ها: <strong className="text-slate-800">{stats.assignees.filter(a => !a.persDept.includes('HSE') && !a.persDept.includes('ایمنی') && !a.persDept.includes('برق') && !a.persDept.includes('پیمانکار') && !a.persDept.includes('اجرایی')).length} دستگاه</strong></span>
+            </div>
+          </div>
+
+        </div>
+      )}
+
     </div>
   );
 }

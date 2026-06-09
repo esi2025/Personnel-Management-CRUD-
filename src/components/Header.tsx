@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { User, Clock, Calendar } from 'lucide-react';
 import Logo from './Logo';
 
-export default function Header() {
+export default function Header({ isDark, onToggleTheme }: { isDark: boolean; onToggleTheme: () => void }) {
   const [time, setTime] = useState('');
   const [shamsiDate, setShamsiDate] = useState('');
-  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
     const updateDateTime = () => {
@@ -31,68 +29,44 @@ export default function Header() {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    const fetchUser = () => {
-      const storedUser = localStorage.getItem('current_user');
-      if (storedUser) {
-        try {
-          setCurrentUser(JSON.parse(storedUser));
-        } catch {
-          setCurrentUser(null);
-        }
-      } else {
-        setCurrentUser(null);
-      }
-    };
-    fetchUser();
-    window.addEventListener('user-session-changed', fetchUser);
-    return () => window.removeEventListener('user-session-changed', fetchUser);
-  }, []);
-
   return (
-    <header className="header-container no-print bg-slate-900 border-b-4 border-blue-600 text-white py-5 px-6 md:px-8 rounded-xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-5 mb-4 shrink-0">
-      <div className="flex items-center gap-3 shrink-0 md:w-1/4">
-        <Logo size="h-12 md:h-12" />
+    <header className="no-print bg-slate-900 border-b-2 border-blue-600 text-white py-3.5 px-5 rounded-xl shadow-md flex flex-col md:flex-row justify-between items-center gap-3 mb-3">
+      <div className="flex items-center gap-3">
+        <Logo size="h-[48px] md:h-[54px]" />
+        <div>
+          <h1 className="text-lg md:text-xl font-black tracking-tight font-sans">شرکت عمران آذرستان</h1>
+          <h2 className="text-xs font-semibold text-slate-300">واحد فناوری اطلاعات و ارتباطات (ICT) | مدیریت تجهیزات کارگاه</h2>
+        </div>
       </div>
       
-      <div className="text-center flex-1 flex flex-col items-center">
-        <h1 className="text-sm sm:text-base font-black tracking-tight font-sans">شرکت عمران آذرستان</h1>
-        <h2 className="text-[10px] sm:text-[11px] font-semibold text-slate-300 mt-1">واحد فناوری اطلاعات و ارتباطات (ICT) | مدیریت تجهیزات</h2>
-        <span className="inline-block mt-1.5 text-[9.5px] sm:text-[10px] text-blue-400 font-bold bg-blue-950/40 border border-blue-900 px-3 py-0.5 rounded-full">
-          سامانه تحت وب مدیریت و شناسنامه هوشمند تجهیزات اداری و کارگاهی
-        </span>
-      </div>
-      
-      <div className="text-left flex flex-col items-center md:items-end gap-2 shrink-0 md:w-1/4">
-        {currentUser && (
-          <div className="flex items-center gap-2 bg-slate-800/80 hover:bg-slate-800 transition px-3 py-1.5 rounded-lg text-[10px] sm:text-[11px] font-semibold text-slate-100 border border-slate-700/60 shadow-xs">
-            <User size={13} className="text-blue-400 stroke-[3] shrink-0" />
-            <span className="leading-none">
-              کاربر جاری: <strong className="text-blue-400 font-bold">{currentUser.name}</strong> <span className="opacity-75">({currentUser.role === 'admin' ? 'مدير' : 'اپراتور'})</span>
-            </span>
-          </div>
-        )}
-        
-        <div className="flex items-center gap-2">
-          <div className="bg-slate-800/80 hover:bg-slate-800 transition px-3 py-1.5 rounded-lg text-[10px] sm:text-[11px] font-semibold text-slate-100 border border-slate-700/60 shadow-xs flex items-center gap-2">
-            <div className="flex items-center gap-1">
-              <Calendar size={13} className="text-slate-400 shrink-0" />
-              <span className="leading-none">تاریخ: <span className="text-blue-400 font-bold">{shamsiDate || '۱۴۰۵/۰۳/۰۵'}</span></span>
-            </div>
-            <span className="text-slate-600 font-light select-none">|</span>
-            <div className="flex items-center gap-1">
-              <Clock size={13} className="text-yellow-500 shrink-0" />
-              <span className="leading-none">زمان: <span className="font-mono text-yellow-500 font-bold">{time || '00:00'}</span></span>
-            </div>
+      <div className="text-left flex flex-col items-center md:items-end gap-1.5 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+          <button
+            onClick={onToggleTheme}
+            type="button"
+            className="flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 hover:text-white text-slate-200 border border-slate-700/60 px-2.5 py-1 rounded-md text-[11px] font-bold transition duration-200 cursor-pointer shadow-sm select-none"
+            title={isDark ? "تغییر به پوسته روز" : "تغییر به پوسته شب"}
+          >
+            {isDark ? (
+              <>
+                <span className="text-yellow-400 text-xs">☀️</span>
+                <span>پوسته روشن</span>
+              </>
+            ) : (
+              <>
+                <span className="text-indigo-400 text-xs">🌙</span>
+                <span>پوسته تاریک</span>
+              </>
+            )}
+          </button>
+          
+          <div className="bg-slate-800/80 px-3 py-1 rounded-md text-xs font-bold text-slate-200 border border-slate-700/50 w-full md:w-auto text-center md:text-right">
+            تاریخ: <span className="text-blue-400 font-extrabold">{shamsiDate || '۱۴۰۵/۰۳/۰۵'}</span> | زمان: <span className="font-mono text-yellow-400">{time || '00:00'}</span>
           </div>
         </div>
         
-        <div className="text-emerald-400 text-[9.5px] sm:text-[10.5px] flex items-center gap-2 font-medium bg-slate-950/30 px-3 py-1 rounded-md border border-slate-800/55">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <span className="leading-none">سامانه فعال و آفلاین (دیتابیس محلی)</span>
+        <div className="text-emerald-400 text-[10px] sm:text-xs flex items-center gap-1.5 self-center md:self-end">
+          <span className="animate-pulse">●</span> سامانه فعال و آفلاین (ذخیره روی فایل‌های محلی)
         </div>
       </div>
     </header>

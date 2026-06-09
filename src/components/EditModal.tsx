@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 
 interface EditModalProps {
   item: any;
-  type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | null;
+  type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | null;
   onClose: () => void;
-  onSave: (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard', data: any) => Promise<boolean>;
+  onSave: (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio', data: any) => Promise<boolean>;
 }
 
 export default function EditModal({ item, type, onClose, onSave }: EditModalProps) {
@@ -30,9 +30,13 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
   const [cRamQty, setCRamQty] = useState('8GB');
   const [cPower, setCPower] = useState('');
 
-  // Monitor/Printer/Mouse/Keyboard states
+  // Monitor/Printer/Mouse/Keyboard/Radio states
   const [equipCode, setEquipCode] = useState('');
   const [equipModel, setEquipModel] = useState('');
+
+  // Radio-specific states
+  const [radioFreq, setRadioFreq] = useState('');
+  const [radioIp, setRadioIp] = useState('');
 
   // Status state
   const [equipStatus, setEquipStatus] = useState<'working' | 'repair' | 'retired'>('working');
@@ -58,9 +62,13 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
       setCRamType(item.ramType || 'DDR4');
       setCRamQty(item.ramQty || '8GB');
       setCPower(item.power || '');
-    } else if (type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard') {
+    } else if (type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard' || type === 'radio') {
       setEquipCode(item.code || '');
       setEquipModel(item.model || '');
+      if (type === 'radio') {
+        setRadioFreq(item.frequencyRange || '');
+        setRadioIp(item.ipRating || '');
+      }
     }
 
     if (type && type !== 'personnel') {
@@ -97,13 +105,17 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
       data.assignedTo = item.assignedTo;
       data.status = equipStatus;
       data.description = equipDesc;
-    } else if (type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard') {
+    } else if (type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard' || type === 'radio') {
       data.code = equipCode;
       data.oldCode = item.code;
       data.model = equipModel;
       data.assignedTo = item.assignedTo;
       data.status = equipStatus;
       data.description = equipDesc;
+      if (type === 'radio') {
+        data.frequencyRange = radioFreq;
+        data.ipRating = radioIp;
+      }
     }
 
     const ok = await onSave(type, data);
@@ -264,7 +276,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
             </div>
           )}
 
-          {(type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard') && (
+          {(type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard' || type === 'radio') && (
             <div className="space-y-4 text-xs md:text-sm">
               <div className="space-y-1">
                 <label className="font-bold text-slate-700">کد اموال تجهیز:</label>
@@ -280,6 +292,24 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
                   className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
                 />
               </div>
+              {type === 'radio' && (
+                <>
+                  <div className="space-y-1 animate-fade-in">
+                    <label className="font-bold text-slate-700">باند فرکانسی (بافرض: UHF / VHF):</label>
+                    <input 
+                      type="text" value={radioFreq} onChange={(e) => setRadioFreq(e.target.value)}
+                      className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1 animate-fade-in">
+                    <label className="font-bold text-slate-700">درجه حفاظت فیزیکی (IP Rating):</label>
+                    <input 
+                      type="text" value={radioIp} onChange={(e) => setRadioIp(e.target.value)}
+                      className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+                </>
+              )}
             </div>
           )}
 

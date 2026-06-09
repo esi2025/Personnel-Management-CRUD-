@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Case, Monitor, Printer, Personnel, Mouse, Keyboard } from '../types';
+import { Case, Monitor, Printer, Personnel, Mouse, Keyboard, Radio } from '../types';
 
 interface TransferTabProps {
   cases: Case[];
@@ -7,6 +7,7 @@ interface TransferTabProps {
   printers: Printer[];
   mice?: Mouse[];
   keyboards?: Keyboard[];
+  radios?: Radio[];
   personnel: Personnel[];
   onTransfer: (equipmentCode: string, targetPersonnelCode: string | null) => Promise<void>;
   prefilledEquipmentCode?: string;
@@ -19,6 +20,7 @@ export default function TransferTab({
   printers,
   mice = [],
   keyboards = [],
+  radios = [],
   personnel,
   onTransfer,
   prefilledEquipmentCode = '',
@@ -29,7 +31,7 @@ export default function TransferTab({
 
   const [matchedEquip, setMatchedEquip] = useState<{
     code: string;
-    type: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard';
+    type: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio';
     info: string;
     owner: string | null;
   } | null>(null);
@@ -110,8 +112,20 @@ export default function TransferTab({
       return;
     }
 
+    // 6. Check Radios
+    const foundRadio = radios.find(r => r.code.toUpperCase() === code);
+    if (foundRadio) {
+      setMatchedEquip({
+        code: foundRadio.code,
+        type: 'radio',
+        info: foundRadio.model,
+        owner: foundRadio.assignedTo
+      });
+      return;
+    }
+
     setMatchedEquip(null);
-  }, [equipCode, cases, monitors, printers, mice, keyboards]);
+  }, [equipCode, cases, monitors, printers, mice, keyboards, radios]);
 
   // Handle Personnel live look up
   useEffect(() => {
@@ -210,7 +224,7 @@ export default function TransferTab({
               <div className="grid grid-cols-2 gap-2 text-slate-600">
                 <div>کد اموال: <span className="font-mono font-bold text-slate-900">{matchedEquip.code}</span></div>
                 <div>نوع دسته: <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold">
-                  {matchedEquip.type === 'case' ? 'کیس کامپیوتر' : matchedEquip.type === 'monitor' ? 'نمایشگر' : matchedEquip.type === 'printer' ? 'چاپگر' : matchedEquip.type === 'mouse' ? 'ماوس' : 'کیبورد'}
+                  {matchedEquip.type === 'case' ? 'کیس کامپیوتر' : matchedEquip.type === 'monitor' ? 'نمایشگر' : matchedEquip.type === 'printer' ? 'چاپگر' : matchedEquip.type === 'mouse' ? 'ماوس' : matchedEquip.type === 'keyboard' ? 'کیبورد' : 'بی‌سیم دستی'}
                 </span></div>
                 <div className="col-span-2">مشخصات/مدل: <span className="text-slate-900 font-medium">{matchedEquip.info}</span></div>
                 <div className="col-span-2 border-t border-slate-200/50 pt-2">

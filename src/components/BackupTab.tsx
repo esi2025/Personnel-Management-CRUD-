@@ -267,7 +267,7 @@ export default function BackupTab({ onRestore, onReload, currentData }: BackupTa
   };
 
   return (
-    <div className="space-y-6 text-right" dir="rtl">
+    <div className="space-y-6">
       
       {/* PHP standalone ZIP source download invitation banner */}
       <div className="bg-slate-900 border-l-4 border-yellow-500 text-white rounded-xl p-6 shadow-md grid grid-cols-1 md:grid-cols-3 items-center gap-6">
@@ -293,18 +293,18 @@ export default function BackupTab({ onRestore, onReload, currentData }: BackupTa
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* Card JSON backup */}
-        <div className="bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 p-6 space-y-4 shadow-sm">
-          <div className="border-b border-slate-100 dark:border-slate-800 pb-2">
-            <h4 className="font-bold text-slate-800 dark:text-white text-sm md:text-base flex items-center gap-1.5">
+        <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4 shadow-sm">
+          <div className="border-b border-slate-100 pb-2">
+            <h4 className="font-bold text-slate-800 text-sm md:text-base flex items-center gap-1.5">
               <span>💾</span> پشتیبان‌گیری و بازیابی پایگاه داده (JSON)
             </h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">امکان جابجایی کل اطلاعات سیستم فیمابین رایانه‌های مختلف کارگاه‌ها</p>
+            <p className="text-xs text-slate-500 mt-1">امکان جابجایی کل اطلاعات سیستم فیمابین رایانه‌های مختلف کارگاه‌ها</p>
           </div>
 
           <div className="space-y-4">
             
             <div className="space-y-1.5">
-              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 block">پشتیبان‌گیری از اطلاعات فعلی:</span>
+              <span className="text-xs font-semibold text-slate-600 block">پشتیبان‌گیری از اطلاعات فعلی:</span>
               <button
                 onClick={handleDownloadBackup}
                 className="bg-blue-600 hover:bg-blue-700 text-white text-xs md:text-sm px-4 py-2.5 rounded-lg font-bold transition flex items-center justify-center gap-1.5 w-full cursor-pointer shadow-sm"
@@ -313,8 +313,8 @@ export default function BackupTab({ onRestore, onReload, currentData }: BackupTa
               </button>
             </div>
 
-            <div className="space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-3">
-              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 block">بازیابی اطلاعات از فایل پشتیبان:</span>
+            <div className="space-y-1.5 border-t border-slate-100 pt-3">
+              <span className="text-xs font-semibold text-slate-600 block">بازیابی اطلاعات از فایل پشتیبان:</span>
               <input
                 type="file"
                 ref={jsonInputRef}
@@ -325,7 +325,7 @@ export default function BackupTab({ onRestore, onReload, currentData }: BackupTa
               <button
                 onClick={() => jsonInputRef.current?.click()}
                 disabled={loading}
-                className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-850 text-slate-800 dark:text-slate-200 text-xs md:text-sm px-4 py-2.5 rounded-lg font-bold transition flex items-center justify-center gap-1.5 w-full border border-slate-300 dark:border-slate-800 pointer-events-auto cursor-pointer"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs md:text-sm px-4 py-2.5 rounded-lg font-bold transition flex items-center justify-center gap-1.5 w-full border border-slate-300 pointer-events-auto cursor-pointer"
               >
                 📤 انتخاب و بارگذاری فایل پشتیبان JSON
               </button>
@@ -335,28 +335,28 @@ export default function BackupTab({ onRestore, onReload, currentData }: BackupTa
         </div>
 
         {/* Card Bulk Excel/CSV upload */}
-        <div className="bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 p-6 space-y-4 shadow-sm">
-          <div className="border-b border-slate-100 dark:border-slate-800 pb-2">
-            <h4 className="font-bold text-slate-800 dark:text-white text-sm md:text-base flex items-center gap-1.5">
+        <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4 shadow-sm">
+          <div className="border-b border-slate-100 pb-2">
+            <h4 className="font-bold text-slate-800 text-sm md:text-base flex items-center gap-1.5">
               <span>📊</span> ورود اطلاعات گروهی از فایل اکسل (CSV)
             </h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">ثبت یکباره تمامی مشخصات سخت‌افزاری بر اساس فایل مرجع کدهای کارگاه</p>
+            <p className="text-xs text-slate-500 mt-1">ثبت یکباره تمامی مشخصات سخت‌افزاری بر اساس فایل مرجع کدهای کارگاه</p>
           </div>
 
           <div className="space-y-4">
             
             <div className="space-y-1.5">
-              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 block">دانلود الگوی ورودی استاندارد:</span>
+              <span className="text-xs font-semibold text-slate-600 block">دانلود الگوی ورودی استاندارد:</span>
               <button
                 onClick={handleDownloadTemplate}
-                className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-850 text-slate-800 dark:text-slate-200 text-xs md:text-sm px-4 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-1.5 w-full border border-slate-300 dark:border-slate-800 cursor-pointer"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs md:text-sm px-4 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-1.5 w-full border border-slate-300 cursor-pointer"
               >
                 📥 دریافت نمونه الگوی آماده اکسل (CSV)
               </button>
             </div>
 
-            <div className="space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-3">
-              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 block">بارگذاری و جایگزینی کل دیتابیس بر اساس کادر:</span>
+            <div className="space-y-1.5 border-t border-slate-100 pt-3">
+              <span className="text-xs font-semibold text-slate-600 block">بارگذاری و جایگزینی کل دیتابیس بر اساس کادر:</span>
               <input
                 type="file"
                 ref={csvInputRef}

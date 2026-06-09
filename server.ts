@@ -52,6 +52,7 @@ function initializeDatabase() {
   const printersFile = path.join(DATA_DIR, "printers.json");
   const miceFile = path.join(DATA_DIR, "mice.json");
   const keyboardsFile = path.join(DATA_DIR, "keyboards.json");
+  const radiosFile = path.join(DATA_DIR, "radios.json");
   const partsCatalogFile = path.join(DATA_DIR, "parts_catalog.json");
   const assignmentsFile = path.join(DATA_DIR, "assignments.json");
   const repairsFile = path.join(DATA_DIR, "repairs.json");
@@ -268,6 +269,26 @@ function initializeDatabase() {
     fs.writeFileSync(keyboardsFile, JSON.stringify(demoKeyboards, null, 2), "utf-8");
   }
 
+  if (!fs.existsSync(radiosFile)) {
+    const demoRadios = [
+      {
+        code: "R-701",
+        model: "موتورولا ال‌پی‌دی ۴۴۶ (Motorola LPD446)",
+        assignedTo: "1001",
+        status: "working",
+        description: "بی‌سیم دستی کانال‌دار با شارژر رومیزی"
+      },
+      {
+        code: "R-702",
+        model: "کنوود ۳۲۰۷ (Kenwood TK-3207)",
+        assignedTo: null,
+        status: "working",
+        description: "بی‌سیم سرپرست کارگاه، باتری تقویت‌شده"
+      }
+    ];
+    fs.writeFileSync(radiosFile, JSON.stringify(demoRadios, null, 2), "utf-8");
+  }
+
   if (!fs.existsSync(partsCatalogFile)) {
     const demoCatalog = [
       { id: "pc1", category: "cpu", name: "Intel Core i5-12400", description: "6 Cores, 12 Threads, 2.5 GHz Base, LGA1700" },
@@ -438,6 +459,7 @@ async function startServer() {
       printers: readDb("printers.json"),
       mice: readDb("mice.json"),
       keyboards: readDb("keyboards.json"),
+      radios: readDb("radios.json"),
       partsCatalog: readDb("parts_catalog.json"),
       assignments: readDb("assignments.json"),
       repairs: readDb("repairs.json")
@@ -700,6 +722,13 @@ async function startServer() {
             });
             writeDb("keyboards.json", keyboards);
 
+            // Radios
+            const radios = readDb("radios.json");
+            radios.forEach((r) => {
+              if (r.assignedTo === oldPersCode) r.assignedTo = trimmedCode;
+            });
+            writeDb("radios.json", radios);
+
             // History
             const assignments = readDb("assignments.json");
             assignments.forEach((ass) => {
@@ -719,7 +748,7 @@ async function startServer() {
       // If terminated, return all currently assigned equipment to the central workshop store/warehouse
       if (status === "terminated") {
         const dateStr = getPersianDateString();
-        const returnedHardware: { code: string; type: "case" | "monitor" | "printer" | "mouse" | "keyboard" }[] = [];
+        const returnedHardware: { code: string; type: "case" | "monitor" | "printer" | "mouse" | "keyboard" | "radio" }[] = [];
 
         // 1. Cases
         const cases = readDb("cases.json");
@@ -780,6 +809,18 @@ async function startServer() {
           }
         });
         if (keyboardsChanged) writeDb("keyboards.json", keyboards);
+
+        // 5.5. Radios
+        const radios = readDb("radios.json");
+        let radiosChanged = false;
+        radios.forEach((r) => {
+          if (r.assignedTo === trimmedCode) {
+            r.assignedTo = null;
+            radiosChanged = true;
+            returnedHardware.push({ code: r.code, type: "radio" });
+          }
+        });
+        if (radiosChanged) writeDb("radios.json", radios);
 
         // 6. Update Assignments History logs
         if (returnedHardware.length > 0) {
@@ -1000,6 +1041,41 @@ async function startServer() {
       return res.json({ success: true, item });
     }
 
+    if (type === "radio") {
+      const radios = readDb("radios.json");
+      const lookupCode = isEdit ? oldCode : trimmedCode;
+
+      const codeExists = radios.some((r) => r.code === trimmedCode && (!isEdit || r.code !== oldCode));
+      if (codeExists) {
+        return res.status(400).json({ error: "کد بی‌سیم تکراری است." });
+      }
+
+      const item = {
+        code: trimmedCode,
+        model: fields.model?.trim() || "سایر",
+        assignedTo: fields.assignedTo || null,
+        status: fields.status || "working",
+        description: fields.description?.trim() || "",
+      };
+
+      if (isEdit) {
+        const idx = radios.findIndex((r) => r.code === lookupCode);
+        if (idx !== -1) radios[idx] = item;
+      } else {
+        radios.push(item);
+      }
+
+      writeDb("radios.json", radios);
+      
+      if (isEdit) {
+        addAuditLog(opUser, opName, clientIp, "edit", "radio", trimmedCode, `ویرایش مشخصات بی‌سیم: مدل ${fields.model || 'سایر'}`);
+      } else {
+        addAuditLog(opUser, opName, clientIp, "create", "radio", trimmedCode, `ثبت بی‌سیم جدید در انبار: مدل ${fields.model || 'سایر'}`);
+      }
+
+      return res.json({ success: true, item });
+    }
+
     if (type === "catalog") {
       const catalog = readDb("parts_catalog.json");
       const itemId = isEdit ? id : `pc_${Date.now()}`;
@@ -1030,6 +1106,106 @@ async function startServer() {
     }
 
     return res.status(400).json({ error: "نوع آیتم نامعتبر است." });
+  });
+
+  // API: Save Bulk Items
+  app.post("/api/save-bulk", (req, res) => {
+    const { items } = req.body;
+
+    if (!items || !Array.isArray(items)) {
+      return res.status(400).json({ error: "لیست تجهیزات معتبر یافت نشد." });
+    }
+
+    const opUser = req.headers["x-operator-username"] as string || "system";
+    const opName = req.headers["x-operator-name"] as string || "سیستم";
+    const clientIp = getClientIp(req);
+
+    // Group items by type to load/save each DB file once
+    const itemsByType: Record<string, any[]> = {};
+    for (const item of items) {
+      if (!item.type || !item.code) continue;
+      const type = item.type;
+      if (!itemsByType[type]) itemsByType[type] = [];
+      itemsByType[type].push(item);
+    }
+
+    const fileMap: Record<string, string> = {
+      case: "cases.json",
+      monitor: "monitors.json",
+      printer: "printers.json",
+      mouse: "mice.json",
+      keyboard: "keyboards.json",
+      radio: "radios.json"
+    };
+
+    let totalSaved = 0;
+    const skipped: string[] = [];
+
+    // Process each type
+    for (const [type, typeItems] of Object.entries(itemsByType)) {
+      const fileName = fileMap[type];
+      if (!fileName) continue;
+
+      const dbList = readDb(fileName);
+
+      for (const rawItem of typeItems) {
+        const trimmedCode = String(rawItem.code).trim().toUpperCase();
+        if (!trimmedCode) continue;
+
+        // Check duplicate
+        const exists = dbList.some((x: any) => String(x.code).toUpperCase() === trimmedCode);
+        if (exists) {
+          skipped.push(trimmedCode);
+          continue;
+        }
+
+        // Build item object
+        let itemObj: any = {
+          code: trimmedCode,
+          assignedTo: null,
+          status: rawItem.status || "working",
+          description: rawItem.description?.trim() || "ایمپورت گروهی به انبار"
+        };
+
+        if (type === "case") {
+          itemObj = {
+            ...itemObj,
+            motherboard: rawItem.motherboard?.trim() || "Gigabyte",
+            cpu: rawItem.cpu?.trim() || "Intel Core i5",
+            vga: rawItem.vga?.trim() || "Onboard",
+            hdd1: rawItem.hdd1?.trim() || "256GB SSD",
+            hdd2: rawItem.hdd2?.trim() || "1TB HDD",
+            ramType: rawItem.ramType || "DDR4",
+            ramQty: rawItem.ramQty || "8GB",
+            power: rawItem.power?.trim() || "Green 400W"
+          };
+        } else if (type === "radio") {
+          itemObj = {
+            ...itemObj,
+            model: rawItem.model?.trim() || "Motorola GP338",
+            frequencyRange: rawItem.frequencyRange?.trim() || "UHF",
+            ipRating: rawItem.ipRating?.trim() || "IP54"
+          };
+        } else {
+          // monitor, printer, mouse, keyboard
+          itemObj = {
+            ...itemObj,
+            model: rawItem.model?.trim() || "سایر"
+          };
+        }
+
+        dbList.push(itemObj);
+        totalSaved++;
+      }
+
+      writeDb(fileName, dbList);
+    }
+
+    if (totalSaved > 0) {
+      addAuditLog(opUser, opName, clientIp, "create", "bulk", "-", `ثبت گروهی و ایمپورت ${totalSaved} دستگاه سخت‌افزاری جدید به حساب انبار`);
+    }
+
+    return res.json({ success: true, savedCount: totalSaved, skippedCodes: skipped });
   });
 
   // API: Delete Item
@@ -1207,6 +1383,26 @@ async function startServer() {
       return res.json({ success: true });
     }
 
+    if (type === "radio") {
+      const radios = readDb("radios.json");
+      const idx = radios.findIndex((r) => r.code === id);
+      if (idx === -1) return res.status(404).json({ error: "بی‌سیم یافت نشد." });
+
+      radios.splice(idx, 1);
+      writeDb("radios.json", radios);
+
+      const assignments = readDb("assignments.json");
+      assignments.forEach((ass) => {
+        if (ass.equipmentCode === id && ass.equipmentType === "radio" && ass.endDate === null) {
+          ass.endDate = dateStr;
+        }
+      });
+      writeDb("assignments.json", assignments);
+
+      addAuditLog(opUser, opName, clientIp, "delete", "radio", id, `حذف فیزیکی بی‌سیم با شماره پرونده اموال ${id}`);
+      return res.json({ success: true });
+    }
+
     if (type === "catalog") {
       const catalog = readDb("parts_catalog.json");
       const idx = catalog.findIndex((c) => c.id === id);
@@ -1235,7 +1431,7 @@ async function startServer() {
     }
 
     // 1. Locate Equipment
-    let equipType: "case" | "monitor" | "printer" | "mouse" | "keyboard" | null = null;
+    let equipType: "case" | "monitor" | "printer" | "mouse" | "keyboard" | "radio" | null = null;
     let equipItem: any = null;
 
     const cases = readDb("cases.json");
@@ -1278,6 +1474,15 @@ async function startServer() {
       if (kIdx !== -1) {
         equipType = "keyboard";
         equipItem = keyboards[kIdx];
+      }
+    }
+
+    if (!equipItem) {
+      const radios = readDb("radios.json");
+      const rIdx = radios.findIndex((r) => r.code === equipmentCode);
+      if (rIdx !== -1) {
+        equipType = "radio";
+        equipItem = radios[rIdx];
       }
     }
 
@@ -1334,6 +1539,11 @@ async function startServer() {
       const idx = keyboards.findIndex((k) => k.code === equipmentCode);
       keyboards[idx] = equipItem;
       writeDb("keyboards.json", keyboards);
+    } else if (equipType === "radio") {
+      const radios = readDb("radios.json");
+      const idx = radios.findIndex((r) => r.code === equipmentCode);
+      radios[idx] = equipItem;
+      writeDb("radios.json", radios);
     }
 
     // History log mapping
@@ -1402,6 +1612,7 @@ async function startServer() {
       printers: "printers.json",
       mice: "mice.json",
       keyboards: "keyboards.json",
+      radios: "radios.json",
       partsCatalog: "parts_catalog.json",
       parts_catalog: "parts_catalog.json",
       assignments: "assignments.json"
