@@ -178,7 +178,7 @@ export function CasesSubTab({
                           </span>
                         ) : (
                           <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full text-[10px] md:text-xs">
-                            📦 مستقر در انبار کارگاه
+                            {c.location ? `📍 ${c.location}` : '📦 مستقر در انبار کارگاه'}
                           </span>
                         )}
                       </td>
@@ -344,7 +344,7 @@ export function MonitorsSubTab({
                           </span>
                         ) : (
                           <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full text-[10px] md:text-xs">
-                            📦 مستقر در انبار کارگاه
+                            {m.location ? `📍 ${m.location}` : '📦 مستقر در انبار کارگاه'}
                           </span>
                         )}
                       </td>
@@ -510,7 +510,7 @@ export function PrintersSubTab({
                           </span>
                         ) : (
                           <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full text-[10px] md:text-xs">
-                            📦 مستقر در انبار کارگاه
+                            {pr.location ? `📍 ${pr.location}` : '📦 مستقر در انبار کارگاه'}
                           </span>
                         )}
                       </td>
@@ -676,7 +676,7 @@ export function MiceSubTab({
                           </span>
                         ) : (
                           <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full text-[10px] md:text-xs">
-                            📦 مستقر در انبار کارگاه
+                            {m.location ? `📍 ${m.location}` : '📦 مستقر در انبار کارگاه'}
                           </span>
                         )}
                       </td>
@@ -842,7 +842,7 @@ export function KeyboardsSubTab({
                           </span>
                         ) : (
                           <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full text-[10px] md:text-xs">
-                            📦 مستقر در انبار کارگاه
+                            {k.location ? `📍 ${k.location}` : '📦 مستقر در انبار کارگاه'}
                           </span>
                         )}
                       </td>
@@ -1098,7 +1098,7 @@ export function RadiosSubTab({
                               </span>
                             ) : (
                               <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full text-[10px] md:text-xs font-medium">
-                                📦 مستقر در انبار مرکزی سخت‌افزار
+                                {r.location ? `📍 ${r.location}` : '📦 مستقر در انبار مرکزی سخت‌افزار'}
                               </span>
                             )}
                           </td>

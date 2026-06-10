@@ -863,8 +863,8 @@ export default function App() {
   };
 
   // Intelligent Equipment Transfer
-  const handleTransferItem = async (equipmentCode: string, targetPersonnelCode: string | null) => {
-    const today = getPersianDateString();
+  const handleTransferItem = async (equipmentCode: string, targetPersonnelCode: string | null, documentNumber?: string, dateStr?: string) => {
+    const today = dateStr || getPersianDateString();
 
     if (!isOfflineMode) {
       try {
@@ -890,7 +890,6 @@ export default function App() {
     // Local Transfer simulation
     const rawDb = localStorage.getItem('azarestan_ict_db');
     let db = rawDb ? JSON.parse(rawDb) : { ...INITIAL_DEMO_DATA };
-    const dateStr = today;
 
     // Locate Equipment
     let equipType: "case" | "monitor" | "printer" | "mouse" | "keyboard" | "radio" | null = null;
@@ -942,10 +941,12 @@ export default function App() {
     if (currentOwnerCode !== null) {
       assignments.forEach((ass: any) => {
         if (ass.equipmentCode === equipmentCode && ass.equipmentType === equipType && ass.endDate === null) {
-          ass.endDate = dateStr;
+          ass.endDate = today;
         }
       });
     }
+
+    const docSuffix = documentNumber ? ` (سند جابجایی ${documentNumber})` : '';
 
     if (targetCode !== null) {
       assignments.push({
@@ -953,8 +954,8 @@ export default function App() {
         equipmentCode,
         equipmentType: equipType,
         personnelCode: targetCode,
-        personnelName: targetName,
-        startDate: dateStr,
+        personnelName: targetName + docSuffix,
+        startDate: today,
         endDate: null
       });
     } else {
@@ -963,11 +964,62 @@ export default function App() {
         equipmentCode,
         equipmentType: equipType,
         personnelCode: null,
-        personnelName: "عودت به انبار/تحویل به کارگاه",
-        startDate: dateStr,
-        endDate: dateStr
+        personnelName: "عودت به انبار/تحویل به کارگاه" + docSuffix,
+        startDate: today,
+        endDate: today
       });
     }
+
+    db.assignments = assignments;
+    localStorage.setItem('azarestan_ict_db', JSON.stringify(db));
+    setIsOfflineMode(true);
+    await loadDatabase();
+  };
+
+  // Location Transfer Handler
+  const handleLocationTransfer = async (equipmentCode: string, targetLocation: string, documentNumber?: string, dateStr?: string) => {
+    const today = dateStr || getPersianDateString();
+
+    const rawDb = localStorage.getItem('azarestan_ict_db');
+    let db = rawDb ? JSON.parse(rawDb) : { ...INITIAL_DEMO_DATA };
+
+    // Locate Equipment
+    let equipType: "case" | "monitor" | "printer" | "mouse" | "keyboard" | "radio" | null = null;
+    let equipItem: any = null;
+
+    const listKeys = ['cases', 'monitors', 'printers', 'mice', 'keyboards', 'radios'] as const;
+    const typesMap = { cases: 'case', monitors: 'monitor', printers: 'printer', mice: 'mouse', keyboards: 'keyboard', radios: 'radio' } as const;
+
+    for (const key of listKeys) {
+      const idx = (db[key] || []).findIndex((x: any) => x.code === equipmentCode);
+      if (idx !== -1) {
+        equipType = typesMap[key];
+        equipItem = db[key][idx];
+        break;
+      }
+    }
+
+    if (!equipItem || !equipType) {
+      alert("تجهیزی با این کد اموال یافت نشد.");
+      throw new Error("تجهیزی با این کد اموال یافت نشد.");
+    }
+
+    const oldLocation = equipItem.location || (equipItem.assignedTo ? (db.personnel || []).find((p: any) => p.code === equipItem.assignedTo)?.location : "انبار کارگاه") || "انبار کارگاه";
+
+    // Set new geographical location
+    equipItem.location = targetLocation;
+
+    // Log the physical movement in history
+    const assignments = db.assignments || [];
+    assignments.push({
+      id: `ass_${Date.now()}`,
+      equipmentCode,
+      equipmentType: equipType,
+      personnelCode: 'LOC_CHG',
+      personnelName: `موقعیت فیزیکی جدید ${documentNumber ? `(سند ${documentNumber})` : ''}: "${targetLocation}" (قبلاً "${oldLocation}")`,
+      startDate: today,
+      endDate: today
+    });
 
     db.assignments = assignments;
     localStorage.setItem('azarestan_ict_db', JSON.stringify(db));
@@ -1215,7 +1267,7 @@ export default function App() {
               <span className="text-xs">📦</span>
               <span>دفتر پرسنل و فهرست سخت‌افزارها</span>
             </div>
-            <div className="flex flex-wrap gap-1 p-1.5 rounded-lg bg-white/80 dark:bg-slate-950/80 border border-slate-200/50 dark:border-slate-800/60 shadow-inner">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 p-1.5 rounded-lg bg-white/80 dark:bg-slate-950/80 border border-slate-200/50 dark:border-slate-800/60 shadow-inner">
               {[
                 { id: 'personnel-tab', label: 'لیست پرسنل', icon: '👥' },
                 { id: 'cases-tab', label: 'کیس‌های کارگاه', icon: '🖥️' },
@@ -1229,14 +1281,14 @@ export default function App() {
                 <button
                   key={tab.id}
                   onClick={() => { setActiveTab(tab.id); }}
-                  className={`px-2 py-0.5 text-[11px] font-bold rounded-md transition-all duration-150 cursor-pointer flex items-center gap-1 border ${
+                  className={`w-full py-2 px-1 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 border text-center ${
                     activeTab === tab.id 
                       ? 'bg-blue-600 border-blue-600 text-white shadow-xs font-black' 
                       : 'bg-slate-50 dark:bg-slate-900 border-slate-200/50 dark:border-slate-800 text-slate-650 dark:text-slate-300 hover:bg-slate-150 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-amber-400'
                   }`}
                 >
                   <span className="text-[10px] shrink-0">{tab.icon}</span>
-                  <span>{tab.label}</span>
+                  <span className="truncate">{tab.label}</span>
                 </button>
               ))}
             </div>
@@ -1248,7 +1300,7 @@ export default function App() {
               <span className="text-xs">🔄</span>
               <span>لجستیک، عملیات تحویل و اسناد</span>
             </div>
-            <div className="flex flex-wrap gap-1 p-1.5 rounded-lg bg-white/80 dark:bg-slate-950/80 border border-slate-200/50 dark:border-slate-800/60 shadow-inner">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 p-1.5 rounded-lg bg-white/80 dark:bg-slate-950/80 border border-slate-200/50 dark:border-slate-800/60 shadow-inner">
               {[
                 { id: 'transfer-tab', label: 'جابجایی هوشمند', icon: '🔄', show: currentUser?.canEditEquipment || currentUser?.role === 'admin' },
                 { id: 'history-tab', label: 'تاریخچه لجستیک', icon: '📜', show: true },
@@ -1260,14 +1312,14 @@ export default function App() {
                 <button
                   key={tab.id}
                   onClick={() => { setActiveTab(tab.id); }}
-                  className={`px-2 py-0.5 text-[11px] font-bold rounded-md transition-all duration-150 cursor-pointer flex items-center gap-1 border ${
+                  className={`w-full py-2 px-1 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 border text-center ${
                     activeTab === tab.id 
                       ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs font-black' 
                       : 'bg-slate-50 dark:bg-slate-900 border-slate-200/50 dark:border-slate-800 text-slate-650 dark:text-slate-300 hover:bg-slate-150 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-amber-400'
                   }`}
                 >
                   <span className="text-[10px] shrink-0">{tab.icon}</span>
-                  <span>{tab.label}</span>
+                  <span className="truncate">{tab.label}</span>
                 </button>
               ))}
             </div>
@@ -1279,7 +1331,7 @@ export default function App() {
               <span className="text-xs">🛡️</span>
               <span>امنیت، سیستم و ثبت پنل</span>
             </div>
-            <div className="flex flex-wrap gap-1 p-1.5 rounded-lg bg-white/80 dark:bg-slate-950/80 border border-slate-200/50 dark:border-slate-800/60 shadow-inner">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 p-1.5 rounded-lg bg-white/80 dark:bg-slate-950/80 border border-slate-200/50 dark:border-slate-800/60 shadow-inner">
               {[
                 { id: 'users-tab', label: 'مدیریت کاربران', icon: '🛡️', show: currentUser?.role === 'admin' },
                 { id: 'logs-tab', label: 'لاگ امنیتی سیستم', icon: '🪵', show: currentUser?.role === 'admin' },
@@ -1289,16 +1341,16 @@ export default function App() {
                 <button
                   key={tab.id}
                   onClick={() => { setActiveTab(tab.id); }}
-                  className={`px-2 py-0.5 text-[11px] font-bold rounded-md transition-all duration-150 cursor-pointer flex items-center gap-1 border ${
+                  className={`w-full py-2 px-1 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 border text-center ${
                     activeTab === tab.id 
                       ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs font-black' 
                       : tab.highlight
-                        ? 'bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-900/50 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100/80'
+                        ? 'bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-900/50 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100/80 font-black'
                         : 'bg-slate-50 dark:bg-slate-900 border-slate-200/50 dark:border-slate-800 text-slate-650 dark:text-slate-300 hover:bg-slate-150 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-amber-400'
                   }`}
                 >
                   <span className="text-[10px] shrink-0">{tab.icon}</span>
-                  <span>{tab.label}</span>
+                  <span className="truncate">{tab.label}</span>
                 </button>
               ))}
             </div>
@@ -1430,6 +1482,7 @@ export default function App() {
               radios={radios}
               personnel={personnel}
               onTransfer={handleTransferItem}
+              onLocationTransfer={handleLocationTransfer}
               prefilledEquipmentCode={prefilledEquipCode}
               prefilledPersonnelCode={prefilledPersCode}
             />

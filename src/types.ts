@@ -22,6 +22,7 @@ export interface Case {
   assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
   status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
   description?: string; // توضیحات تکمیلی
+  location?: string; // موقعیت فیزیکی کالا
 }
 
 export interface Monitor {
@@ -30,6 +31,7 @@ export interface Monitor {
   assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
   status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
   description?: string; // توضیحات تکمیلی
+  location?: string; // موقعیت فیزیکی کالا
 }
 
 export interface Printer {
@@ -38,6 +40,7 @@ export interface Printer {
   assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
   status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
   description?: string; // توضیحات تکمیلی
+  location?: string; // موقعیت فیزیکی کالا
 }
 
 export interface Mouse {
@@ -46,6 +49,7 @@ export interface Mouse {
   assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
   status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
   description?: string; // توضیحات تکمیلی
+  location?: string; // موقعیت فیزیکی کالا
 }
 
 export interface Keyboard {
@@ -54,6 +58,7 @@ export interface Keyboard {
   assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
   status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
   description?: string; // توضیحات تکمیلی
+  location?: string; // موقعیت فیزیکی کالا
 }
 
 export interface Radio {
@@ -64,6 +69,7 @@ export interface Radio {
   description?: string; // توضیحات تکمیلی
   frequencyRange?: string; // UHF/VHF
   ipRating?: string; // درجه حفاظت فیزیکی IP
+  location?: string; // موقعیت فیزیکی کالا
 }
 
 export interface CatalogItem {
