@@ -33,14 +33,25 @@ export default function UsersTab({ currentUser }: UsersTabProps) {
     
     // Fetch users list from server
     fetch('/api/users')
-      .then(res => res.json())
+      .then(async res => {
+        if (!res.ok) {
+          throw new Error(`خطای پاسخ سرور با کد وضعیت ${res.status}`);
+        }
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          const text = await res.text();
+          console.error("Non-JSON Response:", text);
+          throw new Error("قالب داده برگشتی سرور JSON نیست. احتمالاً مسیر یابی وب‌سرور (IIS/XAMPP) اشتباه است و فایل index.html برگردانده شده است.");
+        }
+        return res.json();
+      })
       .then(data => {
         setUsers(data);
         setLoading(false);
       })
       .catch(err => {
         console.error("Error loading users:", err);
-        setError("خطا در بارگذاری لیست کاربران سیستم.");
+        setError(`خطا در بارگذاری لیست کاربران: ${err.message || err}. مطمئن شوید بک‌اند سیستم (Node.js) روی پورت 3000 فعال است و ماژول URL Rewrite روی وب‌سرور تنظیم شده است.`);
         setLoading(false);
       });
 

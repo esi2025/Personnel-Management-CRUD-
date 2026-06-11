@@ -15,9 +15,12 @@ export default function Logo({ className = '', size = 'h-12' }: LogoProps) {
   useEffect(() => {
     const fetchLogo = () => {
       fetch('/api/logo')
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) throw new Error("Server error " + res.status);
+          return res.json();
+        })
         .then(data => {
-          if (data.logo) {
+          if (data && data.logo) {
             localStorage.setItem('custom_company_logo', data.logo);
             setLogoUrl(data.logo);
           } else {
@@ -86,7 +89,17 @@ export default function Logo({ className = '', size = 'h-12' }: LogoProps) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ logo: base64 })
           })
-          .then(res => res.json())
+          .then(async res => {
+            if (!res.ok) {
+              const text = await res.text();
+              throw new Error(`خطای سرور با کد ${res.status}: ${text || ''}`);
+            }
+            const contentType = res.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+              throw new Error("پاسخ وب‌سرور JSON نیست. احتمالاً به دلیل حجم بالا یا نبود سیستم بک‌اند، سرور خطا داده یا بن‌بست شده است.");
+            }
+            return res.json();
+          })
           .then(() => {
             localStorage.setItem('custom_company_logo', base64);
             setLogoUrl(base64);
@@ -94,7 +107,7 @@ export default function Logo({ className = '', size = 'h-12' }: LogoProps) {
           })
           .catch(err => {
             console.error("Error updating logo on server:", err);
-            alert("خطا در ذخیره‌سازی لوگو بر روی سرور مرکزی.");
+            alert(`خطا در بارگذاری لوگو روی سرور: ${err.message || err}\n\nنکته راهنما:\n۱. مطمین شوید سرور Node.js روشن است.\n۲. در IIS، مقدار maxAllowedContentLength را افزایش دهید.\n۳. در آپاچی/PHP (در صورت استفاده از PHP API)، مقادیر upload_max_filesize و post_max_size را در php.ini ارتقا دهید.`);
           });
         }
       };

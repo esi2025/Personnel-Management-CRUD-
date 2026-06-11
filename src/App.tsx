@@ -1222,17 +1222,17 @@ export default function App() {
       </div>
 
       {/* 3. Navigation tabs bar (hides in print) */}
-      <div className="no-print bg-slate-100/50 dark:bg-slate-920/40 border border-slate-200/80 dark:border-slate-800/80 rounded-xl p-2.5 mb-3.5 shadow-sm text-right">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-1.5 mb-2 border-b border-slate-200 dark:border-slate-800 gap-1.5">
+      <div className="no-print border border-slate-700/60 rounded-xl p-2.5 mb-3.5 shadow-sm text-right text-slate-100" style={{ backgroundColor: '#0f172b' }}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-1.5 mb-2 border-b border-slate-700/50 gap-1.5">
           <div className="flex items-center gap-1.5">
             <span className="text-base">🎛️</span>
             <div>
-              <h4 className="text-xs md:text-xs font-black text-slate-850 dark:text-slate-100">میز کار و منوی ناوبری کارگاه بوشهر</h4>
+              <h4 className="text-xs md:text-xs font-black text-slate-100">میز کار و منوی ناوبری کارگاه بوشهر</h4>
             </div>
           </div>
           {/* Active selection badge */}
-          <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 px-2.5 py-0.5 rounded-md text-[10px] font-black border border-blue-100/40 dark:border-blue-900/30">
-            <span className="text-slate-500 dark:text-slate-400 font-bold">بخش فعال:</span>
+          <div className="flex items-center gap-1.5 bg-blue-950/70 text-blue-300 px-2.5 py-0.5 rounded-md text-[10px] font-black border border-blue-900/40">
+            <span className="text-slate-400 font-bold">بخش فعال:</span>
             <span>
               {
                 [
@@ -1263,11 +1263,11 @@ export default function App() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-2.5">
           {/* Column 1: Assets & Equipment */}
           <div className="space-y-1">
-            <div className="flex items-center gap-1 px-1 text-[10px] font-black text-blue-650 dark:text-blue-400">
+            <div className="flex items-center gap-1 px-1 text-[10px] font-black text-blue-400">
               <span className="text-xs">📦</span>
               <span>دفتر پرسنل و فهرست سخت‌افزارها</span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 p-1.5 rounded-lg bg-white/80 dark:bg-slate-950/80 border border-slate-200/50 dark:border-slate-800/60 shadow-inner">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 p-1.5 rounded-lg bg-slate-950/40 border border-slate-800/60 shadow-inner">
               {[
                 { id: 'personnel-tab', label: 'لیست پرسنل', icon: '👥' },
                 { id: 'cases-tab', label: 'کیس‌های کارگاه', icon: '🖥️' },
@@ -1284,7 +1284,7 @@ export default function App() {
                   className={`w-full py-2 px-1 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 border text-center ${
                     activeTab === tab.id 
                       ? 'bg-blue-600 border-blue-600 text-white shadow-xs font-black' 
-                      : 'bg-slate-50 dark:bg-slate-900 border-slate-200/50 dark:border-slate-800 text-slate-650 dark:text-slate-300 hover:bg-slate-150 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-amber-400'
+                      : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
                   }`}
                 >
                   <span className="text-[10px] shrink-0">{tab.icon}</span>
@@ -1296,11 +1296,11 @@ export default function App() {
 
           {/* Column 2: Operations & Actions */}
           <div className="space-y-1">
-            <div className="flex items-center gap-1 px-1 text-[10px] font-black text-emerald-650 dark:text-emerald-400">
+            <div className="flex items-center gap-1 px-1 text-[10px] font-black text-emerald-400">
               <span className="text-xs">🔄</span>
               <span>لجستیک، عملیات تحویل و اسناد</span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 p-1.5 rounded-lg bg-white/80 dark:bg-slate-950/80 border border-slate-200/50 dark:border-slate-800/60 shadow-inner">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 p-1.5 rounded-lg bg-slate-950/40 border border-slate-800/60 shadow-inner">
               {[
                 { id: 'transfer-tab', label: 'جابجایی هوشمند', icon: '🔄', show: currentUser?.canEditEquipment || currentUser?.role === 'admin' },
                 { id: 'history-tab', label: 'تاریخچه لجستیک', icon: '📜', show: true },
@@ -1315,7 +1315,7 @@ export default function App() {
                   className={`w-full py-2 px-1 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 border text-center ${
                     activeTab === tab.id 
                       ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs font-black' 
-                      : 'bg-slate-50 dark:bg-slate-900 border-slate-200/50 dark:border-slate-800 text-slate-650 dark:text-slate-300 hover:bg-slate-150 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-amber-400'
+                      : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
                   }`}
                 >
                   <span className="text-[10px] shrink-0">{tab.icon}</span>
@@ -1327,11 +1327,11 @@ export default function App() {
 
           {/* Column 3: Secure Management & Backup */}
           <div className="space-y-1">
-            <div className="flex items-center gap-1 px-1 text-[10px] font-black text-indigo-650 dark:text-indigo-400">
+            <div className="flex items-center gap-1 px-1 text-[10px] font-black text-indigo-400">
               <span className="text-xs">🛡️</span>
               <span>امنیت، سیستم و ثبت پنل</span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 p-1.5 rounded-lg bg-white/80 dark:bg-slate-950/80 border border-slate-200/50 dark:border-slate-800/60 shadow-inner">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 p-1.5 rounded-lg bg-slate-950/40 border border-slate-800/60 shadow-inner">
               {[
                 { id: 'users-tab', label: 'مدیریت کاربران', icon: '🛡️', show: currentUser?.role === 'admin' },
                 { id: 'logs-tab', label: 'لاگ امنیتی سیستم', icon: '🪵', show: currentUser?.role === 'admin' },
@@ -1345,8 +1345,8 @@ export default function App() {
                     activeTab === tab.id 
                       ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs font-black' 
                       : tab.highlight
-                        ? 'bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-900/50 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100/80 font-black'
-                        : 'bg-slate-50 dark:bg-slate-900 border-slate-200/50 dark:border-slate-800 text-slate-650 dark:text-slate-300 hover:bg-slate-150 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-amber-400'
+                        ? 'bg-indigo-950/50 border-indigo-900/40 text-indigo-300 hover:bg-slate-800 font-black'
+                        : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
                   }`}
                 >
                   <span className="text-[10px] shrink-0">{tab.icon}</span>

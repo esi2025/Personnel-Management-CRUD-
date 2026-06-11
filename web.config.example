@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+  IIS Configuration Template for Company ICT Assets Project (Azarestan)
+  Place this file inside your deployment folder (dist/ or the folder mapped as the IIS website)
+  and rename it to web.config to apply.
+-->
+<configuration>
+  <system.webServer>
+    <rewrite>
+      <rules>
+        <!-- RULE 1: Redirect all API requests to the background Node.js service (Express) on port 3000 -->
+        <rule name="ReverseProxyToNodeApi" stopProcessing="true">
+          <match url="^api/(.*)" />
+          <action type="Rewrite" url="http://localhost:3000/api/{R:1}" />
+        </rule>
+
+        <!-- RULE 2: Fallback all client routes (SPA) to index.html to prevent IIS 404 on refresh -->
+        <rule name="ReactRouterFallback" stopProcessing="true">
+          <match url=".*" />
+          <conditions logicalGrouping="MatchAll">
+            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+          </conditions>
+          <action type="Rewrite" url="index.html" />
+        </rule>
+      </rules>
+    </rewrite>
+
+    <security>
+      <requestFiltering>
+        <!-- 
+          Increase Request Payload Limit for uploading base64 corporate logos and large database backups 
+          Currently set to ~50 MB (Value is in bytes: 52,428,800)
+        -->
+        <requestLimits maxAllowedContentLength="52428800" />
+      </requestFiltering>
+    </security>
+
+    <!-- Enable proper caching and MIME types for modern web assets -->
+    <staticContent>
+      <remove fileExtension=".woff" />
+      <mimeMap fileExtension=".woff" mimeType="application/font-woff" />
+      <remove fileExtension=".woff2" />
+      <mimeMap fileExtension=".woff2" mimeType="font/woff2" />
+      <remove fileExtension=".json" />
+      <mimeMap fileExtension=".json" mimeType="application/json" />
+    </staticContent>
+  </system.webServer>
+</configuration>
