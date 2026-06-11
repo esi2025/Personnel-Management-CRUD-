@@ -25,6 +25,7 @@ import {
   Settings
 } from 'lucide-react';
 import { Repair, RepairNeededPart, Case, Monitor, Printer, Keyboard, Mouse, Personnel, SystemUser, Radio } from '../types';
+import AutocompleteInput, { AutocompleteOption } from './AutocompleteInput';
 
 interface RepairsTabProps {
   repairs: Repair[];
@@ -93,6 +94,26 @@ export default function RepairsTab({
     radios.forEach(r => list.push({ code: r.code, label: `بی‌سیم - اموال ${r.code} (${r.model})`, type: 'radio', status: r.status || 'working' }));
     return list;
   }, [cases, monitors, printers, keyboards, mice, radios]);
+
+  const equipmentOptions = useMemo<AutocompleteOption[]>(() => {
+    return allEquipment.map(eq => ({
+      value: eq.code,
+      label: eq.label,
+      sublabel: `وضعیت استقرار: ${eq.status === 'working' ? 'فعال و سالم' : eq.status === 'declared_repair' ? 'اعلام آوار/خراب' : eq.status === 'repairing' ? 'در حال تعمیر در کارگاه' : 'اسقاط/اوراق'}`,
+      icon: eq.type === 'case' ? '🖥️' : eq.type === 'monitor' ? '📺' : eq.type === 'printer' ? '🖨️' : eq.type === 'mouse' ? '🖱️' : eq.type === 'keyboard' ? '⌨️' : '📻',
+      searchTerms: [eq.code, eq.label]
+    }));
+  }, [allEquipment]);
+
+  const personnelOptions = useMemo<AutocompleteOption[]>(() => {
+    return personnel.map(p => ({
+      value: p.name,
+      label: p.name,
+      sublabel: `${p.title || ''} - واحد: ${p.department || ''} - کد: ${p.code}`,
+      icon: '👤',
+      searchTerms: [p.name, p.code, p.title || '', p.department || '']
+    }));
+  }, [personnel]);
 
   // Handle Equipment auto-type assignment on code change
   const handleEqCodeChange = (code: string) => {
@@ -730,22 +751,14 @@ export default function RepairsTab({
                   {/* Equipment Code input with list recommendations */}
                   <div className="space-y-1">
                     <label className="text-[11px] font-bold text-slate-500 block">کد اموال یا شناسه بازسازی:</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        required
-                        placeholder="مانند C-201"
-                        value={formEqCode}
-                        onChange={(e) => handleEqCodeChange(e.target.value)}
-                        list="avail-equipment"
-                        className="w-full pr-3 pl-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 uppercase"
-                      />
-                      <datalist id="avail-equipment">
-                        {allEquipment.map(eq => (
-                          <option key={eq.code} value={eq.code}>{eq.label}</option>
-                        ))}
-                      </datalist>
-                    </div>
+                    <AutocompleteInput 
+                      value={formEqCode}
+                      onChange={handleEqCodeChange}
+                      options={equipmentOptions}
+                      placeholder="مانند C-201"
+                      required={true}
+                      className="!py-2 !text-xs font-bold text-slate-800 dark:text-slate-200 uppercase rounded-xl"
+                    />
                   </div>
 
                   {/* Auto assigned type */}
@@ -768,19 +781,13 @@ export default function RepairsTab({
                   {/* Requester name */}
                   <div className="space-y-1">
                     <label className="text-[11px] font-bold text-slate-500 block">تحویل‌دهنده / متقاضی:</label>
-                    <input
-                      type="text"
-                      placeholder="نام پرسنل یا واحد کارگاه"
+                    <AutocompleteInput 
                       value={formReqName}
-                      onChange={(e) => setFormReqName(e.target.value)}
-                      list="personnel-list"
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs"
+                      onChange={setFormReqName}
+                      options={personnelOptions}
+                      placeholder="نام پرسنل یا واحد کارگاه"
+                      className="!py-2 !text-xs rounded-xl"
                     />
-                    <datalist id="personnel-list">
-                      {personnel.map(p => (
-                        <option key={p.id} value={p.name}>{p.title} - دپارتمان {p.department}</option>
-                      ))}
-                    </datalist>
                   </div>
 
                 </div>

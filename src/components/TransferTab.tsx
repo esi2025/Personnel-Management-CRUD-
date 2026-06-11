@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Case, Monitor, Printer, Personnel, Mouse, Keyboard, Radio } from '../types';
 import { getPersianDateString } from '../utils/date';
+import AutocompleteInput, { AutocompleteOption } from './AutocompleteInput';
 
 interface TransferTabProps {
   cases: Case[];
@@ -83,6 +84,113 @@ export default function TransferTab({
   } | null>(null);
 
   const [matchedPers, setMatchedPers] = useState<Personnel | null>(null);
+
+  // Memoized Autocomplete options for all equipment
+  const equipmentOptions = useMemo<AutocompleteOption[]>(() => {
+    const opts: AutocompleteOption[] = [];
+
+    cases.forEach(c => {
+      opts.push({
+        value: c.code,
+        label: `کیس - ${c.code}`,
+        sublabel: `${c.motherboard} / ${c.cpu} / RAM: ${c.ramQty} - تحویل: ${c.assignedTo || 'انبار'}`,
+        icon: '🖥️',
+        searchTerms: [c.code, 'کیس', 'کیس کامپیوتر', c.motherboard, c.cpu, c.assignedTo || '']
+      });
+    });
+
+    monitors.forEach(m => {
+      opts.push({
+        value: m.code,
+        label: `مانیتور - ${m.code}`,
+        sublabel: `${m.model || 'نامشخص'} - تحویل: ${m.assignedTo || 'انبار'}`,
+        icon: '📺',
+        searchTerms: [m.code, 'مانیتور', 'نمایشگر', m.model, m.assignedTo || '']
+      });
+    });
+
+    printers.forEach(p => {
+      opts.push({
+        value: p.code,
+        label: `پرینتر - ${p.code}`,
+        sublabel: `${p.model || 'نامشخص'} - تحویل: ${p.assignedTo || 'انبار'}`,
+        icon: '🖨️',
+        searchTerms: [p.code, 'پرینتر', 'چاپگر', p.model, p.assignedTo || '']
+      });
+    });
+
+    (mice || []).forEach(m => {
+      opts.push({
+        value: m.code,
+        label: `ماوس - ${m.code}`,
+        sublabel: `${m.model || 'نامشخص'} - تحویل: ${m.assignedTo || 'انبار'}`,
+        icon: '🖱️',
+        searchTerms: [m.code, 'ماوس', 'موس', m.model, m.assignedTo || '']
+      });
+    });
+
+    (keyboards || []).forEach(k => {
+      opts.push({
+        value: k.code,
+        label: `کیبورد - ${k.code}`,
+        sublabel: `${k.model || 'نامشخص'} - تحویل: ${k.assignedTo || 'انبار'}`,
+        icon: '⌨️',
+        searchTerms: [k.code, 'کیبورد', 'صفحه کلید', k.model, k.assignedTo || '']
+      });
+    });
+
+    (radios || []).forEach(r => {
+      opts.push({
+        value: r.code,
+        label: `بیسیم - ${r.code}`,
+        sublabel: `${r.model || 'نامشخص'} (${r.frequencyRange || ''}) - تحویل: ${r.assignedTo || 'انبار'}`,
+        icon: '📻',
+        searchTerms: [r.code, 'بیسیم', 'بی سیم', 'رادیو', r.model, r.assignedTo || '']
+      });
+    });
+
+    return opts;
+  }, [cases, monitors, printers, mice, keyboards, radios]);
+
+  // Memoized Autocomplete options for personnel (can match code or name)
+  const personnelOptions = useMemo<AutocompleteOption[]>(() => {
+    return personnel.map(p => ({
+      value: p.code,
+      label: p.name,
+      sublabel: `${p.title || ''} / ${p.department || ''} - محل: ${p.location || 'کارگاه'}`,
+      icon: '👤',
+      searchTerms: [p.code, p.name, p.title || '', p.department || '', p.location || '']
+    }));
+  }, [personnel]);
+
+  // Memoized Autocomplete options for locations
+  const locationOptions = useMemo<AutocompleteOption[]>(() => {
+    const locsSet = new Set<string>();
+    
+    // Add presets except 'other'
+    locationPresets.forEach(p => {
+      if (p !== 'سایر موقعیت‌ها (تایپ دستی)') {
+        locsSet.add(p);
+      }
+    });
+
+    // Add personnel locations
+    personnel.forEach(p => {
+      if (p.location) locsSet.add(p.location);
+    });
+
+    // Add equipment locations
+    cases.forEach(c => { if (c.location) locsSet.add(c.location); });
+    monitors.forEach(m => { if (m.location) locsSet.add(m.location); });
+    printers.forEach(p => { if (p.location) locsSet.add(p.location); });
+
+    return Array.from(locsSet).map(l => ({
+      value: l,
+      label: l,
+      icon: '📍',
+      searchTerms: [l]
+    }));
+  }, [personnel, cases, monitors, printers, locationPresets]);
 
   // Sync with prefilled props
   useEffect(() => {
@@ -369,46 +477,19 @@ export default function TransferTab({
             <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
               transferMode === 'ownership' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
             }`}>
-              {transferMode === 'ownership' ? 'تغییر کارتابل شخصی' : 'تغییر آدرس کارگاهی'}
+              {transferMode === 'ownership' ? 'تغییر مالکیت' : 'تغییر موقعیت'}
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 border border-slate-200/50 rounded-xl p-4">
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-600 block">شماره سند مجوز (سیستمی/پیشنهادی):</label>
-              <input
-                type="text"
-                value={docNumber}
-                onChange={(e) => setDocNumber(e.target.value)}
-                placeholder="مثال: AZ-LOC-4052"
-                className="w-full text-left font-mono text-sm p-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 font-bold text-slate-800"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-600 block">تاریخ سند جابجایی (خورشیدی):</label>
-              <input
-                type="text"
-                value={docDate}
-                onChange={(e) => setDocDate(e.target.value)}
-                placeholder="مثال: ۱۴۰۵/۰۳/۱۰"
-                className="w-full text-center text-sm p-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 font-bold text-slate-800"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            
-            {/* Step 1: Equipment Search */}
-            <div className="space-y-2">
+          <div className="space-y-2">
               <label className="text-xs md:text-sm font-semibold text-slate-700 block">
                 کد اموال سخت‌افزار مورد جابجایی:
               </label>
-              <input 
-                type="text"
+              <AutocompleteInput 
                 value={equipCode}
-                onChange={(e) => setEquipCode(e.target.value)}
+                onChange={setEquipCode}
+                options={equipmentOptions}
                 placeholder="مثال: C-201, M-301, P-401, MOU-101, KEY-201, R-101..."
-                className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
 
@@ -440,12 +521,11 @@ export default function TransferTab({
                 <label className="text-xs md:text-sm font-semibold text-slate-700 block">
                   کد پرسنلی تحویل‌گیرنده جدید (مقصد مالکیت):
                 </label>
-                <input 
-                  type="text"
+                <AutocompleteInput 
                   value={persCode}
-                  onChange={(e) => setPersCode(e.target.value)}
+                  onChange={setPersCode}
+                  options={personnelOptions}
                   placeholder="کد پرسنلی کاربر مقصد واگذاری جدید..."
-                  className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:border-blue-500 focus:outline-none"
                 />
                 <p className="text-[11px] text-slate-400">توجه: در صورتی که تمایل به بازگرداندن رسمی این کالا به موجودی آزاد انبار را دارید، این بخش را خالی بگذارید.</p>
 
@@ -481,7 +561,7 @@ export default function TransferTab({
                 <select
                   value={targetLocation}
                   onChange={(e) => setTargetLocation(e.target.value)}
-                  className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:border-blue-500 focus:outline-none"
+                  className="w-full text-right p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:border-blue-500 focus:outline-none dark:text-slate-100"
                 >
                   {locationPresets.map((preset, idx) => (
                     <option key={idx} value={preset}>{preset}</option>
@@ -491,16 +571,15 @@ export default function TransferTab({
                 {targetLocation === 'سایر موقعیت‌ها (تایپ دستی)' && (
                   <div className="space-y-1.5 animate-fade-in">
                     <label className="text-[11px] text-slate-500 font-bold block">موقعیت فیزیکی سفارشی جدید را تایپ کنید:</label>
-                    <input
-                      type="text"
+                    <AutocompleteInput 
                       value={customLocation}
-                      onChange={(e) => setCustomLocation(e.target.value)}
+                      onChange={setCustomLocation}
+                      options={locationOptions}
                       placeholder="مانند: اتاق حسابداری کانکس ۲، مانیتورینگ کارگاه ماشین آلات و ..."
-                      className="w-full text-right p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs md:text-sm focus:outline-none focus:border-blue-500"
                     />
                   </div>
                 )}
-                <div className="bg-emerald-50 border border-emerald-100 text-emerald-800 p-3 rounded-xl text-[11px] md:text-xs">
+                <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 text-emerald-800 dark:text-emerald-300 p-3 rounded-xl text-[11px] md:text-xs">
                   <span>ℹ️</span> <strong>انتقال مکانی فیزیکی:</strong> سخت‌افزار از لحاظ پرونده اموال همچنان به نام تحویل‌گیرنده قبلی باقی مانده اما لوکیشن استقرار آن به مقصد انتخابی تغییر یافته و مجوز تردد ترافیکی آن به نگهبانی ابلاغ خواهد شد.
                 </div>
               </div>
@@ -531,7 +610,6 @@ export default function TransferTab({
             </div>
 
           </div>
-        </div>
 
         {/* Right Info Box */}
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 self-start space-y-4 shadow-sm no-print">

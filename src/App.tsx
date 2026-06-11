@@ -263,23 +263,41 @@ export default function App() {
     if (appBorderRadius === 'rounded-2xl') radiusPx = '16px';
     if (appBorderRadius === 'rounded-3xl') radiusPx = '24px';
 
+    const rootBg = darkMode ? (containerBackground || '#0b0f19') : '#f1f5f9';
+    const cardBg = darkMode ? 'rgba(15, 23, 42, 0.75)' : '#ffffff';
+    const cardBorder = darkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(226, 232, 240, 0.9)';
+    const textColor = darkMode ? '#cbd5e1' : '#334155';
+    const headingColor = darkMode ? '#f8fafc' : '#0f172a';
+    const muteColor = darkMode ? '#94a3b8' : '#64748b';
+    const inputBg = darkMode ? 'rgba(3, 7, 18, 0.65)' : '#ffffff';
+    const inputBorder = darkMode ? 'rgba(255, 255, 255, 0.12)' : '#cbd5e1';
+
     let cardShadow = 'none';
     if (cardGlow) {
-      cardShadow = `0 4px 22px -5px ${accentColor}4d`;
+      cardShadow = darkMode 
+        ? `0 4px 22px -5px ${accentColor}4d, 0 8px 32px rgba(0, 0, 0, 0.35)` 
+        : `0 4px 18px -4px rgba(0, 0, 0, 0.05), 0 10px 30px -10px ${accentColor}10`;
+    } else {
+      cardShadow = darkMode 
+        ? '0 4px 12px rgba(0, 0, 0, 0.25)' 
+        : '0 4px 12px rgba(0, 0, 0, 0.02)';
     }
 
     styleTag.innerHTML = `
       :root, body, #root, #app-root-container {
         font-family: ${fontName} !important;
+        background-color: ${rootBg} !important;
+        color: ${textColor} !important;
+        transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
       }
       
       /* Accent colors override */
-      .text-blue-600, .text-blue-500, .text-blue-400 {
+      .text-blue-600, .text-blue-500, .text-blue-400, .text-blue-650, .text-indigo-655 {
         color: ${accentColor} !important;
       }
-      .bg-blue-600, .bg-blue-500, .bg-blue-700 {
+      .bg-blue-600, .bg-blue-500, .bg-blue-700, .bg-blue-800, .bg-blue-650 {
         background-color: ${accentColor} !important;
-        color: #ffffff !important;
+        color: ${darkMode ? '#000000' : '#ffffff'} !important;
       }
       .border-blue-600, .border-blue-500 {
         border-color: ${accentColor} !important;
@@ -287,28 +305,37 @@ export default function App() {
       
       /* Active tab colors for indigo and emerald subthemes */
       .bg-emerald-600 {
-        background-color: ${accentColor === '#3b82f6' ? '#059669' : accentColor} !important;
+        background-color: ${accentColor === '#3b82f6' ? '#10b981' : accentColor} !important;
+        color: ${darkMode ? '#000000' : '#ffffff'} !important;
       }
       .bg-indigo-600 {
-        background-color: ${accentColor === '#3b82f6' ? '#4f46e5' : accentColor} !important;
+        background-color: ${accentColor === '#3b82f6' ? '#6366f1' : accentColor} !important;
+        color: ${darkMode ? '#000000' : '#ffffff'} !important;
       }
       
       /* Primary and button hover overlays */
-      .hover\\:bg-blue-700:hover, .hover\\:bg-blue-600:hover {
+      .hover\\:bg-blue-700:hover, .hover\\:bg-blue-600:hover, .hover\\:bg-blue-800:hover {
         background-color: ${accentColor}dd !important;
-        opacity: 0.95;
+        filter: brightness(1.08);
       }
       
       /* Styled dynamic workspace wrapper */
       #application-workspace-wrapper {
-        background-color: ${containerBackground || '#0f172a'} !important;
+        background-color: ${rootBg} !important;
         background-image: ${workspaceGlowStyle === 'aurora' 
-          ? `radial-gradient(circle at 12% 18%, ${accentColor}1c 0%, transparent 45%), radial-gradient(circle at 88% 82%, ${accentColor}24 0%, transparent 48%)` 
+          ? (darkMode 
+              ? `radial-gradient(circle at 12% 18%, ${accentColor}1c 0%, transparent 45%), radial-gradient(circle at 88% 82%, ${accentColor}24 0%, transparent 48%)` 
+              : `radial-gradient(circle at 12% 18%, ${accentColor}0a 0%, transparent 60%), radial-gradient(circle at 88% 82%, ${accentColor}0c 0%, transparent 60%)`)
           : workspaceGlowStyle === 'intense'
-          ? `radial-gradient(circle at 50% -25%, ${accentColor}3c 0%, transparent 65%)`
+          ? (darkMode 
+              ? `radial-gradient(circle at 50% -25%, ${accentColor}3c 0%, transparent 65%)` 
+              : `radial-gradient(circle at 50% -25%, ${accentColor}12 0%, transparent 65%)`)
           : workspaceGlowStyle === 'soft'
-          ? `radial-gradient(circle at 50% 50%, ${accentColor}0e 0%, transparent 80%)`
+          ? (darkMode 
+              ? `radial-gradient(circle at 50% 50%, ${accentColor}0e 0%, transparent 80%)` 
+              : `radial-gradient(circle at 50% 50%, ${accentColor}04 0%, transparent 80%)`)
           : 'none'} !important;
+        transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       /* Dynamically adjusted border radius for standard tiles & blocks */
@@ -316,18 +343,93 @@ export default function App() {
         border-radius: ${radiusPx} !important;
       }
       
-      .bg-slate-900\\/50, .bg-slate-900\\/60, .bg-slate-900\\/80, .bg-slate-950\\/80, .bg-slate-900, .bg-slate-950, .bg-slate-900\\/40 {
-        border-radius: ${radiusPx} !important;
+      .bg-white, .dark\\:bg-slate-950, .bg-slate-950, .bg-slate-900\\/50, .bg-slate-900\\/60, .bg-slate-900\\/80, .bg-slate-950\\/80, .bg-slate-900, .bg-slate-950, .bg-slate-900\\/40 {
+        background-color: ${cardBg} !important;
+        border-color: ${cardBorder} !important;
+        box-shadow: ${cardShadow} !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      /* Consistent input backgrounds inside responsive mode */
+      .bg-slate-50, .bg-slate-100\\/60, .bg-slate-100, .dark\\:bg-slate-900, .bg-slate-900 {
+        background-color: ${darkMode ? 'rgba(3, 7, 18, 0.45)' : '#f8fafc'} !important;
+        color: ${headingColor} !important;
+        border-color: ${cardBorder} !important;
       }
       
-      /* High level Glow shadows */
       .shadow-sm, .shadow-md, .shadow-lg, .shadow-2xl, .shadow {
         box-shadow: ${cardShadow} !important;
+      }
+
+      /* System Scrollbar polish once and for all */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: ${darkMode ? '#090d16' : '#f1f5f9'};
+      }
+      ::-webkit-scrollbar-thumb {
+        background: ${darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'};
+        border-radius: 9999px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: ${accentColor}a0;
+      }
+
+      /* Standard typography overrides for pristine readability */
+      h1, h2, h3, h4, h5, h6, strong {
+        color: ${headingColor} !important;
+      }
+      
+      p, label, span, .text-slate-505, .text-slate-500, .text-slate-400, .text-slate-300, .text-slate-650 {
+        color: ${textColor}e0;
+      }
+
+      /* Style all form components consistently */
+      input[type="text"], input[type="password"], select, textarea {
+        background-color: ${inputBg} !important;
+        border-color: ${inputBorder} !important;
+        color: ${headingColor} !important;
+        font-family: inherit;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      input[type="text"]:focus, select:focus, textarea:focus {
+        border-color: ${accentColor} !important;
+        box-shadow: 0 0 0 3px ${accentColor}2c !important;
+        outline: none !important;
+      }
+
+      th {
+        background-color: ${darkMode ? 'rgba(15, 23, 42, 0.9)' : '#f8fafc'} !important;
+        color: ${headingColor} !important;
+      }
+
+      td {
+        border-color: ${cardBorder} !important;
+        color: ${textColor} !important;
+      }
+
+      tr:hover td {
+        background-color: ${darkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)'} !important;
       }
 
       /* Estedad font support custom family class */
       .family-estedad {
         font-family: "Estedad", "Vazirmatn", sans-serif !important;
+      }
+
+      /* Specific focused element styling rule */
+      div#root:nth-of-type(1) > div#application-workspace-wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) {
+        background-color: #0f172a !important;
+      }
+
+      /* Second focused element styling rule */
+      div#root:nth-of-type(1) > div#application-workspace-wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) {
+        background-color: #0f172a !important;
       }
     `;
 
@@ -342,7 +444,7 @@ export default function App() {
         document.head.appendChild(fontLink);
       }
     }
-  }, [currentTheme]);
+  }, [currentTheme, darkMode]);
 
   // Database States
   const [personnel, setPersonnel] = useState<Personnel[]>([]);
@@ -1367,17 +1469,33 @@ export default function App() {
       </div>
 
       {/* 3. Navigation tabs bar (hides in print) */}
-      <div className="no-print border border-slate-700/60 rounded-xl p-2.5 mb-3.5 shadow-sm text-right text-slate-100" style={{ backgroundColor: '#0f172b' }}>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-1.5 mb-2 border-b border-slate-700/50 gap-1.5">
+      <div 
+        className={`no-print border rounded-xl p-2.5 mb-3.5 shadow-xs text-right transition-all duration-250 ${
+          darkMode 
+            ? 'border-slate-800 text-slate-100' 
+            : 'border-slate-300/60 text-slate-800'
+        }`}
+        style={{ 
+          backgroundColor: darkMode ? '#0f172a' : '#ffffff',
+          boxShadow: currentTheme.cardGlow && darkMode ? `0 4px 20px -5px ${currentTheme.accentColor}33` : 'none'
+        }}
+      >
+        <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between pb-1.5 mb-2 border-b gap-1.5 ${
+          darkMode ? 'border-slate-800' : 'border-slate-200'
+        }`}>
           <div className="flex items-center gap-1.5">
             <span className="text-base">🎛️</span>
             <div>
-              <h4 className="text-xs md:text-xs font-black text-slate-100">میز کار و منوی ناوبری کارگاه بوشهر</h4>
+              <h4 className="text-xs md:text-xs font-black">میز کار و منوی ناوبری کارگاه بوشهر</h4>
             </div>
           </div>
           {/* Active selection badge */}
-          <div className="flex items-center gap-1.5 bg-blue-950/70 text-blue-300 px-2.5 py-0.5 rounded-md text-[10px] font-black border border-blue-900/40">
-            <span className="text-slate-400 font-bold">بخش فعال:</span>
+          <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-black border transition-colors ${
+            darkMode 
+              ? 'bg-blue-950/70 text-blue-300 border-blue-900/40' 
+              : 'bg-blue-50 text-blue-700 border-blue-200/70'
+          }`}>
+            <span className={darkMode ? 'text-slate-400 font-bold' : 'text-slate-500 font-bold'}>بخش فعال:</span>
             <span>
               {
                 [
@@ -1397,6 +1515,7 @@ export default function App() {
                   { id: 'systems-tree-tab', label: '🌳 نمودار درختی سیستم‌ها' },
                   { id: 'users-tab', label: '🛡️ مدیریت کاربران' },
                   { id: 'logs-tab', label: '🪵 لاگ امنیتی سیستم' },
+                  { id: 'appearance-tab', label: '🎨 تنظیمات زیبایی تم' },
                   { id: 'backup-tab', label: '⚙️ پشتیبان‌گیری و سورس' },
                   { id: 'add-new-tab', label: '➕ ثبت و ایمپورت جدید' }
                 ].find(t => t.id === activeTab)?.label || '—'
@@ -1408,11 +1527,13 @@ export default function App() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-2.5">
           {/* Column 1: Assets & Equipment */}
           <div className="space-y-1">
-            <div className="flex items-center gap-1 px-1 text-[10px] font-black text-blue-400">
+            <div className={`flex items-center gap-1 px-1 text-[10px] font-black ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
               <span className="text-xs">📦</span>
               <span>دفتر پرسنل و فهرست سخت‌افزارها</span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 p-1.5 rounded-lg bg-slate-950/40 border border-slate-800/60 shadow-inner">
+            <div className={`grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 p-1.5 rounded-lg shadow-inner transition-colors ${
+              darkMode ? 'bg-slate-950/40 border border-slate-800/60' : 'bg-slate-50 border border-slate-200/50'
+            }`}>
               {[
                 { id: 'personnel-tab', label: 'لیست پرسنل', icon: '👥' },
                 { id: 'cases-tab', label: 'کیس‌های کارگاه', icon: '🖥️' },
@@ -1429,7 +1550,9 @@ export default function App() {
                   className={`w-full py-2 px-1 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 border text-center ${
                     activeTab === tab.id 
                       ? 'bg-blue-600 border-blue-600 text-white shadow-xs font-black' 
-                      : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
+                      : darkMode 
+                        ? 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
+                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100/85 hover:text-blue-600 hover:border-blue-300'
                   }`}
                 >
                   <span className="text-[10px] shrink-0">{tab.icon}</span>
@@ -1441,11 +1564,13 @@ export default function App() {
 
           {/* Column 2: Operations & Actions */}
           <div className="space-y-1">
-            <div className="flex items-center gap-1 px-1 text-[10px] font-black text-emerald-400">
+            <div className={`flex items-center gap-1 px-1 text-[10px] font-black ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
               <span className="text-xs">🔄</span>
               <span>لجستیک، عملیات تحویل و اسناد</span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 p-1.5 rounded-lg bg-slate-950/40 border border-slate-800/60 shadow-inner">
+            <div className={`grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 p-1.5 rounded-lg shadow-inner transition-colors ${
+              darkMode ? 'bg-slate-950/40 border border-slate-800/60' : 'bg-slate-50 border border-slate-200/50'
+            }`}>
               {[
                 { id: 'transfer-tab', label: 'جابجایی هوشمند', icon: '🔄', show: currentUser?.canEditEquipment || currentUser?.role === 'admin' },
                 { id: 'history-tab', label: 'تاریخچه لجستیک', icon: '📜', show: true },
@@ -1460,7 +1585,9 @@ export default function App() {
                   className={`w-full py-2 px-1 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 border text-center ${
                     activeTab === tab.id 
                       ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs font-black' 
-                      : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
+                      : darkMode 
+                        ? 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
+                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100/85 hover:text-emerald-600 hover:border-emerald-300'
                   }`}
                 >
                   <span className="text-[10px] shrink-0">{tab.icon}</span>
@@ -1472,11 +1599,13 @@ export default function App() {
 
           {/* Column 3: Secure Management & Backup */}
           <div className="space-y-1">
-            <div className="flex items-center gap-1 px-1 text-[10px] font-black text-indigo-400">
+            <div className={`flex items-center gap-1 px-1 text-[10px] font-black ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
               <span className="text-xs">🛡️</span>
               <span>امنیت، سیستم و ثبت پنل</span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 p-1.5 rounded-lg bg-slate-950/40 border border-slate-800/60 shadow-inner">
+            <div className={`grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 p-1.5 rounded-lg shadow-inner transition-colors ${
+              darkMode ? 'bg-slate-950/40 border border-slate-800/60' : 'bg-slate-50 border border-slate-200/50'
+            }`}>
               {[
                 { id: 'users-tab', label: 'مدیریت کاربران', icon: '🛡️', show: currentUser?.role === 'admin' },
                 { id: 'logs-tab', label: 'لاگ امنیتی سیستم', icon: '🪵', show: currentUser?.role === 'admin' },
@@ -1491,8 +1620,12 @@ export default function App() {
                     activeTab === tab.id 
                       ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs font-black' 
                       : tab.highlight
-                        ? 'bg-indigo-950/50 border-indigo-900/40 text-indigo-300 hover:bg-slate-800 font-black'
-                        : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
+                        ? darkMode
+                          ? 'bg-indigo-950/50 border-indigo-900/40 text-indigo-300 hover:bg-slate-800 font-black'
+                          : 'bg-indigo-50 border-indigo-200/80 text-indigo-700 hover:bg-indigo-100/60 font-black'
+                        : darkMode 
+                          ? 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
+                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100/85 hover:text-indigo-600 hover:border-indigo-300'
                   }`}
                 >
                   <span className="text-[10px] shrink-0">{tab.icon}</span>
