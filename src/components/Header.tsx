@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Logo from './Logo';
 
-export default function Header({ isDark, onToggleTheme }: { isDark: boolean; onToggleTheme: () => void }) {
+export default function Header({ isDark, onToggleTheme, customTitle }: { isDark: boolean; onToggleTheme: () => void; customTitle?: string }) {
   const [time, setTime] = useState('');
   const [shamsiDate, setShamsiDate] = useState('');
 
@@ -35,7 +35,7 @@ export default function Header({ isDark, onToggleTheme }: { isDark: boolean; onT
         <Logo size="h-[48px] md:h-[54px]" />
         <div>
           <h1 className="text-lg md:text-xl font-black tracking-tight font-sans">شرکت عمران آذرستان</h1>
-          <h2 className="text-xs font-semibold text-slate-300">واحد فناوری اطلاعات و ارتباطات (ICT) | مدیریت تجهیزات کارگاه</h2>
+          <h2 className="text-xs font-semibold text-slate-300">{customTitle || "واحد فناوری اطلاعات و ارتباطات (ICT) | مدیریت تجهیزات کارگاه"}</h2>
         </div>
       </div>
       

@@ -137,6 +137,15 @@ export interface Repair {
   assignedTechnician: string;
   completedDate: string;
   remarks: string;
+}export interface ThemeSettings {
+  themeMode: 'slate-dark' | 'emerald' | 'indigo' | 'rose' | 'warm-slate' | 'classic' | 'navy-ocean';
+  fontFamily: 'Vazirmatn' | 'Inter' | 'Estedad' | 'JetBrains Mono' | 'Tahoma';
+  accentColor: string;
+  containerBackground: string;
+  cardGlow: boolean;
+  headingStyle: string;
+  welcomeTitle: string;
+  appBorderRadius: 'rounded-none' | 'rounded-md' | 'rounded-lg' | 'rounded-xl' | 'rounded-2xl' | 'rounded-3xl';
+  workspaceGlowStyle: 'none' | 'soft' | 'aurora' | 'intense';
+  navbarOpacity: string;
 }
-
-

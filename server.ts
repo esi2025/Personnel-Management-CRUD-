@@ -599,6 +599,56 @@ async function startServer() {
     res.json({ success: true });
   });
 
+
+  // API: Get custom theme settings
+  app.get("/api/theme", (req, res) => {
+    const themeFile = path.join(DATA_DIR, "theme.json");
+    try {
+      if (fs.existsSync(themeFile)) {
+        const themeData = JSON.parse(fs.readFileSync(themeFile, "utf-8"));
+        return res.json({ theme: themeData });
+      }
+      // Default theme response
+      return res.json({
+        theme: {
+          themeMode: "slate-dark",
+          fontFamily: "Vazirmatn",
+          accentColor: "#3b82f6",
+          containerBackground: "#0f172a",
+          cardGlow: true,
+          headingStyle: "font-black tracking-tight",
+          welcomeTitle: "اموال و تجهیزات فاوا کارگاه بوشهر",
+          appBorderRadius: "rounded-xl"
+        }
+      });
+    } catch (e) {
+      return res.json({ theme: null });
+    }
+  });
+
+  // API: Update custom theme settings (Admin Only)
+  app.post("/api/theme", (req, res) => {
+    const { theme } = req.body;
+    const themeFile = path.join(DATA_DIR, "theme.json");
+    const opUser = req.headers["x-operator-username"] as string || "admin";
+    const opName = req.headers["x-operator-name"] as string || "مدیریت کل";
+    const clientIp = getClientIp(req);
+    try {
+      if (!theme) {
+        if (fs.existsSync(themeFile)) {
+          fs.unlinkSync(themeFile);
+        }
+        addAuditLog(opUser, opName, clientIp, "edit", "theme", "-", "بازنشانی تنظیمات ظاهری و پوسته پیش‌فرض سیستم");
+        return res.json({ success: true, theme: null });
+      }
+      fs.writeFileSync(themeFile, JSON.stringify(theme, null, 2), "utf-8");
+      addAuditLog(opUser, opName, clientIp, "edit", "theme", "-", "بروزرسانی تنظیمات ظاهری، رنگ‌بندی و فونت سیستم");
+      return res.json({ success: true, theme });
+    } catch (e) {
+      return res.status(500).json({ error: "خطا در ذخیره‌سازی تنظیمات ظاهری روی سرور" });
+    }
+  });
+
   // API: Get Company Shared Corporate Logo
   app.get("/api/logo", (req, res) => {
     const logoFile = path.join(DATA_DIR, "logo.txt");

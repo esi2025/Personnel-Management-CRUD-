@@ -16,7 +16,8 @@ import UsersTab from './components/UsersTab';
 import BulkQRTab from './components/BulkQRTab';
 import LogsTab from './components/LogsTab';
 import RepairsTab from './components/RepairsTab';
-import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard, CatalogItem, Repair, Radio } from './types';
+import AppearanceTab from './components/AppearanceTab';
+import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard, CatalogItem, Repair, Radio, ThemeSettings } from './types';
 import { getPersianDateString } from './utils/date';
 
 export interface BackupData {
@@ -213,6 +214,136 @@ export default function App() {
     }
   }, [darkMode]);
 
+  // Appearance & Theme settings
+  const [currentTheme, setCurrentTheme] = useState<ThemeSettings>(() => {
+    const saved = localStorage.getItem('custom-theme-config');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        // Fallback default
+      }
+    }
+    return {
+      themeMode: 'slate-dark',
+      fontFamily: 'Vazirmatn',
+      accentColor: '#3b82f6',
+      containerBackground: '#0f172a',
+      cardGlow: true,
+      headingStyle: 'font-black tracking-tight',
+      welcomeTitle: 'اموال و تجهیزات فاوا کارگاه بوشهر',
+      appBorderRadius: 'rounded-xl',
+      workspaceGlowStyle: 'soft',
+      navbarOpacity: '90'
+    };
+  });
+
+  // Dynamically compile and override css properties to reflect visual configurations
+  useEffect(() => {
+    let styleTag = document.getElementById('custom-dynamic-theme-styles');
+    if (!styleTag) {
+      styleTag = document.createElement('style');
+      styleTag.id = 'custom-dynamic-theme-styles';
+      document.head.appendChild(styleTag);
+    }
+
+    const { fontFamily, accentColor, containerBackground, cardGlow, appBorderRadius, workspaceGlowStyle } = currentTheme;
+
+    let fontName = 'Vazirmatn';
+    if (fontFamily === 'Inter') fontName = 'Inter, sans-serif';
+    if (fontFamily === 'Estedad') fontName = 'Estedad, sans-serif';
+    if (fontFamily === 'JetBrains Mono') fontName = 'JetBrains Mono, monospace';
+    if (fontFamily === 'Tahoma') fontName = 'Tahoma, Arial, sans-serif';
+
+    let radiusPx = '12px';
+    if (appBorderRadius === 'rounded-none') radiusPx = '0px';
+    if (appBorderRadius === 'rounded-md') radiusPx = '4px';
+    if (appBorderRadius === 'rounded-lg') radiusPx = '8px';
+    if (appBorderRadius === 'rounded-xl') radiusPx = '12px';
+    if (appBorderRadius === 'rounded-2xl') radiusPx = '16px';
+    if (appBorderRadius === 'rounded-3xl') radiusPx = '24px';
+
+    let cardShadow = 'none';
+    if (cardGlow) {
+      cardShadow = `0 4px 22px -5px ${accentColor}4d`;
+    }
+
+    styleTag.innerHTML = `
+      :root, body, #root, #app-root-container {
+        font-family: ${fontName} !important;
+      }
+      
+      /* Accent colors override */
+      .text-blue-600, .text-blue-500, .text-blue-400 {
+        color: ${accentColor} !important;
+      }
+      .bg-blue-600, .bg-blue-500, .bg-blue-700 {
+        background-color: ${accentColor} !important;
+        color: #ffffff !important;
+      }
+      .border-blue-600, .border-blue-500 {
+        border-color: ${accentColor} !important;
+      }
+      
+      /* Active tab colors for indigo and emerald subthemes */
+      .bg-emerald-600 {
+        background-color: ${accentColor === '#3b82f6' ? '#059669' : accentColor} !important;
+      }
+      .bg-indigo-600 {
+        background-color: ${accentColor === '#3b82f6' ? '#4f46e5' : accentColor} !important;
+      }
+      
+      /* Primary and button hover overlays */
+      .hover\\:bg-blue-700:hover, .hover\\:bg-blue-600:hover {
+        background-color: ${accentColor}dd !important;
+        opacity: 0.95;
+      }
+      
+      /* Styled dynamic workspace wrapper */
+      #application-workspace-wrapper {
+        background-color: ${containerBackground || '#0f172a'} !important;
+        background-image: ${workspaceGlowStyle === 'aurora' 
+          ? `radial-gradient(circle at 12% 18%, ${accentColor}1c 0%, transparent 45%), radial-gradient(circle at 88% 82%, ${accentColor}24 0%, transparent 48%)` 
+          : workspaceGlowStyle === 'intense'
+          ? `radial-gradient(circle at 50% -25%, ${accentColor}3c 0%, transparent 65%)`
+          : workspaceGlowStyle === 'soft'
+          ? `radial-gradient(circle at 50% 50%, ${accentColor}0e 0%, transparent 80%)`
+          : 'none'} !important;
+      }
+
+      /* Dynamically adjusted border radius for standard tiles & blocks */
+      .rounded-xl, .rounded-lg, .rounded-2xl, .rounded-3xl {
+        border-radius: ${radiusPx} !important;
+      }
+      
+      .bg-slate-900\\/50, .bg-slate-900\\/60, .bg-slate-900\\/80, .bg-slate-950\\/80, .bg-slate-900, .bg-slate-950, .bg-slate-900\\/40 {
+        border-radius: ${radiusPx} !important;
+      }
+      
+      /* High level Glow shadows */
+      .shadow-sm, .shadow-md, .shadow-lg, .shadow-2xl, .shadow {
+        box-shadow: ${cardShadow} !important;
+      }
+
+      /* Estedad font support custom family class */
+      .family-estedad {
+        font-family: "Estedad", "Vazirmatn", sans-serif !important;
+      }
+    `;
+
+    // Fetch Persian Estedad webfont dynamically if chosen
+    if (fontFamily === 'Estedad') {
+      let fontLink = document.getElementById('font-estedad-link');
+      if (!fontLink) {
+        fontLink = document.createElement('link');
+        fontLink.id = 'font-estedad-link';
+        fontLink.setAttribute('rel', 'stylesheet');
+        fontLink.setAttribute('href', 'https://fonts.googleapis.com/css2?family=Estedad:wght@300;400;700;900&display=swap');
+        document.head.appendChild(fontLink);
+      }
+    }
+  }, [currentTheme]);
+
   // Database States
   const [personnel, setPersonnel] = useState<Personnel[]>([]);
   const [cases, setCases] = useState<Case[]>([]);
@@ -303,6 +434,20 @@ export default function App() {
       setPartsCatalog(data.partsCatalog || []);
       setAssignments(data.assignments || []);
       setRepairs(data.repairs || []);
+
+      // Fetch custom corporate layout theme
+      try {
+        const themeRes = await fetch('/api/theme');
+        if (themeRes.ok) {
+          const themeJson = await themeRes.json();
+          if (themeJson && themeJson.theme) {
+            setCurrentTheme(themeJson.theme);
+            localStorage.setItem('custom-theme-config', JSON.stringify(themeJson.theme));
+          }
+        }
+      } catch (themeErr) {
+        console.warn("Could not retrieve custom theme from server, staying with previous layout config.", themeErr);
+      }
 
       // Cache locally
       localStorage.setItem('azarestan_ict_db', JSON.stringify({
@@ -1162,10 +1307,10 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col p-4 md:p-8 font-sans max-w-[1600px] w-full mx-auto print:p-0 print:max-w-none" dir="rtl">
+    <div className="min-h-screen flex flex-col p-4 md:p-8 font-sans max-w-[1600px] w-full mx-auto print:p-0 print:max-w-none" id="application-workspace-wrapper" dir="rtl">
       
       {/* 1. System Header component */}
-      <Header isDark={darkMode} onToggleTheme={() => setDarkMode(!darkMode)} />
+      <Header isDark={darkMode} onToggleTheme={() => setDarkMode(!darkMode)} customTitle={currentTheme.welcomeTitle} />
 
       {/* Welcome & logout bar */}
       <div className="no-print mt-4 mb-2 flex flex-col md:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs shadow-sm">
@@ -1335,6 +1480,7 @@ export default function App() {
               {[
                 { id: 'users-tab', label: 'مدیریت کاربران', icon: '🛡️', show: currentUser?.role === 'admin' },
                 { id: 'logs-tab', label: 'لاگ امنیتی سیستم', icon: '🪵', show: currentUser?.role === 'admin' },
+                { id: 'appearance-tab', label: 'تنظیمات زیبایی تم', icon: '🎨', show: currentUser?.role === 'admin' },
                 { id: 'backup-tab', label: 'پشتیبان‌گیری و سورس', icon: '⚙️', show: currentUser?.canBackup || currentUser?.role === 'admin' },
                 { id: 'add-new-tab', label: 'ثبت جدید (تکی/گروهی)', icon: '➕', show: currentUser?.canEditPersonnel || currentUser?.canEditEquipment || currentUser?.role === 'admin', highlight: true }
               ].filter(t => t.show).map((tab) => (
@@ -1555,6 +1701,14 @@ export default function App() {
 
           {activeTab === 'logs-tab' && (
             <LogsTab currentUser={currentUser} />
+          )}
+
+          {activeTab === 'appearance-tab' && (
+            <AppearanceTab 
+              currentUser={currentUser} 
+              currentTheme={currentTheme} 
+              onThemeUpdated={(updatedTheme) => setCurrentTheme(updatedTheme)} 
+            />
           )}
 
           {activeTab === 'bulk-qr-tab' && (

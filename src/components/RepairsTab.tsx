@@ -271,7 +271,7 @@ export default function RepairsTab({
         headers: { 
           'Content-Type': 'application/json',
           'x-operator-username': currentUser?.username || 'system',
-          'x-operator-name': currentUser?.name || 'Unknown'
+          'x-operator-name': encodeURIComponent(currentUser?.name || 'Unknown')
         },
         body: JSON.stringify(payload)
       });
@@ -300,7 +300,7 @@ export default function RepairsTab({
         headers: { 
           'Content-Type': 'application/json',
           'x-operator-username': currentUser?.username || 'system',
-          'x-operator-name': currentUser?.name || 'Unknown'
+          'x-operator-name': encodeURIComponent(currentUser?.name || 'Unknown')
         },
         body: JSON.stringify({ id })
       });
