@@ -46,3 +46,45 @@ export function getPersianDateString(date = new Date()): string {
     return "1405/03/09";
   }
 }
+
+/**
+ * Checks if a Shamsi date (YYYY/MM/DD) is older than 6 months from today.
+ */
+export function isServiceOverdue(lastServiced: string | undefined): boolean {
+  if (!lastServiced) return false;
+  
+  // Ensure we clean any Persian numerals or non-standard characters from lastServiced
+  let cleanLast = lastServiced;
+  const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+  for (let i = 0; i < 10; i++) {
+    cleanLast = cleanLast.replace(new RegExp(persianDigits[i], 'g'), String(i));
+  }
+  cleanLast = cleanLast.replace(/[^\d/]/g, '');
+
+  const lastParts = cleanLast.split('/');
+  if (lastParts.length !== 3) return false;
+
+  const y1 = parseInt(lastParts[0], 10);
+  const m1 = parseInt(lastParts[1], 10);
+  const d1 = parseInt(lastParts[2], 10);
+
+  if (isNaN(y1) || isNaN(m1) || isNaN(d1)) return false;
+
+  // Get current Persian date string
+  const todayStr = getPersianDateString();
+  const todayParts = todayStr.split('/');
+  if (todayParts.length !== 3) return false;
+
+  const y2 = parseInt(todayParts[0], 10);
+  const m2 = parseInt(todayParts[1], 10);
+  const d2 = parseInt(todayParts[2], 10);
+
+  if (isNaN(y2) || isNaN(m2) || isNaN(d2)) return false;
+
+  const monthDiff = (y2 - y1) * 12 + (m2 - m1);
+  if (monthDiff > 6) return true;
+  if (monthDiff === 6 && d2 >= d1) return true;
+
+  return false;
+}
+

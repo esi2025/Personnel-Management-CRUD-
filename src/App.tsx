@@ -1323,77 +1323,98 @@ export default function App() {
     setEditType(type);
   };
 
-  // Filter list based on global search inputs
+  // Filter list based on global search inputs with multi-keyword support
   const getFilteredPersonnel = () => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return personnel;
+    const keywords = q.split(/\s+/).filter(Boolean);
     return personnel.filter(p => 
-      p.name.toLowerCase().includes(q) || 
-      p.code.toLowerCase().includes(q) || 
-      p.title.toLowerCase().includes(q) || 
-      p.department.toLowerCase().includes(q)
+      keywords.every(kw =>
+        p.name.toLowerCase().includes(kw) || 
+        p.code.toLowerCase().includes(kw) || 
+        p.title.toLowerCase().includes(kw) || 
+        p.department.toLowerCase().includes(kw)
+      )
     );
   };
 
   const getFilteredCases = () => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return cases;
+    const keywords = q.split(/\s+/).filter(Boolean);
     return cases.filter(c => 
-      c.code.toLowerCase().includes(q) || 
-      c.cpu.toLowerCase().includes(q) || 
-      c.motherboard.toLowerCase().includes(q) ||
-      (c.power && c.power.toLowerCase().includes(q)) ||
-      (c.assignedTo && c.assignedTo.includes(q))
+      keywords.every(kw =>
+        c.code.toLowerCase().includes(kw) || 
+        c.cpu.toLowerCase().includes(kw) || 
+        c.motherboard.toLowerCase().includes(kw) ||
+        (c.power && c.power.toLowerCase().includes(kw)) ||
+        (c.assignedTo && c.assignedTo.toLowerCase().includes(kw))
+      )
     );
   };
 
   const getFilteredMonitors = () => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return monitors;
+    const keywords = q.split(/\s+/).filter(Boolean);
     return monitors.filter(m => 
-      m.code.toLowerCase().includes(q) || 
-      m.model.toLowerCase().includes(q) || 
-      (m.assignedTo && m.assignedTo.includes(q))
+      keywords.every(kw =>
+        m.code.toLowerCase().includes(kw) || 
+        m.model.toLowerCase().includes(kw) || 
+        (m.assignedTo && m.assignedTo.toLowerCase().includes(kw))
+      )
     );
   };
 
   const getFilteredPrinters = () => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return printers;
+    const keywords = q.split(/\s+/).filter(Boolean);
     return printers.filter(pr => 
-      pr.code.toLowerCase().includes(q) || 
-      pr.model.toLowerCase().includes(q) || 
-      (pr.assignedTo && pr.assignedTo.includes(q))
+      keywords.every(kw =>
+        pr.code.toLowerCase().includes(kw) || 
+        pr.model.toLowerCase().includes(kw) || 
+        (pr.assignedTo && pr.assignedTo.toLowerCase().includes(kw))
+      )
     );
   };
 
   const getFilteredMice = () => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return mice;
+    const keywords = q.split(/\s+/).filter(Boolean);
     return mice.filter(m => 
-      m.code.toLowerCase().includes(q) || 
-      m.model.toLowerCase().includes(q) || 
-      (m.assignedTo && m.assignedTo.includes(q))
+      keywords.every(kw =>
+        m.code.toLowerCase().includes(kw) || 
+        m.model.toLowerCase().includes(kw) || 
+        (m.assignedTo && m.assignedTo.toLowerCase().includes(kw))
+      )
     );
   };
 
   const getFilteredKeyboards = () => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return keyboards;
+    const keywords = q.split(/\s+/).filter(Boolean);
     return keyboards.filter(k => 
-      k.code.toLowerCase().includes(q) || 
-      k.model.toLowerCase().includes(q) || 
-      (k.assignedTo && k.assignedTo.includes(q))
+      keywords.every(kw =>
+        k.code.toLowerCase().includes(kw) || 
+        k.model.toLowerCase().includes(kw) || 
+        (k.assignedTo && k.assignedTo.toLowerCase().includes(kw))
+      )
     );
   };
 
   const getFilteredRadios = () => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return radios;
+    const keywords = q.split(/\s+/).filter(Boolean);
     return radios.filter(r => 
-      r.code.toLowerCase().includes(q) || 
-      r.model.toLowerCase().includes(q) || 
-      (r.assignedTo && r.assignedTo.includes(q))
+      keywords.every(kw =>
+        r.code.toLowerCase().includes(kw) || 
+        r.model.toLowerCase().includes(kw) || 
+        (r.assignedTo && r.assignedTo.toLowerCase().includes(kw))
+      )
     );
   };
 

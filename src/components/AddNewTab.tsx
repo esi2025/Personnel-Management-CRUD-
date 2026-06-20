@@ -48,6 +48,7 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
   // Common Equipment State
   const [equipStatus, setEquipStatus] = useState<'working' | 'repair' | 'retired'>('working');
   const [equipDesc, setEquipDesc] = useState('');
+  const [lastServiced, setLastServiced] = useState('');
 
   // --- BULK MODE STATE ---
   const [bulkType, setBulkType] = useState<'case' | 'monitor' | 'printer' | 'radio'>('case');
@@ -84,6 +85,7 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
     setRadCode(''); setRadModel('');
     setEquipStatus('working');
     setEquipDesc('');
+    setLastServiced('');
     setPastedText('');
   };
 
@@ -114,38 +116,39 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
         ramQty: cRamQty,
         power: cPower,
         status: equipStatus,
-        description: equipDesc
+        description: equipDesc,
+        lastServiced: lastServiced
       };
     } else if (activeType === 'monitor') {
       if (!mCode.trim() || !mModel.trim()) {
         alert('کد مانیتور و نام مدل مانیتور الزامی هستند.');
         return;
       }
-      data = { code: mCode, model: mModel, status: equipStatus, description: equipDesc };
+      data = { code: mCode, model: mModel, status: equipStatus, description: equipDesc, lastServiced: lastServiced };
     } else if (activeType === 'printer') {
       if (!prCode.trim() || !prModel.trim()) {
         alert('کد چاپگر و نام مدل چاپگر الزامی هستند.');
         return;
       }
-      data = { code: prCode, model: prModel, status: equipStatus, description: equipDesc };
+      data = { code: prCode, model: prModel, status: equipStatus, description: equipDesc, lastServiced: lastServiced };
     } else if (activeType === 'mouse') {
       if (!mouCode.trim() || !mouModel.trim()) {
         alert('کد ماوس و نام مدل ماوس الزامی هستند.');
         return;
       }
-      data = { code: mouCode, model: mouModel, status: equipStatus, description: equipDesc };
+      data = { code: mouCode, model: mouModel, status: equipStatus, description: equipDesc, lastServiced: lastServiced };
     } else if (activeType === 'keyboard') {
       if (!kbCode.trim() || !kbModel.trim()) {
         alert('کد کیبورد و نام مدل کیبورد الزامی هستند.');
         return;
       }
-      data = { code: kbCode, model: kbModel, status: equipStatus, description: equipDesc };
+      data = { code: kbCode, model: kbModel, status: equipStatus, description: equipDesc, lastServiced: lastServiced };
     } else if (activeType === 'radio') {
       if (!radCode.trim() || !radModel.trim()) {
         alert('کد بی‌سیم و نام مدل بی‌سیم الزامی هستند.');
         return;
       }
-      data = { code: radCode.trim().toUpperCase(), model: radModel, status: equipStatus, description: equipDesc };
+      data = { code: radCode.trim().toUpperCase(), model: radModel, status: equipStatus, description: equipDesc, lastServiced: lastServiced };
     }
 
     const success = await onSave(activeType, data);
@@ -654,6 +657,19 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
                     placeholder="دلیل اختصاص، ایرادات برچسب اموال یا یادداشت..."
                     rows={2}
                     className="w-full text-right p-2.5 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1.5 p-3 bg-slate-50/50 rounded-lg border border-slate-200 text-xs md:text-sm animate-fade-in">
+                  <label className="font-semibold text-slate-800">
+                    ⚠️ تاریخ آخرین سرویس (خورشیدی YYYY/MM/DD):
+                  </label>
+                  <input
+                    type="text"
+                    value={lastServiced}
+                    onChange={(e) => setLastServiced(e.target.value)}
+                    placeholder="مثال: 1404/03/15"
+                    className="w-full text-right p-2.5 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-xs font-mono"
                   />
                 </div>
               </div>

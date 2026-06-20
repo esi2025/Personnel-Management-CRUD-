@@ -23,6 +23,7 @@ export interface Case {
   status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
   description?: string; // توضیحات تکمیلی
   location?: string; // موقعیت فیزیکی کالا
+  lastServiced?: string; // تاریخ آخرین سرویس (شمسی YYYY/MM/DD)
 }
 
 export interface Monitor {
@@ -32,6 +33,7 @@ export interface Monitor {
   status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
   description?: string; // توضیحات تکمیلی
   location?: string; // موقعیت فیزیکی کالا
+  lastServiced?: string; // تاریخ آخرین سرویس (شمسی YYYY/MM/DD)
 }
 
 export interface Printer {
@@ -41,6 +43,7 @@ export interface Printer {
   status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
   description?: string; // توضیحات تکمیلی
   location?: string; // موقعیت فیزیکی کالا
+  lastServiced?: string; // تاریخ آخرین سرویس (شمسی YYYY/MM/DD)
 }
 
 export interface Mouse {
@@ -50,6 +53,7 @@ export interface Mouse {
   status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
   description?: string; // توضیحات تکمیلی
   location?: string; // موقعیت فیزیکی کالا
+  lastServiced?: string; // تاریخ آخرین سرویس (شمسی YYYY/MM/DD)
 }
 
 export interface Keyboard {
@@ -59,6 +63,7 @@ export interface Keyboard {
   status?: 'working' | 'repair' | 'retired'; // وضعیت سلامت تجهیز
   description?: string; // توضیحات تکمیلی
   location?: string; // موقعیت فیزیکی کالا
+  lastServiced?: string; // تاریخ آخرین سرویس (شمسی YYYY/MM/DD)
 }
 
 export interface Radio {
@@ -70,6 +75,7 @@ export interface Radio {
   frequencyRange?: string; // UHF/VHF
   ipRating?: string; // درجه حفاظت فیزیکی IP
   location?: string; // موقعیت فیزیکی کالا
+  lastServiced?: string; // تاریخ آخرین سرویس (شمسی YYYY/MM/DD)
 }
 
 export interface CatalogItem {

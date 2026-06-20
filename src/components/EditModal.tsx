@@ -41,6 +41,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
   // Status state
   const [equipStatus, setEquipStatus] = useState<'working' | 'repair' | 'retired'>('working');
   const [equipDesc, setEquipDesc] = useState('');
+  const [lastServiced, setLastServiced] = useState('');
 
   // Sync inputs with item when mounted
   useEffect(() => {
@@ -74,6 +75,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
     if (type && type !== 'personnel') {
       setEquipStatus(item.status || 'working');
       setEquipDesc(item.description || '');
+      setLastServiced(item.lastServiced || '');
     }
   }, [item, type]);
 
@@ -105,6 +107,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
       data.assignedTo = item.assignedTo;
       data.status = equipStatus;
       data.description = equipDesc;
+      data.lastServiced = lastServiced;
     } else if (type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard' || type === 'radio') {
       data.code = equipCode;
       data.oldCode = item.code;
@@ -112,6 +115,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
       data.assignedTo = item.assignedTo;
       data.status = equipStatus;
       data.description = equipDesc;
+      data.lastServiced = lastServiced;
       if (type === 'radio') {
         data.frequencyRange = radioFreq;
         data.ipRating = radioIp;
@@ -359,6 +363,19 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
                   placeholder="مثال: تخصیص مجدد داده شده، دارای ایراد جزئی در پورت‌ها، مشخصات فن یا هرگونه یادداشت دفتری دیگر..."
                   rows={3}
                   className="w-full text-right p-2.5 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none dark:bg-slate-900 dark:border-slate-700 dark:text-white"
+                />
+              </div>
+
+              <div className="space-y-1.5 p-3 bg-slate-50/50 dark:bg-slate-800/40 rounded-lg border border-slate-200 dark:border-slate-700/60 text-xs md:text-sm animate-fade-in">
+                <label className="font-semibold text-slate-800 dark:text-slate-200">
+                  ⚠️ تاریخ آخرین سرویس (خورشیدی YYYY/MM/DD):
+                </label>
+                <input
+                  type="text"
+                  value={lastServiced}
+                  onChange={(e) => setLastServiced(e.target.value)}
+                  placeholder="مثال: 1404/03/15"
+                  className="w-full text-right p-2.5 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none dark:bg-slate-900 dark:border-slate-700 dark:text-white font-mono"
                 />
               </div>
             </>

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Case, Monitor, Printer, Personnel, Mouse, Keyboard, Radio } from '../types';
+import { isServiceOverdue } from '../utils/date';
 
 export function StatusBadge({ status }: { status?: 'working' | 'repair' | 'retired' }) {
   const currentStatus = status || 'working';
@@ -147,13 +148,23 @@ export function CasesSubTab({
                       onClick={() => onShowQR(c.code, 'case', c)}
                       title="کلیک روی سطر جهت مشاهده و چاپ برچسب بارکد اموال"
                     >
-                      <td className="p-2.5 font-mono font-bold text-slate-900">
-                        <div className="flex items-center gap-1.5 justify-start">
-                          <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none">
+                      <td className="p-2.5 font-mono font-bold text-slate-900 font-sans">
+                        <div className="flex items-center gap-1.5 justify-start font-mono">
+                          <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none font-sans">
                              📸 QR
                           </span>
                           <span>{c.code}</span>
+                          {isServiceOverdue(c.lastServiced) && (
+                            <span className="text-amber-500 text-sm animate-pulse select-none inline-block ml-1" title={`⚠️ نیاز به سرویس: بیش از ۶ ماه از آخرین سرویس گذشته است (${c.lastServiced})`}>
+                              ⚠️
+                            </span>
+                          )}
                         </div>
+                        {c.lastServiced && (
+                          <div className="text-[10px] font-sans text-slate-400 mt-0.5" title="تاریخ آخرین سرویس دوره‌ای">
+                            📅 سرویس: {c.lastServiced}
+                          </div>
+                        )}
                       </td>
                       <td className="p-2.5 text-slate-600">{c.motherboard}</td>
                       <td className="p-2.5 text-slate-600">{c.cpu}</td>
@@ -322,13 +333,23 @@ export function MonitorsSubTab({
                       onClick={() => onShowQR(m.code, 'monitor', m)}
                       title="کلیک روی سطر جهت مشاهده و چاپ برچسب بارکد اموال"
                     >
-                      <td className="p-2.5 font-mono font-bold text-slate-900">
-                        <div className="flex items-center gap-1.5 justify-start">
-                          <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none">
+                      <td className="p-2.5 font-mono font-bold text-slate-900 font-sans">
+                        <div className="flex items-center gap-1.5 justify-start font-mono">
+                          <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none font-sans">
                             📸 QR
                           </span>
                           <span>{m.code}</span>
+                          {isServiceOverdue(m.lastServiced) && (
+                            <span className="text-amber-500 text-sm animate-pulse select-none inline-block ml-1" title={`⚠️ نیاز به سرویس: بیش از ۶ ماه از آخرین سرویس گذشته است (${m.lastServiced})`}>
+                              ⚠️
+                            </span>
+                          )}
                         </div>
+                        {m.lastServiced && (
+                          <div className="text-[10px] font-sans text-slate-400 mt-0.5" title="تاریخ آخرین سرویس دوره‌ای">
+                            📅 سرویس: {m.lastServiced}
+                          </div>
+                        )}
                       </td>
                       <td className="p-2.5 text-slate-600">{m.model}</td>
                       <td className="p-2.5">
@@ -488,13 +509,23 @@ export function PrintersSubTab({
                       onClick={() => onShowQR(pr.code, 'printer', pr)}
                       title="کلیک روی سطر جهت مشاهده و چاپ برچسب بارکد اموال"
                     >
-                      <td className="p-2.5 font-mono font-bold text-slate-900">
-                        <div className="flex items-center gap-1.5 justify-start">
-                          <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none">
+                      <td className="p-2.5 font-mono font-bold text-slate-900 font-sans">
+                        <div className="flex items-center gap-1.5 justify-start font-mono">
+                          <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none font-sans">
                             📸 QR
                           </span>
                           <span>{pr.code}</span>
+                          {isServiceOverdue(pr.lastServiced) && (
+                            <span className="text-amber-500 text-sm animate-pulse select-none inline-block ml-1" title={`⚠️ نیاز به سرویس: بیش از ۶ ماه از آخرین سرویس گذشته است (${pr.lastServiced})`}>
+                              ⚠️
+                            </span>
+                          )}
                         </div>
+                        {pr.lastServiced && (
+                          <div className="text-[10px] font-sans text-slate-400 mt-0.5" title="تاریخ آخرین سرویس دوره‌ای">
+                            📅 سرویس: {pr.lastServiced}
+                          </div>
+                        )}
                       </td>
                       <td className="p-2.5 text-slate-600">{pr.model}</td>
                       <td className="p-2.5">
@@ -654,13 +685,23 @@ export function MiceSubTab({
                       onClick={() => onShowQR(m.code, 'mouse', m)}
                       title="کلیک روی سطر جهت مشاهده و چاپ برچسب بارکد اموال"
                     >
-                      <td className="p-2.5 font-mono font-bold text-slate-900">
-                        <div className="flex items-center gap-1.5 justify-start">
-                          <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none">
+                      <td className="p-2.5 font-mono font-bold text-slate-900 font-sans">
+                        <div className="flex items-center gap-1.5 justify-start font-mono font-sans">
+                          <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none font-sans">
                             📸 QR
                           </span>
                           <span>{m.code}</span>
+                          {isServiceOverdue(m.lastServiced) && (
+                            <span className="text-amber-500 text-sm animate-pulse select-none inline-block ml-1 font-sans" title={`⚠️ نیاز به سرویس: بیش از ۶ ماه از آخرین سرویس گذشته است (${m.lastServiced})`}>
+                              ⚠️
+                            </span>
+                          )}
                         </div>
+                        {m.lastServiced && (
+                          <div className="text-[10px] font-sans text-slate-400 mt-0.5" title="تاریخ آخرین سرویس دوره‌ای">
+                            📅 سرویس: {m.lastServiced}
+                          </div>
+                        )}
                       </td>
                       <td className="p-2.5 text-slate-600">{m.model}</td>
                       <td className="p-2.5">
@@ -820,13 +861,23 @@ export function KeyboardsSubTab({
                       onClick={() => onShowQR(k.code, 'keyboard', k)}
                       title="کلیک روی سطر جهت مشاهده و چاپ برچسب بارکد اموال"
                     >
-                      <td className="p-2.5 font-mono font-bold text-slate-900">
-                        <div className="flex items-center gap-1.5 justify-start">
-                          <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none">
+                      <td className="p-2.5 font-mono font-bold text-slate-900 font-sans">
+                        <div className="flex items-center gap-1.5 justify-start font-mono">
+                          <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none font-sans">
                             📸 QR
                           </span>
                           <span>{k.code}</span>
+                          {isServiceOverdue(k.lastServiced) && (
+                            <span className="text-amber-500 text-sm animate-pulse select-none inline-block ml-1 font-sans" title={`⚠️ نیاز به سرویس: بیش از ۶ ماه از آخرین سرویس گذشته است (${k.lastServiced})`}>
+                              ⚠️
+                            </span>
+                          )}
                         </div>
+                        {k.lastServiced && (
+                          <div className="text-[10px] font-sans text-slate-400 mt-0.5" title="تاریخ آخرین سرویس دوره‌ای">
+                            📅 سرویس: {k.lastServiced}
+                          </div>
+                        )}
                       </td>
                       <td className="p-2.5 text-slate-600">{k.model}</td>
                       <td className="p-2.5">
@@ -1076,13 +1127,23 @@ export function RadiosSubTab({
                           onClick={() => onShowQR(r.code, 'radio', r)}
                           title="کلیک روی سطر جهت مشاهده برچسب بارکد اموال بی‌سیم"
                         >
-                          <td className="p-2.5 font-mono font-bold text-slate-900">
-                            <div className="flex items-center gap-1.5 justify-start">
-                              <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none">
+                          <td className="p-2.5 font-mono font-bold text-slate-900 font-sans font-bold">
+                            <div className="flex items-center gap-1.5 justify-start font-mono">
+                              <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none font-sans">
                                 📸 QR
                               </span>
                               <span>{r.code}</span>
+                              {isServiceOverdue(r.lastServiced) && (
+                                <span className="text-amber-500 text-sm animate-pulse select-none inline-block ml-1 font-sans" title={`⚠️ نیاز به سرویس: بیش از ۶ ماه از آخرین سرویس گذشته است (${r.lastServiced})`}>
+                                  ⚠️
+                                </span>
+                              )}
                             </div>
+                            {r.lastServiced && (
+                              <div className="text-[10px] font-sans text-slate-400 mt-0.5 font-sans font-normal" title="تاریخ آخرین سرویس دوره‌ای">
+                                📅 سرویس: {r.lastServiced}
+                              </div>
+                            )}
                           </td>
                           <td className="p-2.5 text-slate-600 font-bold">{r.model}</td>
                           <td className="p-2.5">
