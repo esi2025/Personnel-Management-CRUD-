@@ -143,7 +143,9 @@ export interface Repair {
   assignedTechnician: string;
   completedDate: string;
   remarks: string;
-}export interface ThemeSettings {
+}
+
+export interface ThemeSettings {
   themeMode: 'slate-dark' | 'emerald' | 'indigo' | 'rose' | 'warm-slate' | 'classic' | 'navy-ocean';
   fontFamily: 'Vazirmatn' | 'Inter' | 'Estedad' | 'JetBrains Mono' | 'Tahoma';
   accentColor: string;
@@ -154,4 +156,16 @@ export interface Repair {
   appBorderRadius: 'rounded-none' | 'rounded-md' | 'rounded-lg' | 'rounded-xl' | 'rounded-2xl' | 'rounded-3xl';
   workspaceGlowStyle: 'none' | 'soft' | 'aurora' | 'intense';
   navbarOpacity: string;
+  textColor?: string;
+  headingColor?: string;
+  cardBackground?: string;
+  buttonBackground?: string;
+  buttonTextColor?: string;
+  baseFontSize?: 'sm' | 'base' | 'lg';
+  lightTextColor?: string;
+  lightHeadingColor?: string;
+  lightCardBackground?: string;
+  lightButtonBackground?: string;
+  lightButtonTextColor?: string;
+  lightContainerBackground?: string;
 }

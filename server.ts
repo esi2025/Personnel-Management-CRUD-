@@ -618,7 +618,21 @@ async function startServer() {
           cardGlow: true,
           headingStyle: "font-black tracking-tight",
           welcomeTitle: "اموال و تجهیزات فاوا کارگاه بوشهر",
-          appBorderRadius: "rounded-xl"
+          appBorderRadius: "rounded-xl",
+          workspaceGlowStyle: "soft",
+          navbarOpacity: "90",
+          textColor: "#cbd5e1",
+          headingColor: "#f8fafc",
+          cardBackground: "rgba(15, 23, 42, 0.75)",
+          buttonBackground: "#3b82f6",
+          buttonTextColor: "#111827",
+          baseFontSize: "base",
+          lightTextColor: "#334155",
+          lightHeadingColor: "#0f172a",
+          lightCardBackground: "#ffffff",
+          lightButtonBackground: "#3b82f6",
+          lightButtonTextColor: "#ffffff",
+          lightContainerBackground: "#f1f5f9"
         }
       });
     } catch (e) {
@@ -931,6 +945,7 @@ async function startServer() {
         assignedTo: fields.assignedTo || null,
         status: fields.status || "working",
         description: fields.description?.trim() || "",
+        lastServiced: fields.lastServiced || "",
       };
 
       if (isEdit) {
@@ -966,6 +981,7 @@ async function startServer() {
         assignedTo: fields.assignedTo || null,
         status: fields.status || "working",
         description: fields.description?.trim() || "",
+        lastServiced: fields.lastServiced || "",
       };
 
       if (isEdit) {
@@ -1001,6 +1017,7 @@ async function startServer() {
         assignedTo: fields.assignedTo || null,
         status: fields.status || "working",
         description: fields.description?.trim() || "",
+        lastServiced: fields.lastServiced || "",
       };
 
       if (isEdit) {
@@ -1036,6 +1053,7 @@ async function startServer() {
         assignedTo: fields.assignedTo || null,
         status: fields.status || "working",
         description: fields.description?.trim() || "",
+        lastServiced: fields.lastServiced || "",
       };
 
       if (isEdit) {
@@ -1071,6 +1089,7 @@ async function startServer() {
         assignedTo: fields.assignedTo || null,
         status: fields.status || "working",
         description: fields.description?.trim() || "",
+        lastServiced: fields.lastServiced || "",
       };
 
       if (isEdit) {
@@ -1106,6 +1125,9 @@ async function startServer() {
         assignedTo: fields.assignedTo || null,
         status: fields.status || "working",
         description: fields.description?.trim() || "",
+        lastServiced: fields.lastServiced || "",
+        frequencyRange: fields.frequencyRange || "",
+        ipRating: fields.ipRating || "",
       };
 
       if (isEdit) {
@@ -1256,6 +1278,72 @@ async function startServer() {
     }
 
     return res.json({ success: true, savedCount: totalSaved, skippedCodes: skipped });
+  });
+
+  // API: Save Bulk Edit on existing Items
+  app.post("/api/save-bulk-edit", (req, res) => {
+    const { updates } = req.body; // updates is an array of { code: string, type: string, fields: any }
+
+    if (!updates || !Array.isArray(updates)) {
+      return res.status(400).json({ error: "لیست تغییرات معتبر یافت نشد." });
+    }
+
+    const opUser = req.headers["x-operator-username"] as string || "system";
+    const opName = req.headers["x-operator-name"] as string || "سیستم";
+    const clientIp = getClientIp(req);
+
+    const fileMap: Record<string, string> = {
+      case: "cases.json",
+      monitor: "monitors.json",
+      printer: "printers.json",
+      mouse: "mice.json",
+      keyboard: "keyboards.json",
+      radio: "radios.json"
+    };
+
+    // Group updates by type
+    const updatesByType: Record<string, any[]> = {};
+    for (const item of updates) {
+      if (!item.type || !item.code) continue;
+      const type = item.type;
+      if (!updatesByType[type]) updatesByType[type] = [];
+      updatesByType[type].push(item);
+    }
+
+    let totalUpdated = 0;
+
+    for (const [type, typeUpdates] of Object.entries(updatesByType)) {
+      const fileName = fileMap[type];
+      if (!fileName) continue;
+
+      const dbList = readDb(fileName);
+      let changed = false;
+
+      for (const updateInfo of typeUpdates) {
+        const targetCode = String(updateInfo.code).trim().toUpperCase();
+        const idx = dbList.findIndex((x: any) => String(x.code).toUpperCase() === targetCode);
+        if (idx !== -1) {
+          // Merge fields safely
+          dbList[idx] = {
+            ...dbList[idx],
+            ...updateInfo.fields,
+            code: dbList[idx].code // always keep original code
+          };
+          changed = true;
+          totalUpdated++;
+        }
+      }
+
+      if (changed) {
+        writeDb(fileName, dbList);
+      }
+    }
+
+    if (totalUpdated > 0) {
+      addAuditLog(opUser, opName, clientIp, "edit", "bulk_edit", "-", `ویرایش تکمیلی گروهی بر روی تعداد ${totalUpdated} تجهیزات سخت‌افزاری`);
+    }
+
+    return res.json({ success: true, updatedCount: totalUpdated });
   });
 
   // API: Delete Item

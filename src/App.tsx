@@ -16,6 +16,7 @@ import UsersTab from './components/UsersTab';
 import BulkQRTab from './components/BulkQRTab';
 import LogsTab from './components/LogsTab';
 import RepairsTab from './components/RepairsTab';
+import { BulkEditTab } from './components/BulkEditTab';
 import AppearanceTab from './components/AppearanceTab';
 import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard, CatalogItem, Repair, Radio, ThemeSettings } from './types';
 import { getPersianDateString } from './utils/date';
@@ -207,9 +208,11 @@ export default function App() {
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
       localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
       localStorage.setItem('theme', 'light');
     }
   }, [darkMode]);
@@ -234,9 +237,26 @@ export default function App() {
       welcomeTitle: 'اموال و تجهیزات فاوا کارگاه بوشهر',
       appBorderRadius: 'rounded-xl',
       workspaceGlowStyle: 'soft',
-      navbarOpacity: '90'
+      navbarOpacity: '90',
+      textColor: '#cbd5e1',
+      headingColor: '#f8fafc',
+      cardBackground: 'rgba(15, 23, 42, 0.75)',
+      buttonBackground: '#3b82f6',
+      buttonTextColor: '#111827',
+      baseFontSize: 'base',
+      lightTextColor: '#334155',
+      lightHeadingColor: '#0f172a',
+      lightCardBackground: '#ffffff',
+      lightButtonBackground: '#3b82f6',
+      lightButtonTextColor: '#ffffff',
+      lightContainerBackground: '#f1f5f9'
     };
   });
+
+  // Synchronize localStorage with currentTheme instantly whenever it changes
+  useEffect(() => {
+    localStorage.setItem('custom-theme-config', JSON.stringify(currentTheme));
+  }, [currentTheme]);
 
   // Dynamically compile and override css properties to reflect visual configurations
   useEffect(() => {
@@ -247,7 +267,26 @@ export default function App() {
       document.head.appendChild(styleTag);
     }
 
-    const { fontFamily, accentColor, containerBackground, cardGlow, appBorderRadius, workspaceGlowStyle } = currentTheme;
+    const { 
+      fontFamily, 
+      accentColor, 
+      containerBackground, 
+      cardGlow, 
+      appBorderRadius, 
+      workspaceGlowStyle,
+      textColor,
+      headingColor,
+      cardBackground,
+      buttonBackground,
+      buttonTextColor,
+      baseFontSize,
+      lightTextColor,
+      lightHeadingColor,
+      lightCardBackground,
+      lightButtonBackground,
+      lightButtonTextColor,
+      lightContainerBackground
+    } = currentTheme;
 
     let fontName = 'Vazirmatn';
     if (fontFamily === 'Inter') fontName = 'Inter, sans-serif';
@@ -263,107 +302,272 @@ export default function App() {
     if (appBorderRadius === 'rounded-2xl') radiusPx = '16px';
     if (appBorderRadius === 'rounded-3xl') radiusPx = '24px';
 
-    const rootBg = darkMode ? (containerBackground || '#0b0f19') : '#f1f5f9';
-    const cardBg = darkMode ? 'rgba(15, 23, 42, 0.75)' : '#ffffff';
+    const rootBg = darkMode 
+      ? (containerBackground || '#0b0f19') 
+      : (lightContainerBackground || '#f1f5f9');
+    
+    // Core color defaults with option overrides
+    const actualTextColor = darkMode 
+      ? (textColor || '#cbd5e1') 
+      : (lightTextColor || '#334155');
+      
+    const actualHeadingColor = darkMode 
+      ? (headingColor || '#f8fafc') 
+      : (lightHeadingColor || '#0f172a');
+      
+    const actualCardBg = darkMode 
+      ? (cardBackground || 'rgba(15, 23, 42, 0.75)') 
+      : (lightCardBackground || '#ffffff');
+      
+    const actualButtonBg = darkMode 
+      ? (buttonBackground || accentColor) 
+      : (lightButtonBackground || accentColor);
+      
+    const actualButtonTextColor = darkMode 
+      ? (buttonTextColor || '#111827') 
+      : (lightButtonTextColor || '#ffffff');
+    
     const cardBorder = darkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(226, 232, 240, 0.9)';
-    const textColor = darkMode ? '#cbd5e1' : '#334155';
-    const headingColor = darkMode ? '#f8fafc' : '#0f172a';
-    const muteColor = darkMode ? '#94a3b8' : '#64748b';
     const inputBg = darkMode ? 'rgba(3, 7, 18, 0.65)' : '#ffffff';
     const inputBorder = darkMode ? 'rgba(255, 255, 255, 0.12)' : '#cbd5e1';
 
     let cardShadow = 'none';
     if (cardGlow) {
       cardShadow = darkMode 
-        ? `0 4px 22px -5px ${accentColor}4d, 0 8px 32px rgba(0, 0, 0, 0.35)` 
-        : `0 4px 18px -4px rgba(0, 0, 0, 0.05), 0 10px 30px -10px ${accentColor}10`;
+        ? `0 4px 22px -5px ${actualButtonBg}4d, 0 8px 32px rgba(0, 0, 0, 0.35)` 
+        : `0 4px 18px -4px rgba(0, 0, 0, 0.05), 0 10px 30px -10px ${actualButtonBg}10`;
     } else {
       cardShadow = darkMode 
         ? '0 4px 12px rgba(0, 0, 0, 0.25)' 
         : '0 4px 12px rgba(0, 0, 0, 0.02)';
     }
 
+    const fontSizePx = baseFontSize === 'sm' ? '12px' : baseFontSize === 'lg' ? '17px' : '14.5px';
+
     styleTag.innerHTML = `
-      :root, body, #root, #app-root-container {
-        font-family: ${fontName} !important;
-        background-color: ${rootBg} !important;
-        color: ${textColor} !important;
-        transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
-      }
-      
-      /* Accent colors override */
-      .text-blue-600, .text-blue-500, .text-blue-400, .text-blue-650, .text-indigo-655 {
-        color: ${accentColor} !important;
-      }
-      .bg-blue-600, .bg-blue-500, .bg-blue-700, .bg-blue-800, .bg-blue-650 {
-        background-color: ${accentColor} !important;
-        color: ${darkMode ? '#000000' : '#ffffff'} !important;
-      }
-      .border-blue-600, .border-blue-500 {
-        border-color: ${accentColor} !important;
-      }
-      
-      /* Active tab colors for indigo and emerald subthemes */
-      .bg-emerald-600 {
-        background-color: ${accentColor === '#3b82f6' ? '#10b981' : accentColor} !important;
-        color: ${darkMode ? '#000000' : '#ffffff'} !important;
-      }
-      .bg-indigo-600 {
-        background-color: ${accentColor === '#3b82f6' ? '#6366f1' : accentColor} !important;
-        color: ${darkMode ? '#000000' : '#ffffff'} !important;
-      }
-      
-      /* Primary and button hover overlays */
-      .hover\\:bg-blue-700:hover, .hover\\:bg-blue-600:hover, .hover\\:bg-blue-800:hover {
-        background-color: ${accentColor}dd !important;
-        filter: brightness(1.08);
-      }
-      
-      /* Styled dynamic workspace wrapper */
-      #application-workspace-wrapper {
-        background-color: ${rootBg} !important;
-        background-image: ${workspaceGlowStyle === 'aurora' 
-          ? (darkMode 
-              ? `radial-gradient(circle at 12% 18%, ${accentColor}1c 0%, transparent 45%), radial-gradient(circle at 88% 82%, ${accentColor}24 0%, transparent 48%)` 
-              : `radial-gradient(circle at 12% 18%, ${accentColor}0a 0%, transparent 60%), radial-gradient(circle at 88% 82%, ${accentColor}0c 0%, transparent 60%)`)
-          : workspaceGlowStyle === 'intense'
-          ? (darkMode 
-              ? `radial-gradient(circle at 50% -25%, ${accentColor}3c 0%, transparent 65%)` 
-              : `radial-gradient(circle at 50% -25%, ${accentColor}12 0%, transparent 65%)`)
-          : workspaceGlowStyle === 'soft'
-          ? (darkMode 
-              ? `radial-gradient(circle at 50% 50%, ${accentColor}0e 0%, transparent 80%)` 
-              : `radial-gradient(circle at 50% 50%, ${accentColor}04 0%, transparent 80%)`)
-          : 'none'} !important;
-        transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      :root {
+        --theme-font-family: ${fontName};
+        --theme-container-bg: ${rootBg};
+        --theme-text-color: ${actualTextColor};
+        --theme-heading-color: ${actualHeadingColor};
+        --theme-card-bg: ${actualCardBg};
+        --theme-button-bg: ${actualButtonBg};
+        --theme-button-text: ${actualButtonTextColor};
+        --theme-accent-color: ${accentColor};
+        --theme-border-radius: ${radiusPx};
+        --theme-font-size: ${fontSizePx};
       }
 
-      /* Dynamically adjusted border radius for standard tiles & blocks */
-      .rounded-xl, .rounded-lg, .rounded-2xl, .rounded-3xl {
-        border-radius: ${radiusPx} !important;
+      body, html, #root, #app-root-container {
+        font-family: var(--theme-font-family) !important;
+        font-size: var(--theme-font-size) !important;
+        background-color: var(--theme-container-bg) !important;
+        color: var(--theme-text-color) !important;
       }
-      
-      .bg-white, .dark\\:bg-slate-950, .bg-slate-950, .bg-slate-900\\/50, .bg-slate-900\\/60, .bg-slate-900\\/80, .bg-slate-950\\/80, .bg-slate-900, .bg-slate-950, .bg-slate-900\\/40 {
-        background-color: ${cardBg} !important;
+
+      /* Heading typography colors and structural labels override with Ultimate Specificity */
+      html body h1, html body h2, html body h3, html body h4, html body h5, html body h6, html body strong, html body th,
+      html.dark body h1, html.dark body h2, html.dark body h3, html.dark body h4, html.dark body h5, html.dark body h6, html.dark body strong, html.dark body th,
+      html.light body h1, html.light body h2, html.light body h3, html.light body h4, html.light body h5, html.light body h6, html.light body strong, html.light body th,
+      html body .font-black, html body .font-bold, html body .font-extrabold,
+      html.dark body .font-black, html.dark body .font-bold, html.dark body .font-extrabold,
+      html.light body .font-black, html.light body .font-bold, html.light body .font-extrabold,
+      html body .text-slate-900, html body .dark\\:text-slate-900,
+      html body .text-slate-800, html body .dark\\:text-slate-800,
+      html body .text-slate-100, html body .dark\\:text-slate-100,
+      html body .text-white, html body .dark\\:text-white,
+      html.dark body .text-slate-900, html.dark body .text-slate-800, html.dark body .text-slate-100, html.dark body .text-white,
+      html.light body .text-slate-900, html.light body .text-slate-800, html.light body .text-white,
+      .heading-themed {
+        color: var(--theme-heading-color) !important;
+      }
+
+      /* Text and descriptive body styling with Ultimate Specificity and Hierarchy */
+      html body p, html body label, html body li, html body td,
+      html body .text-slate-750, html body .text-slate-700, html body .text-slate-650, html body .text-slate-600, html body .dark\\:text-slate-350, html body .dark\\:text-slate-300,
+      html body .dark\\:text-slate-400, html body .text-gray-700, html body .text-gray-650, html body .text-gray-600,
+      html.dark body p, html.dark body label, html.dark body li, html.dark body td,
+      html.dark body .text-slate-700, html.dark body .text-slate-600, html.dark body .text-slate-500, html.dark body .text-slate-400, html.dark body .text-slate-300,
+      html.light body p, html.light body label, html.light body li, html.light body td,
+      html.light body .text-slate-700, html.light body .text-slate-600, html.light body .text-slate-500, html.light body .text-slate-400 {
+        color: var(--theme-text-color) !important;
+      }
+
+      /* Secondary/dimmed descriptions / meta info */
+      html body .text-slate-505, html body .text-slate-500, html body .text-slate-400, html body .text-gray-500, html body .text-gray-400,
+      html.dark body .text-slate-500, html.dark body .text-slate-400,
+      html.light body .text-slate-500, html.light body .text-slate-400 {
+        color: var(--theme-text-color) !important;
+        opacity: 0.8 !important;
+      }
+
+      /* Buttons & active UI actions background and text colors (excl. naked button tags to prevent action button clashes) */
+      html body .bg-indigo-600, html body .bg-indigo-505, html body .bg-indigo-500, html body .bg-indigo-650, html body .bg-indigo-700,
+      html body .bg-blue-600, html body .bg-blue-500, html body .bg-blue-700, html body .bg-blue-800, html body .bg-blue-650,
+      html body .btn-gradient,
+      html body button.bg-gradient-to-r, html body button.bg-gradient-to-l, 
+      html body a.bg-gradient-to-r, html body a.bg-gradient-to-l,
+      html.dark body .bg-indigo-600, html.dark body .bg-indigo-500, html.dark body .bg-indigo-650, html.dark body .bg-indigo-700,
+      html.dark body .bg-blue-600, html.dark body .bg-blue-500, html.dark body .bg-blue-700, html.dark body .bg-blue-800, html.dark body .bg-blue-650,
+      html.dark body button.bg-gradient-to-r, html.dark body button.bg-gradient-to-l,
+      html.light body .bg-indigo-600, html.light body .bg-indigo-500,
+      html.light body .bg-blue-600, html.light body .bg-blue-500, html.light body .bg-blue-700, html.light body .bg-blue-855, html.light body .bg-blue-650,
+      html body button.bg-blue-600, html body button.bg-indigo-600, html.light body button.bg-blue-600, html.light body button.bg-indigo-600 {
+        background-color: var(--theme-button-bg) !important;
+        color: var(--theme-button-text) !important;
+        border-color: var(--theme-button-bg) !important;
+      }
+
+      /* Hover States */
+      html body .bg-indigo-600:hover, html body .bg-indigo-500:hover, html body .bg-indigo-650:hover, html body .bg-indigo-700:hover,
+      html body .bg-blue-600:hover, html body .bg-blue-500:hover, html body .bg-blue-700:hover, html body .bg-blue-800:hover, html body .bg-blue-650:hover,
+      html.dark body .bg-indigo-600:hover, html.dark body .bg-indigo-500:hover, html.dark body .bg-indigo-650:hover, html.dark body .bg-indigo-700:hover,
+      html.light body .bg-indigo-600:hover, html.light body .bg-indigo-500:hover, html.light body .bg-indigo-650:hover, html.light body .bg-indigo-700:hover {
+        background-color: var(--theme-button-bg) !important;
+        filter: brightness(1.15) !important;
+        color: var(--theme-button-text) !important;
+      }
+
+      /* Make sure nested spans, icons, text utilities inside themed backgrounds perfectly match their text color */
+      html body .bg-indigo-600 *, html body .bg-indigo-500 *, html body .bg-indigo-650 *, html body .bg-indigo-700 *,
+      html body .bg-blue-600 *, html body .bg-blue-500 *, html body .bg-blue-700 *, html body .bg-blue-800 *, html body .bg-blue-650 *,
+      html body .btn-gradient *,
+      html body button.bg-gradient-to-r *, html body button.bg-gradient-to-l *, 
+      html body a.bg-gradient-to-r *, html body a.bg-gradient-to-l *,
+      html.dark body .bg-indigo-600 *, html.dark body .bg-indigo-500 *, html.dark body .bg-indigo-650 *, html.dark body .bg-indigo-700 *,
+      html.dark body button.bg-gradient-to-r *, html.dark body button.bg-gradient-to-l *,
+      html.light body .bg-indigo-600 *, html.light body .bg-indigo-500 *, html.light body .bg-indigo-650 *, html.light body .bg-indigo-700 *,
+      html.light body .bg-indigo-600 * span, html.light body .bg-indigo-500 * span {
+        color: var(--theme-button-text) !important;
+      }
+
+      html body .text-blue-600, html body .text-blue-500, html body .text-blue-400, html body .text-indigo-600, html body .text-indigo-500, html body .text-blue-655, html body .text-indigo-650, html body .text-indigo-655,
+      html.dark body .text-blue-500, html.dark body .text-indigo-500, html.light body .text-blue-600, html.light body .text-indigo-600 {
+        color: var(--theme-accent-color) !important;
+      }
+
+      html body .border-blue-600, html body .border-blue-500, html body .border-indigo-600, html body .border-indigo-500 {
+        border-color: var(--theme-accent-color) !important;
+      }
+
+      /* Box, Card, panels backgrounds & shadow effect styling */
+      html body .bg-white, html body .dark\\:bg-slate-950, html body .bg-slate-950, 
+      html body .bg-slate-900\\/50, html body .bg-slate-900\\/60, html body .bg-slate-900\\/80, 
+      html body .bg-slate-950\\/80, html body .bg-slate-900, html body .bg-slate-950, html body .bg-slate-900\\/40, html body .bg-slate-900\\/90,
+      html.dark body .bg-white, html.dark body .bg-slate-950, html.dark body .bg-slate-900, html.light body .bg-white, html.light body .bg-slate-50 {
+        background-color: var(--theme-card-bg) !important;
         border-color: ${cardBorder} !important;
         box-shadow: ${cardShadow} !important;
         backdrop-filter: blur(12px) !important;
         -webkit-backdrop-filter: blur(12px) !important;
-        transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
       }
 
-      /* Consistent input backgrounds inside responsive mode */
-      .bg-slate-50, .bg-slate-100\\/60, .bg-slate-100, .dark\\:bg-slate-900, .bg-slate-900 {
-        background-color: ${darkMode ? 'rgba(3, 7, 18, 0.45)' : '#f8fafc'} !important;
-        color: ${headingColor} !important;
+      /* Consistent styling for sub-boxes, alert boxes and dynamic badges */
+      html body .bg-indigo-50\\/45, html body .bg-indigo-50\\/30, html body .bg-indigo-50\\/60, html body .bg-indigo-50, html body .bg-blue-50, html body .bg-slate-50,
+      html body .dark\\:bg-indigo-950\\/20, html body .dark\\:bg-indigo-950\\/40, html body .dark\\:bg-slate-900\\/50, html body .bg-indigo-50\\/70, html body .bg-indigo-100\\/50,
+      html.dark body .bg-indigo-50, html.dark body .bg-indigo-950\\/20, html.dark body .bg-indigo-950\\/40, html.light body .bg-indigo-50, html.light body .bg-slate-50 {
+        background-color: ${darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'} !important;
         border-color: ${cardBorder} !important;
       }
-      
-      .shadow-sm, .shadow-md, .shadow-lg, .shadow-2xl, .shadow {
-        box-shadow: ${cardShadow} !important;
+
+      /* Consistent badges or highlights */
+      html body .text-indigo-700, html body .text-indigo-800, html body .text-indigo-300, html body .text-indigo-400, 
+      html body .dark\\:text-indigo-300, html body .dark\\:text-indigo-400, html body .text-emerald-800, html body .text-emerald-705,
+      html.dark body .text-indigo-700, html.dark body .text-indigo-800, html.dark body .text-indigo-300, html.dark body .text-indigo-400,
+      html.light body .text-indigo-700, html.light body .text-indigo-800, html.light body .text-indigo-300, html.light body .text-indigo-400 {
+        color: var(--theme-accent-color) !important;
       }
 
-      /* System Scrollbar polish once and for all */
+      /* Overwrite background indigo and slate gradients to match the card and container look */
+      body .from-indigo-900, body .to-slate-900, body .from-blue-900, body .to-indigo-950, body .to-blue-950, body .from-slate-900 {
+        --tw-gradient-from: var(--theme-card-bg) !important;
+        --tw-gradient-to: var(--theme-card-bg) !important;
+        background-color: var(--theme-card-bg) !important;
+      }
+      
+      /* Pure gradient elements overrides for buttons and container divisions */
+      body button.bg-gradient-to-r, body button.bg-gradient-to-l, 
+      body a.bg-gradient-to-r, body a.bg-gradient-to-l,
+      body .btn-gradient {
+        background-image: linear-gradient(135deg, var(--theme-button-bg) 0%, var(--theme-accent-color, var(--theme-button-bg)) 100%) !important;
+        color: var(--theme-button-text) !important;
+        border-color: var(--theme-button-bg) !important;
+      }
+      body button.bg-gradient-to-r:hover, body button.bg-gradient-to-l:hover, 
+      body a.bg-gradient-to-r:hover, body a.bg-gradient-to-l:hover {
+        filter: brightness(1.15) !important;
+      }
+      
+      body div.bg-gradient-to-r, body div.bg-gradient-to-l {
+        background-image: linear-gradient(135deg, var(--theme-card-bg) 0%, var(--theme-card-bg) 100%) !important;
+        border: 1px solid ${cardBorder} !important;
+      }
+
+      /* Borders theme unification */
+      body .border-indigo-100, body .border-indigo-150, body .border-indigo-200, body .border-indigo-300,
+      body .border-slate-200, body .border-slate-300, body .border-slate-800, body .border-slate-850, body .border-slate-700, body .border-slate-900,
+      body .border-indigo-850, body .border-indigo-900\\/40, body .border-indigo-200\\/80, body .border-indigo-150\\/40,
+      .dark .border-slate-800, .dark .border-slate-700, .light .border-slate-200, .light .border-slate-300 {
+        border-color: ${cardBorder} !important;
+      }   .border-indigo-850, .border-indigo-900\\/40, .border-indigo-200\\/80, .border-indigo-150\\/40 {
+        border-color: ${cardBorder} !important;
+      }
+
+      /* Border radius override */
+      .rounded-xl, .rounded-lg, .rounded-2xl, .rounded-3xl, .rounded-md {
+        border-radius: var(--theme-border-radius) !important;
+      }
+
+      /* Theme the dynamic workspace wrapper too */
+      #application-workspace-wrapper {
+        background-color: var(--theme-container-bg) !important;
+        background-image: ${workspaceGlowStyle === 'aurora' 
+          ? (darkMode 
+              ? `radial-gradient(circle at 12% 18%, ${actualButtonBg}1c 0%, transparent 45%), radial-gradient(circle at 88% 82%, ${actualButtonBg}24 0%, transparent 48%)` 
+              : `radial-gradient(circle at 12% 18%, ${actualButtonBg}0a 0%, transparent 60%), radial-gradient(circle at 88% 82%, ${actualButtonBg}0c 0%, transparent 60%)`)
+          : workspaceGlowStyle === 'intense'
+          ? (darkMode 
+              ? `radial-gradient(circle at 50% -25%, ${actualButtonBg}3c 0%, transparent 65%)` 
+              : `radial-gradient(circle at 50% -25%, ${actualButtonBg}12 0%, transparent 65%)`)
+          : workspaceGlowStyle === 'soft'
+          ? (darkMode 
+              ? `radial-gradient(circle at 50% 50%, ${actualButtonBg}0e 0%, transparent 80%)` 
+              : `radial-gradient(circle at 50% 50%, ${actualButtonBg}04 0%, transparent 80%)`)
+          : 'none'} !important;
+        transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      /* Inputs, Select elements, Textareas style override */
+      input[type="text"], input[type="password"], select, textarea {
+        background-color: ${inputBg} !important;
+        border-color: ${inputBorder} !important;
+        color: var(--theme-heading-color) !important;
+        font-family: inherit;
+        border-radius: var(--theme-border-radius) !important;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      input[type="text"]:focus, select:focus, textarea:focus, input[type="password"]:focus {
+        border-color: var(--theme-accent-color) !important;
+        box-shadow: 0 0 0 3px ${actualButtonBg}2c !important;
+        outline: none !important;
+      }
+
+      th {
+        background-color: ${darkMode ? 'rgba(15, 23, 42, 0.9)' : '#f8fafc'} !important;
+        color: var(--theme-heading-color) !important;
+      }
+
+      td {
+        border-color: ${cardBorder} !important;
+        color: var(--theme-text-color) !important;
+      }
+
+      tr:hover td {
+        background-color: ${darkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)'} !important;
+      }
+
+      /* Custom system scrollbar */
       ::-webkit-scrollbar {
         width: 8px;
         height: 8px;
@@ -376,60 +580,20 @@ export default function App() {
         border-radius: 9999px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: ${accentColor}a0;
+        background: ${actualButtonBg}a0;
       }
 
-      /* Standard typography overrides for pristine readability */
-      h1, h2, h3, h4, h5, h6, strong {
-        color: ${headingColor} !important;
-      }
-      
-      p, label, span, .text-slate-505, .text-slate-500, .text-slate-400, .text-slate-300, .text-slate-650 {
-        color: ${textColor}e0;
-      }
-
-      /* Style all form components consistently */
-      input[type="text"], input[type="password"], select, textarea {
-        background-color: ${inputBg} !important;
-        border-color: ${inputBorder} !important;
-        color: ${headingColor} !important;
-        font-family: inherit;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
-      }
-
-      input[type="text"]:focus, select:focus, textarea:focus {
-        border-color: ${accentColor} !important;
-        box-shadow: 0 0 0 3px ${accentColor}2c !important;
-        outline: none !important;
-      }
-
-      th {
-        background-color: ${darkMode ? 'rgba(15, 23, 42, 0.9)' : '#f8fafc'} !important;
-        color: ${headingColor} !important;
-      }
-
-      td {
-        border-color: ${cardBorder} !important;
-        color: ${textColor} !important;
-      }
-
-      tr:hover td {
-        background-color: ${darkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)'} !important;
-      }
-
-      /* Estedad font support custom family class */
       .family-estedad {
         font-family: "Estedad", "Vazirmatn", sans-serif !important;
       }
 
-      /* Specific focused element styling rule */
+      /* Specific focused elements dynamic override instead of constant #0f172a hardcoded */
       div#root:nth-of-type(1) > div#application-workspace-wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) {
-        background-color: #0f172a !important;
+        background-color: var(--theme-card-bg) !important;
       }
 
-      /* Second focused element styling rule */
       div#root:nth-of-type(1) > div#application-workspace-wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) {
-        background-color: #0f172a !important;
+        background-color: var(--theme-card-bg) !important;
       }
     `;
 
@@ -712,6 +876,82 @@ export default function App() {
     setRadios(db.radios || []);
 
     return { success: true, savedCount, skipped };
+  };
+
+  // Save Bulk Edit
+  const handleSaveBulkEdit = async (updates: { type: string, code: string, fields: any }[]) => {
+    if (!currentUser?.canEditEquipment && currentUser?.role !== 'admin') {
+      alert("دسترسی غیرمجاز! شما صلاحیت ویرایش تجهیزات را ندارید.");
+      return { success: false, updatedCount: 0 };
+    }
+
+    if (!isOfflineMode) {
+      try {
+        const res = await fetch('/api/save-bulk-edit', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-operator-username': currentUser?.username || 'system',
+            'x-operator-name': encodeURIComponent(currentUser?.name || '')
+          },
+          body: JSON.stringify({ updates })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          await loadDatabase();
+          return { success: true, updatedCount: data.updatedCount };
+        } else {
+          alert(data.error || "خطا در اعمال تغییرات گروهی بر روی سرور.");
+          return { success: false, updatedCount: 0 };
+        }
+      } catch (err) {
+        console.warn('API save-bulk-edit failed. Switching to Local fallback.', err);
+      }
+    }
+
+    // Local / Offline mutate simulation
+    const rawDb = localStorage.getItem('azarestan_ict_db');
+    let db = rawDb ? JSON.parse(rawDb) : { ...INITIAL_DEMO_DATA };
+
+    let updatedCount = 0;
+
+    const keyMap: Record<string, string> = {
+      case: 'cases',
+      monitor: 'monitors',
+      printer: 'printers',
+      mouse: 'mice',
+      keyboard: 'keyboards',
+      radio: 'radios'
+    };
+
+    updates.forEach((up: any) => {
+      const type = up.type;
+      const dbKey = keyMap[type];
+      if (!dbKey) return;
+
+      db[dbKey] = db[dbKey] || [];
+      const targetCode = String(up.code).toUpperCase().trim();
+      
+      const idx = db[dbKey].findIndex((x: any) => String(x.code).toUpperCase() === targetCode);
+      if (idx !== -1) {
+        db[dbKey][idx] = {
+          ...db[dbKey][idx],
+          ...up.fields,
+          code: db[dbKey][idx].code
+        };
+        updatedCount++;
+      }
+    });
+
+    localStorage.setItem('azarestan_ict_db', JSON.stringify(db));
+    setCases(db.cases || []);
+    setMonitors(db.monitors || []);
+    setPrinters(db.printers || []);
+    setMice(db.mice || []);
+    setKeyboards(db.keyboards || []);
+    setRadios(db.radios || []);
+
+    return { success: true, updatedCount };
   };
 
   // Save/Edit entity
@@ -1533,6 +1773,7 @@ export default function App() {
                   { id: 'reports-tab', label: '📋 گزارش و شناسنامه' },
                   { id: 'repairs-tab', label: '🛠️ تعمیرات و اسقاط' },
                   { id: 'bulk-qr-tab', label: '🖨️ چاپ گروهی بارکد' },
+                  { id: 'bulk-edit-tab', label: '🛠️ ویرایش گروهی تجهیزات' },
                   { id: 'systems-tree-tab', label: '🌳 نمودار درختی سیستم‌ها' },
                   { id: 'users-tab', label: '🛡️ مدیریت کاربران' },
                   { id: 'logs-tab', label: '🪵 لاگ امنیتی سیستم' },
@@ -1597,6 +1838,7 @@ export default function App() {
                 { id: 'history-tab', label: 'تاریخچه لجستیک', icon: '📜', show: true },
                 { id: 'reports-tab', label: 'گزارش و شناسنامه', icon: '📋', show: currentUser?.canExport || currentUser?.role === 'admin' },
                 { id: 'repairs-tab', label: 'تعمیرات و اسقاط', icon: '🛠️', show: true },
+                { id: 'bulk-edit-tab', label: 'ویرایش گروهی تجهیزات', icon: '🛠️', show: currentUser?.canEditEquipment || currentUser?.role === 'admin' },
                 { id: 'bulk-qr-tab', label: 'چاپ گروهی بارکد', icon: '🖨️', show: currentUser?.canExport || currentUser?.role === 'admin' },
                 { id: 'systems-tree-tab', label: 'نمودار درختی', icon: '🌳', show: true }
               ].filter(t => t.show).map((tab) => (
@@ -1785,6 +2027,19 @@ export default function App() {
               onLocationTransfer={handleLocationTransfer}
               prefilledEquipmentCode={prefilledEquipCode}
               prefilledPersonnelCode={prefilledPersCode}
+            />
+          )}
+
+          {activeTab === 'bulk-edit-tab' && (
+            <BulkEditTab 
+              cases={cases}
+              monitors={monitors}
+              printers={printers}
+              mice={mice}
+              keyboards={keyboards}
+              radios={radios}
+              personnel={personnel}
+              onSaveBulkEdit={handleSaveBulkEdit}
             />
           )}
 
