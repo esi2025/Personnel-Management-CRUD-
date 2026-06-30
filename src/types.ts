@@ -7,6 +7,8 @@ export interface Personnel {
   location: string; // موقعیت استقرار
   documentNumber?: string; // شماره سند خروجی (یکتا و توالی)
   status?: 'active' | 'terminated'; // وضعیت فعالیت (فعال یا خاتمه همکاری)
+  username?: string; // نام کاربری سیستم
+  password?: string; // رمز عبور سیستم
 }
 
 export interface Case {
@@ -24,6 +26,9 @@ export interface Case {
   description?: string; // توضیحات تکمیلی
   location?: string; // موقعیت فیزیکی کالا
   lastServiced?: string; // تاریخ آخرین سرویس (شمسی YYYY/MM/DD)
+  ipAddress?: string; // آدرس IP
+  macAddress?: string; // آدرس فیزیکی MAC
+  hostName?: string; // نام کامپیوتر Host Name
 }
 
 export interface Monitor {
@@ -78,6 +83,18 @@ export interface Radio {
   lastServiced?: string; // تاریخ آخرین سرویس (شمسی YYYY/MM/DD)
 }
 
+export interface Cctv {
+  code: string; // کد اموال دوربین مداربسته (unique)
+  brand: string; // مارک دوربین
+  model: string; // مدل دوربین
+  location: string; // موقعیت استقرار
+  assignedTo: string | null; // کد پرسنلی تخصیص یافته یا null
+  status?: 'working' | 'repair' | 'retired'; // وضعیت فعالیت
+  description?: string; // توضیحات
+  lastServiced?: string; // تاریخ آخرین سرویس (شمسی YYYY/MM/DD)
+  accessLink?: string; // لینک دسترسی زنده یا آدرس IP
+}
+
 export interface CatalogItem {
   id: string;
   category: 'cpu' | 'motherboard' | 'vga' | 'ramType' | 'power' | 'monitorBrand' | 'printerBrand' | 'printerFeature';
@@ -88,7 +105,7 @@ export interface CatalogItem {
 export interface Assignment {
   id: string; // شناسه تاریخچه
   equipmentCode: string; // کد تجهیز
-  equipmentType: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio'; // نوع تجهیز
+  equipmentType: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'cctv'; // نوع تجهیز
   personnelCode: string | null; // کد پرسنلی (یا null برای عودت به انبار)
   personnelName: string | null; // نام پرسنل
   startDate: string; // تاریخ شروع (خورشیدی)
@@ -103,6 +120,7 @@ export interface BackupData {
   mice?: Mouse[];
   keyboards?: Keyboard[];
   radios?: Radio[];
+  cctvs?: Cctv[];
   partsCatalog?: CatalogItem[];
   assignments: Assignment[];
 }
@@ -131,7 +149,7 @@ export interface RepairNeededPart {
 export interface Repair {
   id: string;
   equipmentCode: string;
-  equipmentType: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio';
+  equipmentType: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'cctv';
   requestDate: string;
   requesterName: string;
   reportedIssue: string;

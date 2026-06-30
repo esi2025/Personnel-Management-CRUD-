@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 
 interface AddNewTabProps {
-  onSave: (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio', data: any) => Promise<boolean>;
+  onSave: (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'cctv', data: any) => Promise<boolean>;
   onSaveBulk: (items: any[]) => Promise<{ success: boolean; savedCount: number; skipped: string[] }>;
 }
 
 export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
-  const [activeType, setActiveType] = useState<'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio'>('personnel');
+  const [activeType, setActiveType] = useState<'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'cctv'>('personnel');
   const [isBulkMode, setIsBulkMode] = useState(false);
 
   // Personnel fields
@@ -17,6 +17,8 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
   const [pLoc, setPLoc] = useState('');
   const [pDocNum, setPDocNum] = useState('');
   const [pStatus, setPStatus] = useState<'active' | 'terminated'>('active');
+  const [pUsername, setPUsername] = useState('');
+  const [pPassword, setPPassword] = useState('');
 
   // Single Input - Case fields
   const [cCode, setCCode] = useState('');
@@ -28,6 +30,9 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
   const [cRamType, setCRamType] = useState('DDR4');
   const [cRamQty, setCRamQty] = useState('8GB');
   const [cPower, setCPower] = useState('');
+  const [cIpAddress, setCIpAddress] = useState('');
+  const [cMacAddress, setCMacAddress] = useState('');
+  const [cHostName, setCHostName] = useState('');
 
   // Single Input - Other fields
   const [mCode, setMCode] = useState('');
@@ -44,6 +49,13 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
 
   const [radCode, setRadCode] = useState('');
   const [radModel, setRadModel] = useState('');
+
+  // CCTV fields
+  const [cctvCode, setCctvCode] = useState('');
+  const [cctvBrand, setCctvBrand] = useState('');
+  const [cctvModel, setCctvModel] = useState('');
+  const [cctvLocation, setCctvLocation] = useState('');
+  const [cctvAccessLink, setCctvAccessLink] = useState('');
 
   // Common Equipment State
   const [equipStatus, setEquipStatus] = useState<'working' | 'repair' | 'retired'>('working');
@@ -77,12 +89,15 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
 
   const handleResetForm = () => {
     setPName(''); setPCode(''); setPTitle(''); setPDept(''); setPLoc(''); setPDocNum(''); setPStatus('active');
+    setPUsername(''); setPPassword('');
     setCCode(''); setCMobo(''); setCCpu(''); setCVga(''); setCHdd1(''); setCHdd2(''); setCRamType('DDR4'); setCRamQty('8GB'); setCPower('');
+    setCIpAddress(''); setCMacAddress(''); setCHostName('');
     setMCode(''); setMModel('');
     setPrCode(''); setPrModel('');
     setMouCode(''); setMouModel('');
     setKbCode(''); setKbModel('');
     setRadCode(''); setRadModel('');
+    setCctvCode(''); setCctvBrand(''); setCctvModel(''); setCctvLocation(''); setCctvAccessLink('');
     setEquipStatus('working');
     setEquipDesc('');
     setLastServiced('');
@@ -99,7 +114,7 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
         alert('وارد کردن نام کامل و کد پرسنلی الزامی است.');
         return;
       }
-      data = { name: pName, code: pCode, title: pTitle, department: pDept, location: pLoc, documentNumber: pDocNum, status: pStatus };
+      data = { name: pName, code: pCode, title: pTitle, department: pDept, location: pLoc, documentNumber: pDocNum, status: pStatus, username: pUsername, password: pPassword };
     } else if (activeType === 'case') {
       if (!cCode.trim()) {
         alert('وارد کردن کد کیس (اموال) الزامی است.');
@@ -117,7 +132,10 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
         power: cPower,
         status: equipStatus,
         description: equipDesc,
-        lastServiced: lastServiced
+        lastServiced: lastServiced,
+        ipAddress: cIpAddress,
+        macAddress: cMacAddress,
+        hostName: cHostName
       };
     } else if (activeType === 'monitor') {
       if (!mCode.trim() || !mModel.trim()) {
@@ -149,6 +167,21 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
         return;
       }
       data = { code: radCode.trim().toUpperCase(), model: radModel, status: equipStatus, description: equipDesc, lastServiced: lastServiced };
+    } else if (activeType === 'cctv') {
+      if (!cctvCode.trim() || !cctvBrand.trim() || !cctvModel.trim()) {
+        alert('کد اموال، مارک و مدل دوربین مداربسته الزامی هستند.');
+        return;
+      }
+      data = {
+        code: cctvCode.trim().toUpperCase(),
+        brand: cctvBrand.trim(),
+        model: cctvModel.trim(),
+        location: cctvLocation.trim(),
+        accessLink: cctvAccessLink.trim(),
+        status: equipStatus,
+        description: equipDesc,
+        lastServiced: lastServiced
+      };
     }
 
     const success = await onSave(activeType, data);
@@ -336,8 +369,8 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
         <form onSubmit={handleFormSubmit} className="space-y-5">
           
           {/* Select active type */}
-          <div className="grid grid-cols-2 sm:grid-cols-7 gap-2">
-            {(['personnel', 'case', 'monitor', 'printer', 'mouse', 'keyboard', 'radio'] as const).map((type) => (
+          <div className="grid grid-cols-2 sm:grid-cols-8 gap-2">
+            {(['personnel', 'case', 'monitor', 'printer', 'mouse', 'keyboard', 'radio', 'cctv'] as const).map((type) => (
               <button
                 key={type}
                 type="button"
@@ -355,6 +388,7 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
                 {type === 'mouse' && <span>🖱️ ماوس</span>}
                 {type === 'keyboard' && <span>⌨️ کیبورد</span>}
                 {type === 'radio' && <span>📻 بی‌سیم</span>}
+                {type === 'cctv' && <span>🎥 دوربین</span>}
               </button>
             ))}
           </div>
@@ -404,12 +438,30 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
                     className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
                   />
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 font-sans">
                   <label className="font-semibold text-slate-700">شماره سند الحاقی / قرار داد صادر شده:</label>
                   <input 
                     type="text" value={pDocNum} onChange={(e) => setPDocNum(e.target.value)}
                     placeholder="مثال: D-6380-405"
                     className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1.5 font-sans">
+                  <label className="font-semibold text-slate-700">نام کاربری سیستم (Username):</label>
+                  <input 
+                    type="text" value={pUsername} onChange={(e) => setPUsername(e.target.value)}
+                    placeholder="مثال: a.ahmadi"
+                    className="w-full text-left p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+                    dir="ltr"
+                  />
+                </div>
+                <div className="space-y-1.5 font-sans">
+                  <label className="font-semibold text-slate-700">رمز عبور سیستم (Password):</label>
+                  <input 
+                    type="text" value={pPassword} onChange={(e) => setPPassword(e.target.value)}
+                    placeholder="مثال: P@ssw0rd123"
+                    className="w-full text-left p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+                    dir="ltr"
                   />
                 </div>
               </div>
@@ -496,6 +548,33 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
                     type="text" value={cHdd2} onChange={(e) => setCHdd2(e.target.value)}
                     placeholder="مثال: 1TB HDD WD Blue"
                     className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1.5 font-sans">
+                  <label className="font-semibold text-slate-700">آدرس IP (IP Address):</label>
+                  <input 
+                    type="text" value={cIpAddress} onChange={(e) => setCIpAddress(e.target.value)}
+                    placeholder="مثال: 192.168.1.15"
+                    className="w-full text-left p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+                    dir="ltr"
+                  />
+                </div>
+                <div className="space-y-1.5 font-sans">
+                  <label className="font-semibold text-slate-700">آدرس فیزیکی (MAC Address):</label>
+                  <input 
+                    type="text" value={cMacAddress} onChange={(e) => setCMacAddress(e.target.value)}
+                    placeholder="مثال: 00:1A:2B:3C:4D:5E"
+                    className="w-full text-left p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+                    dir="ltr"
+                  />
+                </div>
+                <div className="space-y-1.5 font-sans">
+                  <label className="font-semibold text-slate-700">نام کامپیوتر (Host Name):</label>
+                  <input 
+                    type="text" value={cHostName} onChange={(e) => setCHostName(e.target.value)}
+                    placeholder="مثال: HR-PC-02"
+                    className="w-full text-left p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+                    dir="ltr"
                   />
                 </div>
               </div>
@@ -606,6 +685,53 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
                     type="text" required value={radModel} onChange={(e) => setRadModel(e.target.value)}
                     placeholder="مثال: Motorola GP338"
                     className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Render Form 8: CCTV Add */}
+            {activeType === 'cctv' && (
+              <div className="grid grid-cols-1 gap-4 text-xs md:text-sm animate-fade-in text-right font-sans">
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700">کد اموال دوربین مداربسته:</label>
+                  <input 
+                    type="text" required value={cctvCode} onChange={(e) => setCctvCode(e.target.value)}
+                    placeholder="مثال: CAM-801"
+                    className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono uppercase"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700">مارک دوربین مداربسته:</label>
+                  <input 
+                    type="text" required value={cctvBrand} onChange={(e) => setCctvBrand(e.target.value)}
+                    placeholder="مثال: هایک‌ویژن (Hikvision)"
+                    className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700">مدل دوربین مداربسته:</label>
+                  <input 
+                    type="text" required value={cctvModel} onChange={(e) => setCctvModel(e.target.value)}
+                    placeholder="مثال: DS-2CD1123G0E-I"
+                    className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700">موقعیت استقرار:</label>
+                  <input 
+                    type="text" value={cctvLocation} onChange={(e) => setCctvLocation(e.target.value)}
+                    placeholder="مثال: درب ورودی کانکس نگهبانی"
+                    className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700">لینک دسترسی / آدرس IP (جهت مشاهده پخش زنده):</label>
+                  <input 
+                    type="text" value={cctvAccessLink} onChange={(e) => setCctvAccessLink(e.target.value)}
+                    placeholder="مثال: http://192.168.1.100 یا لینک دامنه پخش زنده"
+                    className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+                    dir="ltr"
                   />
                 </div>
               </div>

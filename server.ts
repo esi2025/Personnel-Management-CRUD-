@@ -53,6 +53,7 @@ function initializeDatabase() {
   const miceFile = path.join(DATA_DIR, "mice.json");
   const keyboardsFile = path.join(DATA_DIR, "keyboards.json");
   const radiosFile = path.join(DATA_DIR, "radios.json");
+  const cctvsFile = path.join(DATA_DIR, "cctvs.json");
   const partsCatalogFile = path.join(DATA_DIR, "parts_catalog.json");
   const assignmentsFile = path.join(DATA_DIR, "assignments.json");
   const repairsFile = path.join(DATA_DIR, "repairs.json");
@@ -289,6 +290,32 @@ function initializeDatabase() {
     fs.writeFileSync(radiosFile, JSON.stringify(demoRadios, null, 2), "utf-8");
   }
 
+  if (!fs.existsSync(cctvsFile)) {
+    const demoCctvs = [
+      {
+        code: "CAM-901",
+        brand: "هایک‌ویژن (Hikvision)",
+        model: "DS-2CD1123G0E-I",
+        location: "درب ورودی کانکس نگهبانی اصلی کارگاه",
+        assignedTo: null,
+        status: "working",
+        description: "دوربین تحت شبکه گنبدی ضدضربه، پوشش زاویه دید ورودی اصلی",
+        accessLink: "http://192.168.1.101"
+      },
+      {
+        code: "CAM-902",
+        brand: "داهوا (Dahua)",
+        model: "DH-IPC-HFW1230S-A",
+        location: "دیوار شمالی انبار مرکزی آهن‌آلات",
+        assignedTo: null,
+        status: "working",
+        description: "دوربین تحت شبکه بالت دید در شب سیاه سفید و رنگی فعال",
+        accessLink: "http://192.168.1.102"
+      }
+    ];
+    fs.writeFileSync(cctvsFile, JSON.stringify(demoCctvs, null, 2), "utf-8");
+  }
+
   if (!fs.existsSync(partsCatalogFile)) {
     const demoCatalog = [
       { id: "pc1", category: "cpu", name: "Intel Core i5-12400", description: "6 Cores, 12 Threads, 2.5 GHz Base, LGA1700" },
@@ -460,6 +487,7 @@ async function startServer() {
       mice: readDb("mice.json"),
       keyboards: readDb("keyboards.json"),
       radios: readDb("radios.json"),
+      cctvs: readDb("cctvs.json"),
       partsCatalog: readDb("parts_catalog.json"),
       assignments: readDb("assignments.json"),
       repairs: readDb("repairs.json")
@@ -793,6 +821,13 @@ async function startServer() {
             });
             writeDb("radios.json", radios);
 
+            // Cctvs
+            const cctvs = readDb("cctvs.json");
+            cctvs.forEach((c) => {
+              if (c.assignedTo === oldPersCode) c.assignedTo = trimmedCode;
+            });
+            writeDb("cctvs.json", cctvs);
+
             // History
             const assignments = readDb("assignments.json");
             assignments.forEach((ass) => {
@@ -812,7 +847,7 @@ async function startServer() {
       // If terminated, return all currently assigned equipment to the central workshop store/warehouse
       if (status === "terminated") {
         const dateStr = getPersianDateString();
-        const returnedHardware: { code: string; type: "case" | "monitor" | "printer" | "mouse" | "keyboard" | "radio" }[] = [];
+        const returnedHardware: { code: string; type: "case" | "monitor" | "printer" | "mouse" | "keyboard" | "radio" | "cctv" }[] = [];
 
         // 1. Cases
         const cases = readDb("cases.json");
@@ -885,6 +920,18 @@ async function startServer() {
           }
         });
         if (radiosChanged) writeDb("radios.json", radios);
+
+        // 5.6. Cctvs
+        const cctvs = readDb("cctvs.json");
+        let cctvsChanged = false;
+        cctvs.forEach((c) => {
+          if (c.assignedTo === trimmedCode) {
+            c.assignedTo = null;
+            cctvsChanged = true;
+            returnedHardware.push({ code: c.code, type: "cctv" });
+          }
+        });
+        if (cctvsChanged) writeDb("cctvs.json", cctvs);
 
         // 6. Update Assignments History logs
         if (returnedHardware.length > 0) {
@@ -1148,6 +1195,45 @@ async function startServer() {
       return res.json({ success: true, item });
     }
 
+    if (type === "cctv") {
+      const cctvs = readDb("cctvs.json");
+      const lookupCode = isEdit ? oldCode : trimmedCode;
+
+      const codeExists = cctvs.some((c) => c.code === trimmedCode && (!isEdit || c.code !== oldCode));
+      if (codeExists) {
+        return res.status(400).json({ error: "کد دوربین مداربسته تکراری است." });
+      }
+
+      const item = {
+        code: trimmedCode,
+        brand: fields.brand?.trim() || "سایر",
+        model: fields.model?.trim() || "سایر",
+        location: fields.location?.trim() || "",
+        assignedTo: fields.assignedTo || null,
+        status: fields.status || "working",
+        description: fields.description?.trim() || "",
+        lastServiced: fields.lastServiced || "",
+        accessLink: fields.accessLink?.trim() || "",
+      };
+
+      if (isEdit) {
+        const idx = cctvs.findIndex((c) => c.code === lookupCode);
+        if (idx !== -1) cctvs[idx] = item;
+      } else {
+        cctvs.push(item);
+      }
+
+      writeDb("cctvs.json", cctvs);
+      
+      if (isEdit) {
+        addAuditLog(opUser, opName, clientIp, "edit", "cctv", trimmedCode, `ویرایش مشخصات دوربین مداربسته: برند ${fields.brand || 'سایر'} مدل ${fields.model || 'سایر'}`);
+      } else {
+        addAuditLog(opUser, opName, clientIp, "create", "cctv", trimmedCode, `ثبت دوربین مداربسته جدید: برند ${fields.brand || 'سایر'} مدل ${fields.model || 'سایر'}`);
+      }
+
+      return res.json({ success: true, item });
+    }
+
     if (type === "catalog") {
       const catalog = readDb("parts_catalog.json");
       const itemId = isEdit ? id : `pc_${Date.now()}`;
@@ -1207,7 +1293,8 @@ async function startServer() {
       printer: "printers.json",
       mouse: "mice.json",
       keyboard: "keyboards.json",
-      radio: "radios.json"
+      radio: "radios.json",
+      cctv: "cctvs.json"
     };
 
     let totalSaved = 0;
@@ -1298,7 +1385,8 @@ async function startServer() {
       printer: "printers.json",
       mouse: "mice.json",
       keyboard: "keyboards.json",
-      radio: "radios.json"
+      radio: "radios.json",
+      cctv: "cctvs.json"
     };
 
     // Group updates by type
@@ -1541,6 +1629,26 @@ async function startServer() {
       return res.json({ success: true });
     }
 
+    if (type === "cctv") {
+      const cctvs = readDb("cctvs.json");
+      const idx = cctvs.findIndex((c) => c.code === id);
+      if (idx === -1) return res.status(404).json({ error: "دوربین مداربسته یافت نشد." });
+
+      cctvs.splice(idx, 1);
+      writeDb("cctvs.json", cctvs);
+
+      const assignments = readDb("assignments.json");
+      assignments.forEach((ass) => {
+        if (ass.equipmentCode === id && ass.equipmentType === "cctv" && ass.endDate === null) {
+          ass.endDate = dateStr;
+        }
+      });
+      writeDb("assignments.json", assignments);
+
+      addAuditLog(opUser, opName, clientIp, "delete", "cctv", id, `حذف فیزیکی دوربین مداربسته با شماره پرونده اموال ${id}`);
+      return res.json({ success: true });
+    }
+
     if (type === "catalog") {
       const catalog = readDb("parts_catalog.json");
       const idx = catalog.findIndex((c) => c.id === id);
@@ -1569,7 +1677,7 @@ async function startServer() {
     }
 
     // 1. Locate Equipment
-    let equipType: "case" | "monitor" | "printer" | "mouse" | "keyboard" | "radio" | null = null;
+    let equipType: "case" | "monitor" | "printer" | "mouse" | "keyboard" | "radio" | "cctv" | null = null;
     let equipItem: any = null;
 
     const cases = readDb("cases.json");
@@ -1621,6 +1729,15 @@ async function startServer() {
       if (rIdx !== -1) {
         equipType = "radio";
         equipItem = radios[rIdx];
+      }
+    }
+
+    if (!equipItem) {
+      const cctvs = readDb("cctvs.json");
+      const cIdx = cctvs.findIndex((c) => c.code === equipmentCode);
+      if (cIdx !== -1) {
+        equipType = "cctv";
+        equipItem = cctvs[cIdx];
       }
     }
 
@@ -1682,6 +1799,11 @@ async function startServer() {
       const idx = radios.findIndex((r) => r.code === equipmentCode);
       radios[idx] = equipItem;
       writeDb("radios.json", radios);
+    } else if (equipType === "cctv") {
+      const cctvs = readDb("cctvs.json");
+      const idx = cctvs.findIndex((c) => c.code === equipmentCode);
+      cctvs[idx] = equipItem;
+      writeDb("cctvs.json", cctvs);
     }
 
     // History log mapping
@@ -1751,6 +1873,7 @@ async function startServer() {
       mice: "mice.json",
       keyboards: "keyboards.json",
       radios: "radios.json",
+      cctvs: "cctvs.json",
       partsCatalog: "parts_catalog.json",
       parts_catalog: "parts_catalog.json",
       assignments: "assignments.json"

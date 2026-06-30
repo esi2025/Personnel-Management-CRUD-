@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 
 interface EditModalProps {
   item: any;
-  type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | null;
+  type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'cctv' | null;
   onClose: () => void;
-  onSave: (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio', data: any) => Promise<boolean>;
+  onSave: (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'cctv', data: any) => Promise<boolean>;
 }
 
 export default function EditModal({ item, type, onClose, onSave }: EditModalProps) {
@@ -18,6 +18,8 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
   const [pLoc, setPLoc] = useState('');
   const [pDocNum, setPDocNum] = useState('');
   const [pStatus, setPStatus] = useState<'active' | 'terminated'>('active');
+  const [pUsername, setPUsername] = useState('');
+  const [pPassword, setPPassword] = useState('');
 
   // Case states
   const [cCode, setCCode] = useState('');
@@ -29,14 +31,22 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
   const [cRamType, setCRamType] = useState('DDR4');
   const [cRamQty, setCRamQty] = useState('8GB');
   const [cPower, setCPower] = useState('');
+  const [cIpAddress, setCIpAddress] = useState('');
+  const [cMacAddress, setCMacAddress] = useState('');
+  const [cHostName, setCHostName] = useState('');
 
-  // Monitor/Printer/Mouse/Keyboard/Radio states
+  // Monitor/Printer/Mouse/Keyboard/Radio/CCTV states
   const [equipCode, setEquipCode] = useState('');
   const [equipModel, setEquipModel] = useState('');
 
   // Radio-specific states
   const [radioFreq, setRadioFreq] = useState('');
   const [radioIp, setRadioIp] = useState('');
+
+  // CCTV-specific states
+  const [cctvBrand, setCctvBrand] = useState('');
+  const [cctvLocation, setCctvLocation] = useState('');
+  const [cctvAccessLink, setCctvAccessLink] = useState('');
 
   // Status state
   const [equipStatus, setEquipStatus] = useState<'working' | 'repair' | 'retired'>('working');
@@ -53,6 +63,8 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
       setPLoc(item.location || '');
       setPDocNum(item.documentNumber || '');
       setPStatus(item.status || 'active');
+      setPUsername(item.username || '');
+      setPPassword(item.password || '');
     } else if (type === 'case') {
       setCCode(item.code || '');
       setCMobo(item.motherboard || '');
@@ -63,12 +75,19 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
       setCRamType(item.ramType || 'DDR4');
       setCRamQty(item.ramQty || '8GB');
       setCPower(item.power || '');
-    } else if (type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard' || type === 'radio') {
+      setCIpAddress(item.ipAddress || '');
+      setCMacAddress(item.macAddress || '');
+      setCHostName(item.hostName || '');
+    } else if (type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard' || type === 'radio' || type === 'cctv') {
       setEquipCode(item.code || '');
       setEquipModel(item.model || '');
       if (type === 'radio') {
         setRadioFreq(item.frequencyRange || '');
         setRadioIp(item.ipRating || '');
+      } else if (type === 'cctv') {
+        setCctvBrand(item.brand || '');
+        setCctvLocation(item.location || '');
+        setCctvAccessLink(item.accessLink || '');
       }
     }
 
@@ -93,6 +112,8 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
       data.location = pLoc;
       data.documentNumber = pDocNum;
       data.status = pStatus;
+      data.username = pUsername;
+      data.password = pPassword;
     } else if (type === 'case') {
       data.code = cCode;
       data.oldCode = item.code; // Track old code if user modifies Case Code ID
@@ -108,7 +129,10 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
       data.status = equipStatus;
       data.description = equipDesc;
       data.lastServiced = lastServiced;
-    } else if (type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard' || type === 'radio') {
+      data.ipAddress = cIpAddress;
+      data.macAddress = cMacAddress;
+      data.hostName = cHostName;
+    } else if (type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard' || type === 'radio' || type === 'cctv') {
       data.code = equipCode;
       data.oldCode = item.code;
       data.model = equipModel;
@@ -119,6 +143,10 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
       if (type === 'radio') {
         data.frequencyRange = radioFreq;
         data.ipRating = radioIp;
+      } else if (type === 'cctv') {
+        data.brand = cctvBrand;
+        data.location = cctvLocation;
+        data.accessLink = cctvAccessLink;
       }
     }
 
@@ -135,7 +163,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
         {/* Title */}
         <div className="p-4 bg-slate-900 text-white flex justify-between items-center">
           <h3 className="font-bold text-sm md:text-base">
-            ✏️ ویرایش مشخصات {type === 'personnel' ? 'پرسنل' : type === 'case' ? 'کیس کامپیوتر' : type === 'monitor' ? 'مانیتور' : type === 'printer' ? 'پرینتر' : type === 'mouse' ? 'ماوس' : 'کیبورد'}
+            ✏️ ویرایش مشخصات {type === 'personnel' ? 'پرسنل' : type === 'case' ? 'کیس کامپیوتر' : type === 'monitor' ? 'مانیتور' : type === 'printer' ? 'پرینتر' : type === 'mouse' ? 'ماوس' : type === 'keyboard' ? 'کیبورد' : type === 'radio' ? 'بی‌سیم' : 'دوربین مداربسته'}
           </h3>
           <button 
             type="button" 
@@ -205,6 +233,24 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
                   <option value="terminated">🔴 خاتمه همکاری (غیرفعال)</option>
                 </select>
               </div>
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700">نام کاربری سیستم (Username):</label>
+                <input 
+                  type="text" value={pUsername} onChange={(e) => setPUsername(e.target.value)}
+                  placeholder="مثال: a.ahmadi"
+                  className="w-full text-left p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+                  dir="ltr"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700">رمز عبور سیستم (Password):</label>
+                <input 
+                  type="text" value={pPassword} onChange={(e) => setPPassword(e.target.value)}
+                  placeholder="مثال: P@ssw0rd123"
+                  className="w-full text-left p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+                  dir="ltr"
+                />
+              </div>
             </div>
           )}
 
@@ -270,17 +316,44 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
                   className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:outline-none"
                 />
               </div>
-              <div className="space-y-1 md:col-span-2">
+              <div className="space-y-1 md:col-span-2 font-sans">
                 <label className="font-bold text-slate-700">مدل منبع تغذیه (Power Supply - پاور):</label>
                 <input 
                   type="text" value={cPower} onChange={(e) => setCPower(e.target.value)}
                   className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:outline-none"
                 />
               </div>
+              <div className="space-y-1 font-sans">
+                <label className="font-bold text-slate-700">آدرس IP (IP Address):</label>
+                <input 
+                  type="text" value={cIpAddress} onChange={(e) => setCIpAddress(e.target.value)}
+                  placeholder="مثال: 192.168.1.15"
+                  className="w-full text-left p-2.5 bg-slate-50 border border-slate-200 rounded focus:outline-none font-mono"
+                  dir="ltr"
+                />
+              </div>
+              <div className="space-y-1 font-sans">
+                <label className="font-bold text-slate-700">آدرس فیزیکی (MAC Address):</label>
+                <input 
+                  type="text" value={cMacAddress} onChange={(e) => setCMacAddress(e.target.value)}
+                  placeholder="مثال: 00:1A:2B:3C:4D:5E"
+                  className="w-full text-left p-2.5 bg-slate-50 border border-slate-200 rounded focus:outline-none font-mono"
+                  dir="ltr"
+                />
+              </div>
+              <div className="space-y-1 md:col-span-2 font-sans">
+                <label className="font-bold text-slate-700">نام کامپیوتر (Host Name):</label>
+                <input 
+                  type="text" value={cHostName} onChange={(e) => setCHostName(e.target.value)}
+                  placeholder="مثال: HR-PC-02"
+                  className="w-full text-left p-2.5 bg-slate-50 border border-slate-200 rounded focus:outline-none font-mono"
+                  dir="ltr"
+                />
+              </div>
             </div>
           )}
 
-          {(type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard' || type === 'radio') && (
+          {(type === 'monitor' || type === 'printer' || type === 'mouse' || type === 'keyboard' || type === 'radio' || type === 'cctv') && (
             <div className="space-y-4 text-xs md:text-sm">
               <div className="space-y-1">
                 <label className="font-bold text-slate-700">کد اموال تجهیز:</label>
@@ -289,13 +362,44 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
                   className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
                 />
               </div>
+              {type === 'cctv' && (
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">مارک دوربین مداربسته:</label>
+                  <input 
+                    type="text" required value={cctvBrand} onChange={(e) => setCctvBrand(e.target.value)}
+                    className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+              )}
               <div className="space-y-1">
-                <label className="font-bold text-slate-700">نام مدل و سازنده:</label>
+                <label className="font-bold text-slate-700">
+                  {type === 'cctv' ? 'مدل دوربین مداربسته:' : 'نام مدل و سازنده:'}
+                </label>
                 <input 
                   type="text" required value={equipModel} onChange={(e) => setEquipModel(e.target.value)}
                   className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
                 />
               </div>
+              {type === 'cctv' && (
+                <>
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">موقعیت استقرار دوربین:</label>
+                    <input 
+                      type="text" value={cctvLocation} onChange={(e) => setCctvLocation(e.target.value)}
+                      className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">لینک دسترسی / آدرس IP (جهت پخش زنده):</label>
+                    <input 
+                      type="text" value={cctvAccessLink} onChange={(e) => setCctvAccessLink(e.target.value)}
+                      placeholder="مثال: http://192.168.1.100"
+                      className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+                      dir="ltr"
+                    />
+                  </div>
+                </>
+              )}
               {type === 'radio' && (
                 <>
                   <div className="space-y-1 animate-fade-in">

@@ -1,6 +1,21 @@
 import React, { useState, useMemo } from 'react';
-import { Case, Monitor, Printer, Personnel, Mouse, Keyboard, Radio } from '../types';
+import { Case, Monitor, Printer, Personnel, Mouse, Keyboard, Radio, Cctv } from '../types';
 import { isServiceOverdue } from '../utils/date';
+import CctvStatusPieChart from './CctvStatusPieChart';
+
+export const downloadRdpFile = (ipAddress: string, hostName: string) => {
+  const target = ipAddress || hostName || 'localhost';
+  const content = `full address:s:${target}\nprompt for credentials:i:1\nusername:s:Administrator\n`;
+  const blob = new Blob([content], { type: 'application/x-rdp' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${hostName || ipAddress || 'remote'}.rdp`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
 
 export function StatusBadge({ status }: { status?: 'working' | 'repair' | 'retired' }) {
   const currentStatus = status || 'working';
@@ -125,6 +140,7 @@ export function CasesSubTab({
                 <th onClick={() => handleSort('vga')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کارت گرافیک {renderSortIndicator('vga')}</th>
                 <th onClick={() => handleSort('hdd')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">فضای هارد (HDD/SSD) {renderSortIndicator('hdd')}</th>
                 <th onClick={() => handleSort('power')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">پاور (منبع تغذیه) {renderSortIndicator('power')}</th>
+                <th className="p-2.5 font-bold text-right select-none">مشخصات شبکه و ریموت</th>
                 <th onClick={() => handleSort('status')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
                 <th className="p-2.5 font-bold text-right select-none">توضیحات</th>
                 <th onClick={() => handleSort('assignedTo')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">تحویل به {renderSortIndicator('assignedTo')}</th>
@@ -134,7 +150,7 @@ export function CasesSubTab({
             <tbody>
               {sortedCases.length === 0 ? (
                 <tr>
-                   <td colSpan={11} className="p-6 text-center text-slate-400">
+                   <td colSpan={12} className="p-6 text-center text-slate-400">
                     کیسی در سامانه ثبت نگردیده است. نسبت به افزودن از تب ثبت جدید اقدام فرمایید.
                   </td>
                 </tr>
@@ -176,6 +192,36 @@ export function CasesSubTab({
                       <td className="p-2.5 text-slate-600">{c.vga}</td>
                       <td className="p-2.5 text-slate-500 font-mono text-[10px] md:text-[11px]">{c.hdd1} | {c.hdd2}</td>
                       <td className="p-2.5 text-slate-600 font-mono text-[10px] md:text-[11px]">{c.power || "—"}</td>
+                      <td className="p-2.5 text-right font-sans" onClick={(e) => e.stopPropagation()}>
+                        <div className="space-y-0.5 max-w-[180px]">
+                          {c.hostName && <div className="text-[11px] font-bold text-slate-800">🖥️ {c.hostName}</div>}
+                          {c.ipAddress && <div className="text-[11px] text-blue-600 font-mono" dir="ltr">{c.ipAddress}</div>}
+                          {c.macAddress && <div className="text-[10px] text-slate-400 font-mono" dir="ltr">{c.macAddress}</div>}
+                          {!c.hostName && !c.ipAddress && !c.macAddress && <span className="text-slate-400">—</span>}
+                          
+                          {(c.ipAddress || c.hostName) && (
+                            <div className="flex items-center gap-1 mt-1">
+                              <button
+                                onClick={() => downloadRdpFile(c.ipAddress || '', c.hostName || '')}
+                                title="دانلود فایل RDP برای اتصال ریموت"
+                                className="bg-blue-50 hover:bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-medium border border-blue-200 transition cursor-pointer"
+                              >
+                                📥 فایل RDP
+                              </button>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(`mstsc /v:${c.ipAddress || c.hostName}`);
+                                  alert('دستور ریموت کپی شد! می‌توانید با فشردن Win+R و وارد کردن آن ریموت بزنید:\n' + `mstsc /v:${c.ipAddress || c.hostName}`);
+                                }}
+                                title="کپی دستور ریموت (mstsc)"
+                                className="bg-slate-50 hover:bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] border border-slate-200 transition cursor-pointer font-mono"
+                              >
+                                📋 دستور RDP
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
                       <td className="p-2.5">
                         <StatusBadge status={c.status} />
                       </td>
@@ -1275,6 +1321,385 @@ export function RadiosSubTab({
         </div>
       )}
 
+    </div>
+  );
+}
+
+export interface CctvsSubTabProps {
+  cctvs: Cctv[];
+  personnel: Personnel[];
+  onEdit: (cctv: Cctv) => void;
+  onDelete: (code: string) => void;
+  onTransfer: (code: string) => void;
+  onTabChange: (tabId: string) => void;
+  onShowQR: (code: string, type: 'cctv', data: Cctv) => void;
+}
+
+export function CctvsSubTab({
+  cctvs,
+  personnel,
+  onEdit,
+  onDelete,
+  onTransfer,
+  onTabChange,
+  onShowQR
+}: CctvsSubTabProps) {
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortAsc, setSortAsc] = useState<boolean>(true);
+  const [viewMode, setViewMode] = useState<'table' | 'location'>('table');
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortAsc(!sortAsc);
+    } else {
+      setSortField(field);
+      setSortAsc(true);
+    }
+  };
+
+  const sortedCctvs = useMemo(() => {
+    if (!sortField) return cctvs;
+    return [...cctvs].sort((a: any, b: any) => {
+      let valA = String(a[sortField] || '');
+      let valB = String(b[sortField] || '');
+      return sortAsc 
+        ? valA.localeCompare(valB, 'fa') 
+        : valB.localeCompare(valA, 'fa');
+    });
+  }, [cctvs, sortField, sortAsc]);
+
+  const groupedCctvs = useMemo(() => {
+    const groups: Record<string, Cctv[]> = {};
+    cctvs.forEach((c) => {
+      const loc = (c.location || '').trim() || 'نامشخص / ثبت نشده';
+      if (!groups[loc]) {
+        groups[loc] = [];
+      }
+      groups[loc].push(c);
+    });
+    return groups;
+  }, [cctvs]);
+
+  const renderSortIndicator = (field: string) => {
+    if (sortField !== field) return <span className="text-slate-300 mr-1 select-none text-[10px]">⇅</span>;
+    return sortAsc 
+      ? <span className="text-blue-600 mr-1 select-none">▲</span> 
+      : <span className="text-blue-600 mr-1 select-none">▼</span>;
+  };
+
+  const stats = useMemo(() => {
+    const total = cctvs.length;
+    const working = cctvs.filter(c => c.status === 'working').length;
+    const inRepair = cctvs.filter(c => c.status === 'repair').length;
+    const retired = cctvs.filter(c => c.status === 'retired').length;
+    return { total, working, inRepair, retired };
+  }, [cctvs]);
+
+  return (
+    <div className="space-y-5 text-right font-sans" dir="rtl">
+      
+      {/* Upper header */}
+      <div className="bg-slate-100/50 p-4 rounded-xl border border-slate-200">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h4 className="text-sm md:text-base font-black text-slate-800 flex items-center gap-1.5">
+              <span>🎥 مدیریت و نظارت بر دوربین‌های مداربسته کارگاه</span>
+            </h4>
+            <p className="text-[11px] text-slate-500 mt-1">
+              ثبت مشخصات فنی دوربین‌های مداربسته کارگاه، مارک، مدل، تعیین دقیق موقعیت استقرار و رصد وضعیت فعالیت آن‌ها به همراه چاپ بارکد QR اختصاصی.
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => onTabChange('add-new-tab')}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap cursor-pointer shadow-sm scale-100 hover:scale-[1.02]"
+            >
+              ➕ ثبت دوربین مداربسته جدید
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {/* Stats & Pie Chart Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 flex flex-col justify-between">
+            {/* Grid Mini Stats */}
+            <div className="grid grid-cols-2 gap-3 h-full">
+              <div className="bg-slate-50/50 border border-slate-150 p-4 rounded-xl flex flex-col justify-center">
+                <span className="text-[10px] text-slate-400 font-bold block">کل دوربین‌ها</span>
+                <span className="text-base md:text-lg font-black text-slate-800 block mt-1">{stats.total} دستگاه</span>
+              </div>
+              <div className="bg-emerald-50/30 border border-emerald-100 p-4 rounded-xl text-emerald-800 flex flex-col justify-center">
+                <span className="text-[10px] text-emerald-500 font-bold block">فعال / سالم</span>
+                <span className="text-base md:text-lg font-black block mt-1">{stats.working} دستگاه</span>
+              </div>
+              <div className="bg-amber-50/30 border border-amber-100 p-4 rounded-xl text-amber-800 flex flex-col justify-center">
+                <span className="text-[10px] text-amber-500 font-bold block">در انتظار تعمیر / خراب</span>
+                <span className="text-base md:text-lg font-black block mt-1">{stats.inRepair} دستگاه</span>
+              </div>
+              <div className="bg-red-50/30 border border-red-100 p-4 rounded-xl text-red-800 flex flex-col justify-center">
+                <span className="text-[10px] text-red-500 font-bold block">غیرفعال / اسقاط شده</span>
+                <span className="text-base md:text-lg font-black block mt-1">{stats.retired} دستگاه</span>
+              </div>
+            </div>
+          </div>
+          <div className="lg:col-span-1">
+            <CctvStatusPieChart 
+              workingCount={stats.working}
+              repairCount={stats.inRepair}
+              retiredCount={stats.retired}
+            />
+          </div>
+        </div>
+
+        {/* VIEW MODE TOGGLE */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-2">
+          <span className="text-xs font-bold text-slate-550">🛠️ انتخاب نحوه نمایش دوربین‌ها:</span>
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+            <button
+              onClick={() => setViewMode('table')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black transition cursor-pointer flex items-center gap-1 ${
+                viewMode === 'table'
+                  ? 'bg-white text-slate-800 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <span>📋</span> لیست یکپارچه جدول
+            </button>
+            <button
+              onClick={() => setViewMode('location')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black transition cursor-pointer flex items-center gap-1 ${
+                viewMode === 'location'
+                  ? 'bg-white text-slate-800 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <span>🗂️</span> دسته‌بندی بر اساس موقعیت کارگاه
+            </button>
+          </div>
+        </div>
+
+        {viewMode === 'location' ? (
+          <div className="space-y-4">
+            {Object.keys(groupedCctvs).length === 0 ? (
+              <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400">
+                هیچ دوربین مداربسته‌ای در سامانه کارگاه ثبت نگردیده است.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {(Object.entries(groupedCctvs) as [string, Cctv[]][]).map(([locName, list]) => (
+                  <div key={locName} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs flex flex-col">
+                    <div className="bg-slate-50/80 border-b border-slate-150 px-4 py-3 flex justify-between items-center">
+                      <h5 className="text-xs md:text-sm font-black text-slate-800 flex items-center gap-1.5">
+                        <span className="text-blue-600">📍</span>
+                        <span>{locName}</span>
+                      </h5>
+                      <span className="bg-blue-550/10 text-blue-700 border border-blue-100 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                        {list.length} دستگاه
+                      </span>
+                    </div>
+                    <div className="p-4 space-y-3 flex-1">
+                      {list.map((c) => {
+                        const isInactive = c.status === 'retired';
+                        return (
+                          <div 
+                            key={c.code} 
+                            className={`border rounded-lg p-3 transition cursor-pointer group ${
+                              isInactive 
+                                ? 'bg-red-50/70 border-red-150/70 hover:bg-red-100/50' 
+                                : 'border-slate-100 hover:bg-slate-50/50'
+                            }`}
+                            onClick={() => onShowQR(c.code, 'cctv', c)}
+                            title="کلیک جهت مشاهده برچسب بارکد اموال دوربین"
+                          >
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                              <div className="space-y-1 text-right">
+                                <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-slate-900">
+                                  <span className="text-[9px] text-blue-600 bg-blue-50 px-1 rounded select-none">📸 QR</span>
+                                  <span>{c.code}</span>
+                                  {isServiceOverdue(c.lastServiced) && (
+                                    <span className="text-amber-500 text-sm animate-pulse inline-block" title={`⚠️ نیاز به سرویس: بیش از ۶ ماه از آخرین سرویس گذشته است (${c.lastServiced})`}>
+                                      ⚠️
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-[11px] font-bold text-slate-700">
+                                  {c.brand} - {c.model}
+                                </div>
+                                {c.accessLink && (
+                                  <div className="pt-0.5">
+                                    <a 
+                                      href={c.accessLink.startsWith('http') ? c.accessLink : `http://${c.accessLink}`} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="inline-flex items-center gap-1 text-[10px] text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-150 px-1.5 py-0.5 rounded font-black transition"
+                                    >
+                                      🌐 پخش زنده ({c.accessLink})
+                                    </a>
+                                  </div>
+                                )}
+                                {c.description && (
+                                  <p className="text-[10px] text-slate-500 max-w-xs truncate" title={c.description}>
+                                    {c.description}
+                                  </p>
+                                )}
+                                {c.lastServiced && (
+                                  <div className="text-[9px] text-slate-400">
+                                    📅 آخرین سرویس: {c.lastServiced}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex flex-col items-start sm:items-end gap-2 self-stretch sm:self-auto shrink-0">
+                                <StatusBadge status={c.status} />
+                                <div className="flex gap-1 mt-1" onClick={(e) => e.stopPropagation()}>
+                                  <button 
+                                    onClick={() => onEdit(c)}
+                                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] transition cursor-pointer"
+                                  >
+                                    ✏️ ویرایش
+                                  </button>
+                                  <button 
+                                    onClick={() => onDelete(c.code)}
+                                    className="bg-red-50 hover:bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] transition cursor-pointer"
+                                  >
+                                    🗑️ حذف
+                                  </button>
+                                  <button 
+                                    onClick={() => onTransfer(c.code)}
+                                    className="bg-indigo-650 hover:bg-indigo-700 text-white px-2 py-0.5 rounded text-[10px] transition font-semibold cursor-pointer"
+                                  >
+                                    🔄 انتقال
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* MAIN INVENTORY TABLE */
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-right border-collapse text-[11px] md:text-xs">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 whitespace-nowrap">
+                    <th onClick={() => handleSort('code')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کد اموال {renderSortIndicator('code')}</th>
+                    <th onClick={() => handleSort('brand')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">مارک دوربین {renderSortIndicator('brand')}</th>
+                    <th onClick={() => handleSort('model')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">مدل دوربین {renderSortIndicator('model')}</th>
+                    <th onClick={() => handleSort('location')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">موقعیت استقرار {renderSortIndicator('location')}</th>
+                    <th className="p-2.5 font-bold text-right select-none">لینک دسترسی</th>
+                    <th onClick={() => handleSort('status')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">وضعیت فعالیت {renderSortIndicator('status')}</th>
+                    <th className="p-2.5 font-bold text-right select-none">توضیحات تکمیلی</th>
+                    <th className="p-2.5 text-center font-bold select-none">عملیات کنترلی</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedCctvs.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="p-6 text-center text-slate-400">
+                         هیچ دوربین مداربسته‌ای در سامانه کارگاه ثبت نگردیده است.
+                      </td>
+                    </tr>
+                  ) : (
+                    sortedCctvs.map((c) => {
+                      const isInactive = c.status === 'retired';
+                      return (
+                        <tr 
+                          key={c.code} 
+                          className={`border-b transition cursor-pointer group whitespace-nowrap ${
+                            isInactive 
+                              ? 'bg-red-50/70 border-red-100/50 hover:bg-red-100/60' 
+                              : 'border-slate-100 hover:bg-slate-50/80'
+                          }`}
+                          onClick={() => onShowQR(c.code, 'cctv', c)}
+                          title="کلیک روی سطر جهت مشاهده برچسب بارکد اموال دوربین"
+                        >
+                          <td className="p-2.5 font-mono font-bold text-slate-900">
+                            <div className="flex items-center gap-1.5 justify-start font-mono">
+                              <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none">
+                                📸 QR
+                              </span>
+                              <span>{c.code}</span>
+                              {isServiceOverdue(c.lastServiced) && (
+                                <span className="text-amber-500 text-sm animate-pulse select-none inline-block ml-1 font-sans" title={`⚠️ نیاز به سرویس: بیش از ۶ ماه از آخرین سرویس گذشته است (${c.lastServiced})`}>
+                                  ⚠️
+                                </span>
+                              )}
+                            </div>
+                            {c.lastServiced && (
+                              <div className="text-[10px] font-sans text-slate-400 mt-0.5 font-normal" title="تاریخ آخرین سرویس دوره‌ای">
+                                📅 سرویس: {c.lastServiced}
+                              </div>
+                            )}
+                          </td>
+                          <td className="p-2.5 text-slate-600 font-bold">{c.brand}</td>
+                          <td className="p-2.5 text-slate-600 font-bold">{c.model}</td>
+                          <td className="p-2.5">
+                            <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-medium border border-slate-200">
+                              📍 {c.location || 'نامعلوم'}
+                            </span>
+                          </td>
+                          <td className="p-2.5" onClick={(e) => e.stopPropagation()}>
+                            {c.accessLink ? (
+                              <a 
+                                href={c.accessLink.startsWith('http') ? c.accessLink : `http://${c.accessLink}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-[10px] text-indigo-650 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-150 px-2 py-0.5 rounded font-black transition"
+                              >
+                                🌐 پخش زنده ({c.accessLink})
+                              </a>
+                            ) : (
+                              <span className="text-slate-400">—</span>
+                            )}
+                          </td>
+                          <td className="p-2.5">
+                            <StatusBadge status={c.status} />
+                          </td>
+                          <td className="p-2.5 text-slate-500 max-w-[150px] truncate" title={c.description || undefined}>
+                            {c.description || '—'}
+                          </td>
+                          <td className="p-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-center gap-1">
+                              <button 
+                                onClick={() => onEdit(c)}
+                                className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
+                              >
+                                ✏️ ویرایش
+                              </button>
+                              <button 
+                                onClick={() => onDelete(c.code)}
+                                className="bg-red-50 hover:bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
+                              >
+                                🗑️ حذف
+                              </button>
+                              <button 
+                                onClick={() => onTransfer(c.code)}
+                                className="bg-indigo-650 hover:bg-indigo-700 text-white px-2 py-0.5 rounded text-[10px] md:text-xs transition font-semibold cursor-pointer"
+                              >
+                                🔄 انتقال
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

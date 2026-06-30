@@ -1,6 +1,20 @@
 import React, { useState, useMemo } from 'react';
 import { Personnel, Case, Monitor, Printer, Mouse, Keyboard } from '../types';
 
+export const downloadRdpFile = (ipAddress: string, hostName: string) => {
+  const target = ipAddress || hostName || 'localhost';
+  const content = `full address:s:${target}\nprompt for credentials:i:1\nusername:s:Administrator\n`;
+  const blob = new Blob([content], { type: 'application/x-rdp' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${hostName || ipAddress || 'remote'}.rdp`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
 interface PersonnelTabProps {
   personnel: Personnel[];
   cases: Case[];
@@ -114,6 +128,9 @@ export default function PersonnelTab({
                 <th onClick={() => handleSort('status')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">
                   وضعیت فعالیت {renderSortIndicator('status')}
                 </th>
+                <th className="p-2.5 font-bold text-right select-none">
+                  حساب کاربری سیستم
+                </th>
                 <th onClick={() => handleSort('hardware')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">
                   سخت‌افزارهای تحویل‌شده {renderSortIndicator('hardware')}
                 </th>
@@ -123,7 +140,7 @@ export default function PersonnelTab({
             <tbody>
               {sortedPersonnel.length === 0 ? (
                 <tr>
-                   <td colSpan={8} className="p-6 text-center text-slate-400">
+                   <td colSpan={9} className="p-6 text-center text-slate-400">
                     هیچ کاربری در سامانه یافت نشد. جهت افزودن پرسنل، روی ثبت جدید کلیک کنید.
                   </td>
                 </tr>
@@ -148,16 +165,66 @@ export default function PersonnelTab({
                           </span>
                         )}
                       </td>
+                      <td className="p-2.5 text-right font-sans">
+                        {p.username || p.password ? (
+                          <div className="space-y-0.5 max-w-[150px]">
+                            {p.username && (
+                              <div className="text-[11px] font-mono" dir="ltr">
+                                <span className="text-slate-400 select-none">U: </span>
+                                <span className="font-bold text-slate-800">{p.username}</span>
+                              </div>
+                            )}
+                            {p.password && (
+                              <div className="text-[11px] font-mono" dir="ltr">
+                                <span className="text-slate-400 select-none">P: </span>
+                                <span className="text-slate-800 bg-slate-100 hover:bg-slate-200 px-1.5 py-0.2 rounded cursor-pointer select-all font-bold" title="کلیک جهت انتخاب">{p.password}</span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
+                      </td>
                       <td className="p-2.5 whitespace-normal">
-                         <div className="flex flex-wrap gap-1 max-w-[280px]">
+                         <div className="flex flex-wrap gap-1.5 max-w-[320px]">
                           {assigns.cases.map(c => (
-                            <span 
+                            <div 
                               key={c.code} 
-                              className="bg-blue-50 border border-blue-200 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap"
-                              title={`${c.motherboard} | CPU: ${c.cpu}`}
+                              className="flex flex-col gap-1 p-1 bg-blue-50/50 border border-blue-100 rounded-lg text-right text-[10px]"
                             >
-                              🖥️ {c.code}
-                            </span>
+                              <div className="flex items-center gap-1">
+                                <span 
+                                  className="bg-blue-100 border border-blue-300 text-blue-800 px-1.5 py-0.5 rounded font-bold"
+                                  title={`${c.motherboard} | CPU: ${c.cpu}`}
+                                >
+                                  🖥️ {c.code}
+                                </span>
+                                {c.hostName && <span className="text-slate-500 font-bold" title="Host Name">{c.hostName}</span>}
+                              </div>
+                              {c.ipAddress && <div className="text-blue-600 font-mono" dir="ltr">{c.ipAddress}</div>}
+                              
+                              {(c.ipAddress || c.hostName) && (
+                                <div className="flex items-center gap-1 mt-0.5" onClick={(e) => e.stopPropagation()}>
+                                  <button
+                                    onClick={() => downloadRdpFile(c.ipAddress || '', c.hostName || '')}
+                                    title="دانلود فایل RDP برای اتصال ریموت"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-1 py-0.5 rounded text-[9px] font-medium transition cursor-pointer"
+                                  >
+                                    📥 RDP
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(`mstsc /v:${c.ipAddress || c.hostName}`);
+                                      alert('دستور ریموت کپی شد:\n' + `mstsc /v:${c.ipAddress || c.hostName}`);
+                                    }}
+                                    title="کپی دستور ریموت (mstsc)"
+                                    className="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 px-1 py-0.5 rounded text-[9px] transition cursor-pointer font-mono"
+                                  >
+                                    📋 دستور
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           ))}
                           {assigns.monitors.map(m => (
                             <span 

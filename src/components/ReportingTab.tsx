@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard } from '../types';
+import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard, Radio, Cctv } from '../types';
 import Logo from './Logo';
 import EquipmentPieChart from './EquipmentPieChart';
 import EquipmentStatusBarChart from './EquipmentStatusBarChart';
@@ -12,6 +12,8 @@ interface ReportingTabProps {
   printers: Printer[];
   mice?: Mouse[];
   keyboards?: Keyboard[];
+  radios?: Radio[];
+  cctvs?: Cctv[];
   assignments: Assignment[];
   prefilledPersonnelCode?: string;
   onSaveItem?: (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'catalog', data: any) => Promise<boolean>;
@@ -24,6 +26,8 @@ export default function ReportingTab({
   printers,
   mice = [],
   keyboards = [],
+  radios = [],
+  cctvs = [],
   assignments,
   prefilledPersonnelCode,
   onSaveItem
@@ -33,6 +37,8 @@ export default function ReportingTab({
   const [secCases, setSecCases] = useState(true);
   const [secMons, setSecMons] = useState(true);
   const [secPris, setSecPris] = useState(true);
+  const [secRadios, setSecRadios] = useState(true);
+  const [secCctvs, setSecCctvs] = useState(true);
   const [secHis, setSecHis] = useState(true);
 
   // Filters
@@ -75,6 +81,30 @@ export default function ReportingTab({
       const owner = personnel.find(prs => prs.code === p.assignedTo);
       const query = filterPers.toLowerCase().trim();
       if (owner && !owner.name.toLowerCase().includes(query) && !owner.code.toLowerCase().includes(query)) return false;
+    }
+    return true;
+  });
+
+  const filteredRadios = radios.filter(r => {
+    if (onlyNeedsRepair && r.status !== 'repair') return false;
+    if (filterEquip.trim() && !r.code.toLowerCase().includes(filterEquip.toLowerCase().trim())) return false;
+    if (filterPers.trim() && r.assignedTo) {
+      const owner = personnel.find(p => p.code === r.assignedTo);
+      const query = filterPers.toLowerCase().trim();
+      if (owner && !owner.name.toLowerCase().includes(query) && !owner.code.toLowerCase().includes(query)) return false;
+    }
+    return true;
+  });
+
+  const filteredCctvs = cctvs.filter(c => {
+    if (onlyNeedsRepair && c.status !== 'repair') return false;
+    if (filterEquip.trim() && !c.code.toLowerCase().includes(filterEquip.toLowerCase().trim())) return false;
+    if (filterPers.trim()) {
+      const query = filterPers.toLowerCase().trim();
+      const owner = c.assignedTo ? personnel.find(p => p.code === c.assignedTo) : null;
+      const ownerMatch = owner && (owner.name.toLowerCase().includes(query) || owner.code.toLowerCase().includes(query));
+      const locationMatch = c.location && c.location.toLowerCase().includes(query);
+      if (!ownerMatch && !locationMatch) return false;
     }
     return true;
   });
@@ -181,13 +211,17 @@ export default function ReportingTab({
     const userPrinters = printers.filter(p => p.assignedTo === userCode);
     const userMice = (mice || []).filter(m => m.assignedTo === userCode);
     const userKeyboards = (keyboards || []).filter(k => k.assignedTo === userCode);
+    const userRadios = (radios || []).filter(r => r.assignedTo === userCode);
+    const userCctvs = (cctvs || []).filter(c => c.assignedTo === userCode);
     return {
       cases: userCases,
       monitors: userMonitors,
       printers: userPrinters,
       mice: userMice,
       keyboards: userKeyboards,
-      totalCount: userCases.length + userMonitors.length + userPrinters.length + userMice.length + userKeyboards.length
+      radios: userRadios,
+      cctvs: userCctvs,
+      totalCount: userCases.length + userMonitors.length + userPrinters.length + userMice.length + userKeyboards.length + userRadios.length + userCctvs.length
     };
   };
 
@@ -265,6 +299,16 @@ export default function ReportingTab({
     <tr>
       <td colspan="2" style="font-weight: bold; background-color: #f7fafc;">پرینتر و ملزومات چاپ:</td>
       <td colspan="2" style="font-weight: bold; color: #059669;">${filteredPrinters.length} عدد</td>
+      <td colspan="6" style="border: none;"></td>
+    </tr>
+    <tr>
+      <td colspan="2" style="font-weight: bold; background-color: #f7fafc;">دستگاه‌های بی‌سیم دستی:</td>
+      <td colspan="2" style="font-weight: bold; color: #4f46e5;">${filteredRadios.length} عدد</td>
+      <td colspan="6" style="border: none;"></td>
+    </tr>
+    <tr>
+      <td colspan="2" style="font-weight: bold; background-color: #f7fafc;">دوربین‌های مداربسته کارگاه:</td>
+      <td colspan="2" style="font-weight: bold; color: #db2777;">${filteredCctvs.length} عدد</td>
       <td colspan="6" style="border: none;"></td>
     </tr>
   </table>
@@ -436,6 +480,89 @@ export default function ReportingTab({
 `;
       }
 
+      if (secRadios) {
+        html += `
+  <table>
+    <tr>
+      <td colspan="6" class="section-header" style="background-color: #4f46e5;">📻 گزارش بی‌سیم‌های دستی (رادیو)</td>
+    </tr>
+    <thead>
+      <tr>
+        <th>ردیف</th>
+        <th>کد بی‌سیم</th>
+        <th>مدل</th>
+        <th>محدوده فرکانس</th>
+        <th>وضعیت سلامت</th>
+        <th>تحویل گیرنده / محل استقرار</th>
+      </tr>
+    </thead>
+    <tbody>
+`;
+        if (filteredRadios.length === 0) {
+          html += `<tr><td colspan="6" style="text-align: center; color: #a0aec0; padding: 20px;">موردی یافت نشد.</td></tr>`;
+        } else {
+          filteredRadios.forEach((r, idx) => {
+            const statusLabel = r.status === 'repair' ? '⚠️ نیاز به تعمیر' : r.status === 'retired' ? '❌ اسقاط شده' : '✅ سالم';
+            const ownerName = r.assignedTo ? `${personnel.find(p => p.code === r.assignedTo)?.name || 'کد نامعتبر'} (${r.assignedTo})` : (r.location ? `📍 ${r.location}` : '📦 انبار کارگاه');
+            html += `
+        <tr>
+          <td style="text-align: center;">${idx + 1}</td>
+          <td style="font-family: monospace; font-weight: bold;">${r.code || ''}</td>
+          <td>${r.model || ''}</td>
+          <td style="font-family: monospace;">${r.frequencyRange || '—'}</td>
+          <td>${statusLabel}</td>
+          <td style="font-weight: bold;">${ownerName}</td>
+        </tr>
+`;
+          });
+        }
+        html += `
+    </tbody>
+  </table>
+`;
+      }
+
+      if (secCctvs) {
+        html += `
+  <table>
+    <tr>
+      <td colspan="6" class="section-header" style="background-color: #db2777;">📸 گزارش دوربین‌های مداربسته</td>
+    </tr>
+    <thead>
+      <tr>
+        <th>ردیف</th>
+        <th>کد دوربین</th>
+        <th>برند و مدل</th>
+        <th>موقعیت استقرار</th>
+        <th>وضعیت فعالیت</th>
+        <th>لینک پخش زنده</th>
+      </tr>
+    </thead>
+    <tbody>
+`;
+        if (filteredCctvs.length === 0) {
+          html += `<tr><td colspan="6" style="text-align: center; color: #a0aec0; padding: 20px;">موردی یافت نشد.</td></tr>`;
+        } else {
+          filteredCctvs.forEach((c, idx) => {
+            const statusLabel = c.status === 'repair' ? '⚠️ نیاز به تعمیر' : c.status === 'retired' ? '❌ غیرفعال' : '✅ فعال';
+            html += `
+        <tr>
+          <td style="text-align: center;">${idx + 1}</td>
+          <td style="font-family: monospace; font-weight: bold;">${c.code || ''}</td>
+          <td>${c.brand || ''} - ${c.model || ''}</td>
+          <td style="font-weight: bold;">📍 ${c.location || 'نامعلوم'}</td>
+          <td>${statusLabel}</td>
+          <td style="font-family: monospace; text-align: left; direction: ltr;">${c.accessLink || '—'}</td>
+        </tr>
+`;
+          });
+        }
+        html += `
+    </tbody>
+  </table>
+`;
+      }
+
       if (secHis) {
         html += `
   <table>
@@ -525,6 +652,12 @@ export default function ReportingTab({
       <td style="font-weight: bold; background-color: #edf2f7;">نشانی محل استقرار دارد:</td>
       <td colspan="3">${certificatePers.location || ''}</td>
     </tr>
+    <tr>
+      <td style="font-weight: bold; background-color: #edf2f7;">نام کاربری سیستم (Username):</td>
+      <td style="font-family: monospace;">${certificatePers.username || '—'}</td>
+      <td style="font-weight: bold; background-color: #edf2f7;">رمز عبور سیستم (Password):</td>
+      <td style="font-family: monospace;">${certificatePers.password || '—'}</td>
+    </tr>
   </table>
 
   <table>
@@ -574,6 +707,16 @@ export default function ReportingTab({
       <td style="font-family: monospace;">${c.power || '—'}</td>
       <td style="font-weight: bold; background-color: #edf2f7;">وضعیت سلامت:</td>
       <td style="font-weight: bold; color: #2b6cb0;">${statusLabel}</td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold; background-color: #edf2f7;">آدرس IP کامپیوتر:</td>
+      <td style="font-family: monospace; font-weight: bold; color: #2b6cb0;">${c.ipAddress || '—'}</td>
+      <td style="font-weight: bold; background-color: #edf2f7;">آدرس MAC (فیزیکی):</td>
+      <td style="font-family: monospace;">${c.macAddress || '—'}</td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold; background-color: #edf2f7;">نام کامپیوتر (Host Name):</td>
+      <td style="font-family: monospace; font-weight: bold;" colspan="3">${c.hostName || '—'}</td>
     </tr>
   </table>
 `;
@@ -758,6 +901,14 @@ export default function ReportingTab({
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={secPris} onChange={(e) => setSecPris(e.target.checked)} />
                 لیست پرینترها و دستگاه‌های چاپ
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={secRadios} onChange={(e) => setSecRadios(e.target.checked)} />
+                لیست بی‌سیم‌های دستی (رادیو)
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={secCctvs} onChange={(e) => setSecCctvs(e.target.checked)} />
+                لیست دوربین‌های مداربسته
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={secHis} onChange={(e) => setSecHis(e.target.checked)} />
@@ -998,6 +1149,8 @@ export default function ReportingTab({
           casesCount={cases.length} 
           monitorsCount={monitors.length} 
           printersCount={printers.length} 
+          radiosCount={radios.length}
+          cctvsCount={cctvs.length}
         />
 
         {/* Controls Block D: Interactive Status Distribution */}
@@ -1007,6 +1160,8 @@ export default function ReportingTab({
           printers={printers}
           mice={mice}
           keyboards={keyboards}
+          radios={radios}
+          cctvs={cctvs}
         />
 
       </div>
@@ -1070,23 +1225,35 @@ export default function ReportingTab({
                 <p className="text-[11px] text-slate-500 mt-2 pb-2">تاریخ گزارش: ۱۴۰۵/۰۳/۰۳ | فیلتر اعمال شده: بر اساس درخواست کاربر</p>
                 
                 {/* Print & Screen Distribution stats */}
-                <div className="grid grid-cols-3 gap-3 text-right mt-3 text-xs font-sans">
-                  <div className="border border-slate-200 rounded p-2.5 bg-slate-50">
-                    <div className="text-slate-500 font-medium mb-1 text-[11px]">کیس‌های کارگاهی / اداری</div>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-right mt-3 text-xs font-sans">
+                  <div className="border border-slate-200 rounded p-2 bg-slate-50">
+                    <div className="text-slate-500 font-medium mb-1 text-[10px]">کیس‌های کارگاهی / اداری</div>
                     <div className="font-bold text-[#84141A] text-xs">
-                      {filteredCases.length} عدد ({filteredCases.length + filteredMonitors.length + filteredPrinters.length > 0 ? Math.round((filteredCases.length / (filteredCases.length + filteredMonitors.length + filteredPrinters.length)) * 100) : 0}٪)
+                      {filteredCases.length} عدد
                     </div>
                   </div>
-                  <div className="border border-slate-200 rounded p-2.5 bg-slate-50">
-                    <div className="text-slate-500 font-medium mb-1 text-[11px]">دستگاه‌های مانیتور</div>
+                  <div className="border border-slate-200 rounded p-2 bg-slate-50">
+                    <div className="text-slate-500 font-medium mb-1 text-[10px]">دستگاه‌های مانیتور</div>
                     <div className="font-bold text-blue-600 text-xs">
-                      {filteredMonitors.length} عدد ({filteredCases.length + filteredMonitors.length + filteredPrinters.length > 0 ? Math.round((filteredMonitors.length / (filteredCases.length + filteredMonitors.length + filteredPrinters.length)) * 100) : 0}٪)
+                      {filteredMonitors.length} عدد
                     </div>
                   </div>
-                  <div className="border border-slate-200 rounded p-2.5 bg-slate-50">
-                    <div className="text-slate-500 font-medium mb-1 text-[11px]">پرینتر و ملزومات چاپ</div>
+                  <div className="border border-slate-200 rounded p-2 bg-slate-50">
+                    <div className="text-slate-500 font-medium mb-1 text-[10px]">پرینتر و ملزومات چاپ</div>
                     <div className="font-bold text-emerald-600 text-xs">
-                      {filteredPrinters.length} عدد ({filteredCases.length + filteredMonitors.length + filteredPrinters.length > 0 ? Math.round((filteredPrinters.length / (filteredCases.length + filteredMonitors.length + filteredPrinters.length)) * 100) : 0}٪)
+                      {filteredPrinters.length} عدد
+                    </div>
+                  </div>
+                  <div className="border border-slate-200 rounded p-2 bg-slate-50">
+                    <div className="text-slate-500 font-medium mb-1 text-[10px]">بی‌سیم دستی (رادیو)</div>
+                    <div className="font-bold text-indigo-600 text-xs">
+                      {filteredRadios.length} عدد
+                    </div>
+                  </div>
+                  <div className="border border-slate-200 rounded p-2 bg-slate-50">
+                    <div className="text-slate-500 font-medium mb-1 text-[10px]">دوربین‌های مداربسته</div>
+                    <div className="font-bold text-pink-600 text-xs">
+                      {filteredCctvs.length} عدد
                     </div>
                   </div>
                 </div>
@@ -1250,6 +1417,96 @@ export default function ReportingTab({
                             </td>
                             <td className="border border-slate-300 p-2 font-semibold">
                               {pr.assignedTo ? `${personnel.find(p=>p.code===pr.assignedTo)?.name || 'کد نامعتبر'}(${pr.assignedTo})` : '📦 انبار'}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Radios Block */}
+              {secRadios && (
+                <div className="space-y-2 pt-4">
+                  <h4 className="font-bold text-slate-800 py-1 bg-slate-100 px-2 rounded flex justify-between items-center">
+                    <span>📻 گزارش بی‌سیم‌های دستی (رادیو)</span>
+                    {onlyNeedsRepair && <span className="text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded font-bold">فیلتر شده: نیاز به تعمیر</span>}
+                  </h4>
+                  <table className="w-full text-xs text-right border-collapse border border-slate-300 font-sans">
+                    <thead className="bg-slate-50 text-slate-700">
+                      <tr>
+                        <th className="border border-slate-300 p-2 font-bold w-12 text-center">ردیف</th>
+                        <th className="border border-slate-300 p-2 font-bold">کد بی‌سیم</th>
+                        <th className="border border-slate-300 p-2 font-bold">مدل</th>
+                        <th className="border border-slate-300 p-2 font-bold">محدوده فرکانس</th>
+                        <th className="border border-slate-300 p-2 font-bold">وضعیت سلامت</th>
+                        <th className="border border-slate-300 p-2 font-bold">تحویل گیرنده / موقعیت</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredRadios.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="border border-slate-300 p-4 text-center text-slate-400">موردی با این مشخصات یافت نشد.</td>
+                        </tr>
+                      ) : (
+                        filteredRadios.map((r, idx) => (
+                          <tr key={r.code}>
+                            <td className="border border-slate-300 p-2 text-center font-mono">{idx + 1}</td>
+                            <td className="border border-slate-300 p-2 font-mono font-bold">{r.code}</td>
+                            <td className="border border-slate-300 p-2">{r.model}</td>
+                            <td className="border border-slate-300 p-2 font-mono">{r.frequencyRange || '—'}</td>
+                            <td className="border border-slate-300 p-2">
+                              {r.status === 'repair' ? '⚠️ نیاز به تعمیر' : r.status === 'retired' ? '❌ اسقاط شده' : '✅ سالم'}
+                            </td>
+                            <td className="border border-slate-300 p-2 font-semibold">
+                              {r.assignedTo ? `${personnel.find(p=>p.code===r.assignedTo)?.name || 'کد نامعتبر'}(${r.assignedTo})` : (r.location ? `📍 ${r.location}` : '📦 انبار کارگاه')}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* CCTV Block */}
+              {secCctvs && (
+                <div className="space-y-2 pt-4">
+                  <h4 className="font-bold text-slate-800 py-1 bg-slate-100 px-2 rounded flex justify-between items-center">
+                    <span>📸 گزارش دوربین‌های مداربسته</span>
+                    {onlyNeedsRepair && <span className="text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded font-bold">فیلتر شده: نیاز به تعمیر</span>}
+                  </h4>
+                  <table className="w-full text-xs text-right border-collapse border border-slate-300 font-sans">
+                    <thead className="bg-slate-50 text-slate-700">
+                      <tr>
+                        <th className="border border-slate-300 p-2 font-bold w-12 text-center">ردیف</th>
+                        <th className="border border-slate-300 p-2 font-bold">کد دوربین</th>
+                        <th className="border border-slate-300 p-2 font-bold">برند و مدل</th>
+                        <th className="border border-slate-300 p-2 font-bold">موقعیت استقرار</th>
+                        <th className="border border-slate-300 p-2 font-bold">وضعیت فعالیت</th>
+                        <th className="border border-slate-300 p-2 font-bold">لینک پخش زنده</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredCctvs.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="border border-slate-300 p-4 text-center text-slate-400">موردی با این مشخصات یافت نشد.</td>
+                        </tr>
+                      ) : (
+                        filteredCctvs.map((c, idx) => (
+                          <tr key={c.code}>
+                            <td className="border border-slate-300 p-2 text-center font-mono">{idx + 1}</td>
+                            <td className="border border-slate-300 p-2 font-mono font-bold">{c.code}</td>
+                            <td className="border border-slate-300 p-2">{c.brand} - {c.model}</td>
+                            <td className="border border-slate-300 p-2 font-semibold">📍 {c.location || '—'}</td>
+                            <td className="border border-slate-300 p-2">
+                              {c.status === 'repair' ? '⚠️ نیاز به تعمیر' : c.status === 'retired' ? '❌ غیرفعال' : '✅ فعال'}
+                            </td>
+                            <td className="border border-slate-300 p-2 font-mono text-left" dir="ltr">
+                              {c.accessLink ? (
+                                <a href={c.accessLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{c.accessLink}</a>
+                              ) : '—'}
                             </td>
                           </tr>
                         ))

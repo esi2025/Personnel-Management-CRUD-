@@ -5,20 +5,26 @@ interface EquipmentPieChartProps {
   casesCount: number;
   monitorsCount: number;
   printersCount: number;
+  radiosCount?: number;
+  cctvsCount?: number;
 }
 
 export default function EquipmentPieChart({
   casesCount,
   monitorsCount,
   printersCount,
+  radiosCount = 0,
+  cctvsCount = 0,
 }: EquipmentPieChartProps) {
-  const total = casesCount + monitorsCount + printersCount;
+  const total = casesCount + monitorsCount + printersCount + radiosCount + cctvsCount;
 
   const data = [
     { name: 'کیس‌های اداری/کارگاهی', value: casesCount, color: '#84141A' }, // Omran Azarestan Burgundy
     { name: 'مانیتور و نماینده‌های تصویر', value: monitorsCount, color: '#3b82f6' }, // Modern Tech Blue
     { name: 'پرینتر و ملزومات چاپ', value: printersCount, color: '#10b981' }, // Clean Emerald green
-  ];
+    { name: 'دستگاه‌های بی‌سیم دستی', value: radiosCount, color: '#6366f1' }, // Indigo
+    { name: 'دوربین‌های مداربسته', value: cctvsCount, color: '#ec4899' }, // Pink
+  ].filter(item => item.value > 0);
 
   // Avoid crash/blank if no equipment exists
   if (total === 0) {

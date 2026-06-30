@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import PersonnelTab from './components/PersonnelTab';
-import { CasesSubTab, MonitorsSubTab, PrintersSubTab, MiceSubTab, KeyboardsSubTab, RadiosSubTab } from './components/EquipmentTabs';
+import { CasesSubTab, MonitorsSubTab, PrintersSubTab, MiceSubTab, KeyboardsSubTab, RadiosSubTab, CctvsSubTab } from './components/EquipmentTabs';
 import PartsCatalogTab from './components/PartsCatalogTab';
 import TransferTab from './components/TransferTab';
 import HistoryTab from './components/HistoryTab';
@@ -18,7 +18,7 @@ import LogsTab from './components/LogsTab';
 import RepairsTab from './components/RepairsTab';
 import { BulkEditTab } from './components/BulkEditTab';
 import AppearanceTab from './components/AppearanceTab';
-import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard, CatalogItem, Repair, Radio, ThemeSettings } from './types';
+import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard, CatalogItem, Repair, Radio, ThemeSettings, Cctv } from './types';
 import { getPersianDateString } from './utils/date';
 
 export interface BackupData {
@@ -177,7 +177,8 @@ const INITIAL_DEMO_DATA = {
       endDate: null
     }
   ],
-  radios: []
+  radios: [],
+  cctvs: []
 };
 
 export default function App() {
@@ -618,6 +619,7 @@ export default function App() {
   const [mice, setMice] = useState<Mouse[]>([]);
   const [keyboards, setKeyboards] = useState<Keyboard[]>([]);
   const [radios, setRadios] = useState<Radio[]>([]);
+  const [cctvs, setCctvs] = useState<Cctv[]>([]);
   const [partsCatalog, setPartsCatalog] = useState<CatalogItem[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [repairs, setRepairs] = useState<Repair[]>([]);
@@ -627,7 +629,7 @@ export default function App() {
 
   // Editing state
   const [editItem, setEditItem] = useState<any>(null);
-  const [editType, setEditType] = useState<'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'catalog' | null>(null);
+  const [editType, setEditType] = useState<'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'cctv' | 'catalog' | null>(null);
 
   // Transfer prefill
   const [prefilledEquipCode, setPrefilledEquipCode] = useState('');
@@ -636,7 +638,7 @@ export default function App() {
   // QR Code Modal State
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [qrCode, setQrCode] = useState('');
-  const [qrType, setQrType] = useState<'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio'>('case');
+  const [qrType, setQrType] = useState<'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'cctv'>('case');
   const [qrData, setQrData] = useState<any>(null);
   const [onlineUsersData, setOnlineUsersData] = useState<{ count: number; users: { username: string; name: string }[] }>({ count: 1, users: [] });
 
@@ -667,7 +669,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, [currentUser, isOfflineMode]);
 
-  const handleShowQR = (code: string, type: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio', data: any) => {
+  const handleShowQR = (code: string, type: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'cctv', data: any) => {
     setQrCode(code);
     setQrType(type);
     setQrData(data);
@@ -697,6 +699,7 @@ export default function App() {
       setMice(data.mice || []);
       setKeyboards(data.keyboards || []);
       setRadios(data.radios || []);
+      setCctvs(data.cctvs || []);
       setPartsCatalog(data.partsCatalog || []);
       setAssignments(data.assignments || []);
       setRepairs(data.repairs || []);
@@ -724,6 +727,7 @@ export default function App() {
         mice: data.mice || [],
         keyboards: data.keyboards || [],
         radios: data.radios || [],
+        cctvs: data.cctvs || [],
         partsCatalog: data.partsCatalog || [],
         assignments: data.assignments || [],
         repairs: data.repairs || []
@@ -753,6 +757,7 @@ export default function App() {
       setMice(localDb.mice || []);
       setKeyboards(localDb.keyboards || []);
       setRadios(localDb.radios || []);
+      setCctvs(localDb.cctvs || []);
       setPartsCatalog(localDb.partsCatalog || []);
       setAssignments(localDb.assignments || []);
       setRepairs(localDb.repairs || []);
@@ -812,7 +817,8 @@ export default function App() {
       printer: 'printers',
       mouse: 'mice',
       keyboard: 'keyboards',
-      radio: 'radios'
+      radio: 'radios',
+      cctv: 'cctvs'
     };
 
     items.forEach((rawItem: any) => {
@@ -856,6 +862,13 @@ export default function App() {
           frequencyRange: rawItem.frequencyRange || "UHF",
           ipRating: rawItem.ipRating || "IP54"
         };
+      } else if (type === 'cctv') {
+        itemObj = {
+          ...itemObj,
+          brand: rawItem.brand || "سایر",
+          model: rawItem.model || "سایر",
+          location: rawItem.location || ""
+        };
       } else {
         itemObj = {
           ...itemObj,
@@ -874,6 +887,7 @@ export default function App() {
     setMice(db.mice || []);
     setKeyboards(db.keyboards || []);
     setRadios(db.radios || []);
+    setCctvs(db.cctvs || []);
 
     return { success: true, savedCount, skipped };
   };
@@ -955,7 +969,7 @@ export default function App() {
   };
 
   // Save/Edit entity
-  const handleSaveItem = async (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'catalog', data: any) => {
+  const handleSaveItem = async (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'cctv' | 'catalog', data: any) => {
     // Permission validation checks
     if (type === 'personnel') {
       if (!currentUser?.canEditPersonnel && currentUser?.role !== 'admin') {
@@ -1026,7 +1040,7 @@ export default function App() {
       if (data.status === 'terminated') {
         const today = getPersianDateString();
         const trimmedCode = data.code.trim();
-        const returnedHardware: { code: string; type: "case" | "monitor" | "printer" | "mouse" | "keyboard" | "radio" }[] = [];
+        const returnedHardware: { code: string; type: "case" | "monitor" | "printer" | "mouse" | "keyboard" | "radio" | "cctv" }[] = [];
 
         // Cases
         db.cases = (db.cases || []).map((c: any) => {
@@ -1080,6 +1094,15 @@ export default function App() {
             return { ...r, assignedTo: null };
           }
           return r;
+        });
+
+        // Cctvs
+        db.cctvs = (db.cctvs || []).map((c: any) => {
+          if (c.assignedTo === trimmedCode) {
+            returnedHardware.push({ code: c.code, type: 'cctv' });
+            return { ...c, assignedTo: null };
+          }
+          return c;
         });
 
         if (returnedHardware.length > 0) {
@@ -1219,6 +1242,24 @@ export default function App() {
       }
       db.radios = list;
     }
+    else if (type === 'cctv') {
+      let list = db.cctvs || [];
+      if (!data.code) {
+        alert("کد دوربین مداربسته الزامی است.");
+        return false;
+      }
+      const index = list.findIndex((c: any) => c.code === data.code);
+      if (index > -1) {
+        list[index] = { ...list[index], ...data };
+      } else {
+        if (list.some((c: any) => c.code === data.code)) {
+          alert("کد دوربین مداربسته تکراری است.");
+          return false;
+        }
+        list.push({ ...data, assignedTo: null });
+      }
+      db.cctvs = list;
+    }
     else if (type === 'catalog') {
       let list = db.partsCatalog || [];
       const index = list.findIndex((c: any) => c.id === data.id);
@@ -1237,7 +1278,7 @@ export default function App() {
   };
 
   // Delete entity
-  const handleDeleteItem = async (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'catalog', id: string) => {
+  const handleDeleteItem = async (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'cctv' | 'catalog', id: string) => {
     // Permission validation checks for deletion
     if (type === 'personnel') {
       if (!currentUser?.canEditPersonnel && currentUser?.role !== 'admin') {
@@ -1306,6 +1347,7 @@ export default function App() {
           (db.mice || []).forEach((m: any) => { if (m.assignedTo === codeToClear) m.assignedTo = null; });
           (db.keyboards || []).forEach((k: any) => { if (k.assignedTo === codeToClear) k.assignedTo = null; });
           (db.radios || []).forEach((r: any) => { if (r.assignedTo === codeToClear) r.assignedTo = null; });
+          (db.cctvs || []).forEach((c: any) => { if (c.assignedTo === codeToClear) c.assignedTo = null; });
 
           (db.assignments || []).forEach((ass: any) => {
             if (ass.personnelCode === codeToClear && ass.endDate === null) {
@@ -1322,6 +1364,7 @@ export default function App() {
         'mouse': 'mice',
         'keyboard': 'keyboards',
         'radio': 'radios',
+        'cctv': 'cctvs',
         'catalog': 'partsCatalog'
       };
       const listKey = keyMap[type];
@@ -1379,11 +1422,11 @@ export default function App() {
     let db = rawDb ? JSON.parse(rawDb) : { ...INITIAL_DEMO_DATA };
 
     // Locate Equipment
-    let equipType: "case" | "monitor" | "printer" | "mouse" | "keyboard" | "radio" | null = null;
+    let equipType: "case" | "monitor" | "printer" | "mouse" | "keyboard" | "radio" | "cctv" | null = null;
     let equipItem: any = null;
 
-    const listKeys = ['cases', 'monitors', 'printers', 'mice', 'keyboards', 'radios'] as const;
-    const typesMap = { cases: 'case', monitors: 'monitor', printers: 'printer', mice: 'mouse', keyboards: 'keyboard', radios: 'radio' } as const;
+    const listKeys = ['cases', 'monitors', 'printers', 'mice', 'keyboards', 'radios', 'cctvs'] as const;
+    const typesMap = { cases: 'case', monitors: 'monitor', printers: 'printer', mice: 'mouse', keyboards: 'keyboard', radios: 'radio', cctvs: 'cctv' } as const;
 
     for (const key of listKeys) {
       const idx = (db[key] || []).findIndex((x: any) => x.code === equipmentCode);
@@ -1471,11 +1514,11 @@ export default function App() {
     let db = rawDb ? JSON.parse(rawDb) : { ...INITIAL_DEMO_DATA };
 
     // Locate Equipment
-    let equipType: "case" | "monitor" | "printer" | "mouse" | "keyboard" | "radio" | null = null;
+    let equipType: "case" | "monitor" | "printer" | "mouse" | "keyboard" | "radio" | "cctv" | null = null;
     let equipItem: any = null;
 
-    const listKeys = ['cases', 'monitors', 'printers', 'mice', 'keyboards', 'radios'] as const;
-    const typesMap = { cases: 'case', monitors: 'monitor', printers: 'printer', mice: 'mouse', keyboards: 'keyboard', radios: 'radio' } as const;
+    const listKeys = ['cases', 'monitors', 'printers', 'mice', 'keyboards', 'radios', 'cctvs'] as const;
+    const typesMap = { cases: 'case', monitors: 'monitor', printers: 'printer', mice: 'mouse', keyboards: 'keyboard', radios: 'radio', cctvs: 'cctv' } as const;
 
     for (const key of listKeys) {
       const idx = (db[key] || []).findIndex((x: any) => x.code === equipmentCode);
@@ -1558,7 +1601,7 @@ export default function App() {
     setActiveTab('transfer-tab');
   };
 
-  const handleEditTrigger = (item: any, type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'catalog') => {
+  const handleEditTrigger = (item: any, type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'cctv' | 'catalog') => {
     setEditItem(item);
     setEditType(type);
   };
@@ -1573,7 +1616,8 @@ export default function App() {
         p.name.toLowerCase().includes(kw) || 
         p.code.toLowerCase().includes(kw) || 
         p.title.toLowerCase().includes(kw) || 
-        p.department.toLowerCase().includes(kw)
+        p.department.toLowerCase().includes(kw) ||
+        (p.username && p.username.toLowerCase().includes(kw))
       )
     );
   };
@@ -1588,7 +1632,10 @@ export default function App() {
         c.cpu.toLowerCase().includes(kw) || 
         c.motherboard.toLowerCase().includes(kw) ||
         (c.power && c.power.toLowerCase().includes(kw)) ||
-        (c.assignedTo && c.assignedTo.toLowerCase().includes(kw))
+        (c.assignedTo && c.assignedTo.toLowerCase().includes(kw)) ||
+        (c.ipAddress && c.ipAddress.toLowerCase().includes(kw)) ||
+        (c.hostName && c.hostName.toLowerCase().includes(kw)) ||
+        (c.macAddress && c.macAddress.toLowerCase().includes(kw))
       )
     );
   };
@@ -1654,6 +1701,20 @@ export default function App() {
         r.code.toLowerCase().includes(kw) || 
         r.model.toLowerCase().includes(kw) || 
         (r.assignedTo && r.assignedTo.toLowerCase().includes(kw))
+      )
+    );
+  };
+
+  const getFilteredCctvs = () => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return cctvs;
+    const keywords = q.split(/\s+/).filter(Boolean);
+    return cctvs.filter(c => 
+      keywords.every(kw =>
+        c.code.toLowerCase().includes(kw) || 
+        c.brand.toLowerCase().includes(kw) || 
+        c.model.toLowerCase().includes(kw) || 
+        (c.location && c.location.toLowerCase().includes(kw))
       )
     );
   };
@@ -1726,6 +1787,7 @@ export default function App() {
           <span className="bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 px-1.5 py-0.5 rounded">🖱️ ماوس: {mice.length}</span>
           <span className="bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 px-1.5 py-0.5 rounded">⌨️ کیبورد: {keyboards.length}</span>
           <span className="bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-150/40 text-indigo-700 dark:text-indigo-400 px-1.5 py-0.5 rounded">📻 بی‌سیم: {radios.length}</span>
+          <span className="bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-150/40 text-indigo-700 dark:text-indigo-400 px-1.5 py-0.5 rounded">📹 دوربین مداربسته: {cctvs.length}</span>
         </div>
       </div>
 
@@ -1767,6 +1829,7 @@ export default function App() {
                   { id: 'mice-tab', label: '🖱️ ماوس‌ها' },
                   { id: 'keyboards-tab', label: '⌨️ کیبوردها' },
                   { id: 'radios-tab', label: '📻 بی‌سیم‌ها دستی' },
+                  { id: 'cctvs-tab', label: '📹 دوربین‌های مداربسته' },
                   { id: 'catalog-tab', label: '🛠️ قطعات مرجع' },
                   { id: 'transfer-tab', label: '🔄 جابجایی هوشمند' },
                   { id: 'history-tab', label: '📜 تاریخچه لجستیک' },
@@ -1804,6 +1867,7 @@ export default function App() {
                 { id: 'mice-tab', label: 'ماوس‌ها', icon: '🖱️' },
                 { id: 'keyboards-tab', label: 'کیبوردها', icon: '⌨️' },
                 { id: 'radios-tab', label: 'بی‌سیم‌های دستی', icon: '📻' },
+                { id: 'cctvs-tab', label: 'دوربین مداربسته', icon: '📹' },
                 { id: 'catalog-tab', label: 'قطعات مرجع', icon: '🛠️' }
               ].map((tab) => (
                 <button
@@ -2006,6 +2070,18 @@ export default function App() {
             />
           )}
 
+          {activeTab === 'cctvs-tab' && (
+            <CctvsSubTab 
+              cctvs={getFilteredCctvs()} 
+              personnel={personnel}
+              onEdit={(c) => handleEditTrigger(c, 'cctv')}
+              onDelete={(code) => handleDeleteItem('cctv', code)}
+              onTransfer={handleTriggerTransfer}
+              onTabChange={setActiveTab}
+              onShowQR={handleShowQR}
+            />
+          )}
+
           {activeTab === 'catalog-tab' && (
             <PartsCatalogTab 
               catalog={partsCatalog}
@@ -2055,6 +2131,8 @@ export default function App() {
               printers={printers}
               mice={mice}
               keyboards={keyboards}
+              radios={radios}
+              cctvs={cctvs}
               assignments={assignments}
               prefilledPersonnelCode={prefilledPersCode}
               onSaveItem={handleSaveItem}

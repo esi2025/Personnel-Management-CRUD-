@@ -1,6 +1,6 @@
 import React from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { Case, Monitor, Printer, Mouse, Keyboard } from '../types';
+import { Case, Monitor, Printer, Mouse, Keyboard, Radio, Cctv } from '../types';
 
 interface EquipmentStatusBarChartProps {
   cases: Case[];
@@ -8,6 +8,8 @@ interface EquipmentStatusBarChartProps {
   printers: Printer[];
   mice?: Mouse[];
   keyboards?: Keyboard[];
+  radios?: Radio[];
+  cctvs?: Cctv[];
 }
 
 export default function EquipmentStatusBarChart({
@@ -15,7 +17,9 @@ export default function EquipmentStatusBarChart({
   monitors,
   printers,
   mice = [],
-  keyboards = []
+  keyboards = [],
+  radios = [],
+  cctvs = []
 }: EquipmentStatusBarChartProps) {
   
   // Count states helper
@@ -45,6 +49,8 @@ export default function EquipmentStatusBarChart({
   const printerStats = getStatusCounts(printers);
   const mouseStats = getStatusCounts(mice);
   const keyboardStats = getStatusCounts(keyboards);
+  const radioStats = getStatusCounts(radios);
+  const cctvStats = getStatusCounts(cctvs);
 
   const data = [
     { name: 'کیس‌ها', ...caseStats },
@@ -52,10 +58,12 @@ export default function EquipmentStatusBarChart({
     { name: 'پرینترها', ...printerStats },
     { name: 'ماوس‌ها', ...mouseStats },
     { name: 'کیبوردها', ...keyboardStats },
+    { name: 'بی‌سیم‌ها', ...radioStats },
+    { name: 'دوربین‌ها', ...cctvStats },
   ];
 
   const totalAll = 
-    cases.length + monitors.length + printers.length + mice.length + keyboards.length;
+    cases.length + monitors.length + printers.length + mice.length + keyboards.length + radios.length + cctvs.length;
 
   if (totalAll === 0) {
     return (

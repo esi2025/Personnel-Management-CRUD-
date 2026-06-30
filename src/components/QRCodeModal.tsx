@@ -7,8 +7,8 @@ interface QRCodeModalProps {
   isOpen: boolean;
   onClose: () => void;
   equipmentCode: string;
-  equipmentType: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard';
-  equipmentData: Case | Monitor | PrinterType | Mouse | Keyboard | null;
+  equipmentType: 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'cctv';
+  equipmentData: any;
   personnel: Personnel[];
 }
 
@@ -38,6 +38,10 @@ export default function QRCodeModal({
         return 'ماوس جانبی';
       case 'keyboard':
         return 'کیبورد جانبی';
+      case 'radio':
+        return 'بی‌سیم دستی (رادیو)';
+      case 'cctv':
+        return 'دوربین مداربسته';
       default:
         return 'سخت‌افزار';
     }
@@ -163,9 +167,30 @@ export default function QRCodeModal({
                     <span>{(equipmentData as Case).hdd1} | {(equipmentData as Case).hdd2}</span>
                   </div>
                 </div>
+              ) : equipmentType === 'cctv' ? (
+                <div className="space-y-1.5 text-slate-800 font-medium">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">برند دوربین:</span>
+                    <span className="font-bold">{equipmentData.brand}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">مدل دوربین:</span>
+                    <span className="font-bold">{equipmentData.model}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">مکان استقرار:</span>
+                    <span className="font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">{equipmentData.location || 'نامعلوم'}</span>
+                  </div>
+                  {equipmentData.accessLink && (
+                    <div className="flex justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-200/60 font-mono">
+                      <span>لینک دسترسی:</span>
+                      <span className="font-bold text-blue-600 truncate max-w-[150px]" dir="ltr">{equipmentData.accessLink}</span>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div className="text-slate-800 font-bold">
-                  {(equipmentData as any).model || 'فاقد مشخصات تفصیلی'}
+                  {(equipmentData as any).brand ? `${(equipmentData as any).brand} - ` : ''}{(equipmentData as any).model || 'فاقد مشخصات تفصیلی'}
                 </div>
               )}
             </div>
@@ -183,6 +208,11 @@ export default function QRCodeModal({
                     <span className="block text-[10px] text-slate-400 font-medium mt-0.5">
                       واحد: {owner.department} | موقعیت: {owner.location}
                     </span>
+                  </div>
+                ) : equipmentType === 'cctv' ? (
+                  <div className="text-indigo-700 font-bold flex items-center gap-1">
+                    <span className="inline-block w-2 h-2 rounded-full bg-indigo-500" />
+                    مستقر در موقعیت کارگاهی: {equipmentData.location || 'نامشخص'}
                   </div>
                 ) : (
                   <div className="text-amber-700 font-bold flex items-center gap-1">
