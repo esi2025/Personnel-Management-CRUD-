@@ -1928,18 +1928,18 @@ export default function App() {
       {/* Dynamic Summary Cards Grid (Request 2) */}
       <div className="no-print grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-4">
         {[
-          { label: 'کیس‌ها', count: cases.length, icon: '🖥️', active: cases.filter(c => c.status === 'working' || !c.status).length, repair: cases.filter(c => c.status === 'repair').length, color: 'from-blue-500/10 to-blue-600/5 text-blue-600 border-blue-200/60 dark:border-blue-900/40' },
-          { label: 'مانیتورها', count: monitors.length, icon: '📺', active: monitors.filter(m => m.status === 'working' || !m.status).length, repair: monitors.filter(m => m.status === 'repair').length, color: 'from-sky-500/10 to-sky-600/5 text-sky-600 border-sky-200/60 dark:border-sky-900/40' },
-          { label: 'پرینترها', count: printers.length, icon: '🖨️', active: printers.filter(p => p.status === 'working' || !p.status).length, repair: printers.filter(p => p.status === 'repair').length, color: 'from-amber-500/10 to-amber-600/5 text-amber-600 border-amber-200/60 dark:border-amber-900/40' },
-          { label: 'کیبوردها', count: keyboards.length, icon: '⌨️', active: keyboards.filter(k => k.status === 'working' || !k.status).length, repair: keyboards.filter(k => k.status === 'repair').length, color: 'from-purple-500/10 to-purple-600/5 text-purple-600 border-purple-200/60 dark:border-purple-900/40' },
-          { label: 'ماوس‌ها', count: mice.length, icon: '🖱️', active: mice.filter(m => m.status === 'working' || !m.status).length, repair: mice.filter(m => m.status === 'repair').length, color: 'from-indigo-500/10 to-indigo-600/5 text-indigo-600 border-indigo-200/60 dark:border-indigo-900/40' },
-          { label: 'بی‌سیم‌ها', count: radios.length, icon: '📻', active: radios.filter(r => r.status === 'working' || !r.status).length, repair: radios.filter(r => r.status === 'repair').length, color: 'from-teal-500/10 to-teal-600/5 text-teal-600 border-teal-200/60 dark:border-teal-900/40' },
-          { label: 'دوربین‌ها', count: cctvs.length, icon: '📹', active: cctvs.filter(c => c.status === 'working' || !c.status).length, repair: cctvs.filter(c => c.status === 'repair').length, color: 'from-pink-500/10 to-pink-600/5 text-pink-600 border-pink-200/60 dark:border-pink-900/40' },
+          { label: 'کیس‌ها', count: cases.length, icon: '🖥️', active: cases.filter(c => !c.status || c.status === 'working' || c.status === null).length, repair: cases.filter(c => c.status === 'repair').length, color: 'from-blue-500/10 to-blue-600/5 text-blue-600 border-blue-200/60 dark:border-blue-900/40' },
+          { label: 'مانیتورها', count: monitors.length, icon: '📺', active: monitors.filter(m => !m.status || m.status === 'working' || m.status === null).length, repair: monitors.filter(m => m.status === 'repair').length, color: 'from-sky-500/10 to-sky-600/5 text-sky-600 border-sky-200/60 dark:border-sky-900/40' },
+          { label: 'پرینترها', count: printers.length, icon: '🖨️', active: printers.filter(p => !p.status || p.status === 'working' || p.status === null).length, repair: printers.filter(p => p.status === 'repair').length, color: 'from-amber-500/10 to-amber-600/5 text-amber-600 border-amber-200/60 dark:border-amber-900/40' },
+          { label: 'کیبوردها', count: keyboards.length, icon: '⌨️', active: keyboards.filter(k => !k.status || k.status === 'working' || k.status === null).length, repair: keyboards.filter(k => k.status === 'repair').length, color: 'from-purple-500/10 to-purple-600/5 text-purple-600 border-purple-200/60 dark:border-purple-900/40' },
+          { label: 'ماوس‌ها', count: mice.length, icon: '🖱️', active: mice.filter(m => !m.status || m.status === 'working' || m.status === null).length, repair: mice.filter(m => m.status === 'repair').length, color: 'from-indigo-500/10 to-indigo-600/5 text-indigo-600 border-indigo-200/60 dark:border-indigo-900/40' },
+          { label: 'بی‌سیم‌ها', count: radios.length, icon: '📻', active: radios.filter(r => !r.status || r.status === 'working' || r.status === null).length, repair: radios.filter(r => r.status === 'repair').length, color: 'from-teal-500/10 to-teal-600/5 text-teal-600 border-teal-200/60 dark:border-teal-900/40' },
+          { label: 'دوربین‌ها', count: cctvs.length, icon: '📹', active: cctvs.filter(c => !c.status || c.status === 'working' || c.status === null).length, repair: cctvs.filter(c => c.status === 'repair').length, color: 'from-pink-500/10 to-pink-600/5 text-pink-600 border-pink-200/60 dark:border-pink-900/40' },
           ...customCategories.map(cat => ({
             label: cat.name,
             count: customEquipment.filter(e => e.categorySlug === cat.id).length,
             icon: cat.icon || '⚙️',
-            active: customEquipment.filter(e => e.categorySlug === cat.id && (e.status === 'working' || !e.status)).length,
+            active: customEquipment.filter(e => e.categorySlug === cat.id && (!e.status || e.status === 'working' || e.status === null)).length,
             repair: customEquipment.filter(e => e.categorySlug === cat.id && e.status === 'repair').length,
             color: 'from-slate-500/10 to-slate-600/5 text-slate-600 border-slate-200/60 dark:border-slate-800'
           }))
