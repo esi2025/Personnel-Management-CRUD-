@@ -198,6 +198,10 @@ export default function App() {
   });
 
   const [activeTab, setActiveTab] = useState('personnel-tab');
+  const [col1Expanded, setCol1Expanded] = useState(false);
+  const [col2Expanded, setCol2Expanded] = useState(false);
+  const [col3Expanded, setCol3Expanded] = useState(false);
+  const [col4Expanded, setCol4Expanded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
@@ -627,6 +631,38 @@ export default function App() {
   const [repairs, setRepairs] = useState<Repair[]>([]);
   const [customCategories, setCustomCategories] = useState<any[]>([]);
   const [customEquipment, setCustomEquipment] = useState<any[]>([]);
+
+  // Auto-expand navigation categories if active tab is in the collapsed list
+  useEffect(() => {
+    // Column 1
+    const col1Hidden = ['systems-tree-tab', 'define-hardware-tab'];
+    if (col1Hidden.includes(activeTab)) {
+      setCol1Expanded(true);
+    }
+
+    // Column 2
+    const col2StandardIds = ['cases-tab', 'monitors-tab', 'printers-tab', 'keyboards-tab', 'mice-tab', 'radios-tab', 'cctvs-tab'];
+    const isCustomCat = activeTab?.startsWith('custom_');
+    const col2Index = [
+      ...col2StandardIds,
+      ...customCategories.map(cat => `custom_${cat.id}`)
+    ].indexOf(activeTab);
+    if (col2Index >= 3 || isCustomCat) {
+      setCol2Expanded(true);
+    }
+
+    // Column 3
+    const col3Hidden = ['repairs-tab', 'bulk-edit-tab', 'bulk-qr-tab'];
+    if (col3Hidden.includes(activeTab)) {
+      setCol3Expanded(true);
+    }
+
+    // Column 4
+    const col4Hidden = ['backup-tab'];
+    if (col4Hidden.includes(activeTab)) {
+      setCol4Expanded(true);
+    }
+  }, [activeTab, customCategories]);
 
   // Search filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -1892,35 +1928,42 @@ export default function App() {
       {/* Dynamic Summary Cards Grid (Request 2) */}
       <div className="no-print grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-4">
         {[
-          { label: 'کیس‌ها', count: cases.length, icon: '🖥️', active: cases.filter(c => c.status === 'working').length, color: 'from-blue-500/10 to-blue-600/5 text-blue-600 border-blue-200/60 dark:border-blue-900/40' },
-          { label: 'مانیتورها', count: monitors.length, icon: '📺', active: monitors.filter(m => m.status === 'working').length, color: 'from-sky-500/10 to-sky-600/5 text-sky-600 border-sky-200/60 dark:border-sky-900/40' },
-          { label: 'پرینترها', count: printers.length, icon: '🖨️', active: printers.filter(p => p.status === 'working').length, color: 'from-amber-500/10 to-amber-600/5 text-amber-600 border-amber-200/60 dark:border-amber-900/40' },
-          { label: 'کیبوردها', count: keyboards.length, icon: '⌨️', active: keyboards.filter(k => k.status === 'working').length, color: 'from-purple-500/10 to-purple-600/5 text-purple-600 border-purple-200/60 dark:border-purple-900/40' },
-          { label: 'ماوس‌ها', count: mice.length, icon: '🖱️', active: mice.filter(m => m.status === 'working').length, color: 'from-indigo-500/10 to-indigo-600/5 text-indigo-600 border-indigo-200/60 dark:border-indigo-900/40' },
-          { label: 'بی‌سیم‌ها', count: radios.length, icon: '📻', active: radios.filter(r => r.status === 'working').length, color: 'from-teal-500/10 to-teal-600/5 text-teal-600 border-teal-200/60 dark:border-teal-900/40' },
-          { label: 'دوربین‌ها', count: cctvs.length, icon: '📹', active: cctvs.filter(c => c.status === 'working').length, color: 'from-pink-500/10 to-pink-600/5 text-pink-600 border-pink-200/60 dark:border-pink-900/40' },
+          { label: 'کیس‌ها', count: cases.length, icon: '🖥️', active: cases.filter(c => c.status === 'working' || !c.status).length, repair: cases.filter(c => c.status === 'repair').length, color: 'from-blue-500/10 to-blue-600/5 text-blue-600 border-blue-200/60 dark:border-blue-900/40' },
+          { label: 'مانیتورها', count: monitors.length, icon: '📺', active: monitors.filter(m => m.status === 'working' || !m.status).length, repair: monitors.filter(m => m.status === 'repair').length, color: 'from-sky-500/10 to-sky-600/5 text-sky-600 border-sky-200/60 dark:border-sky-900/40' },
+          { label: 'پرینترها', count: printers.length, icon: '🖨️', active: printers.filter(p => p.status === 'working' || !p.status).length, repair: printers.filter(p => p.status === 'repair').length, color: 'from-amber-500/10 to-amber-600/5 text-amber-600 border-amber-200/60 dark:border-amber-900/40' },
+          { label: 'کیبوردها', count: keyboards.length, icon: '⌨️', active: keyboards.filter(k => k.status === 'working' || !k.status).length, repair: keyboards.filter(k => k.status === 'repair').length, color: 'from-purple-500/10 to-purple-600/5 text-purple-600 border-purple-200/60 dark:border-purple-900/40' },
+          { label: 'ماوس‌ها', count: mice.length, icon: '🖱️', active: mice.filter(m => m.status === 'working' || !m.status).length, repair: mice.filter(m => m.status === 'repair').length, color: 'from-indigo-500/10 to-indigo-600/5 text-indigo-600 border-indigo-200/60 dark:border-indigo-900/40' },
+          { label: 'بی‌سیم‌ها', count: radios.length, icon: '📻', active: radios.filter(r => r.status === 'working' || !r.status).length, repair: radios.filter(r => r.status === 'repair').length, color: 'from-teal-500/10 to-teal-600/5 text-teal-600 border-teal-200/60 dark:border-teal-900/40' },
+          { label: 'دوربین‌ها', count: cctvs.length, icon: '📹', active: cctvs.filter(c => c.status === 'working' || !c.status).length, repair: cctvs.filter(c => c.status === 'repair').length, color: 'from-pink-500/10 to-pink-600/5 text-pink-600 border-pink-200/60 dark:border-pink-900/40' },
           ...customCategories.map(cat => ({
             label: cat.name,
             count: customEquipment.filter(e => e.categorySlug === cat.id).length,
             icon: cat.icon || '⚙️',
-            active: customEquipment.filter(e => e.categorySlug === cat.id && e.status === 'working').length,
+            active: customEquipment.filter(e => e.categorySlug === cat.id && (e.status === 'working' || !e.status)).length,
+            repair: customEquipment.filter(e => e.categorySlug === cat.id && e.status === 'repair').length,
             color: 'from-slate-500/10 to-slate-600/5 text-slate-600 border-slate-200/60 dark:border-slate-800'
           }))
         ].map((card, idx) => (
           <div 
             key={idx}
-            className={`bg-gradient-to-br ${card.color} border py-1.5 px-2 rounded-lg flex flex-col justify-between shadow-2xs hover:shadow-xs transition-all duration-200`}
+            className={`bg-gradient-to-br ${card.color} border py-1 px-1.5 rounded-lg flex items-center justify-between shadow-2xs hover:shadow-xs transition-all duration-200 text-xs`}
+            style={{ minHeight: '36px' }}
           >
-            <div className="flex justify-between items-center">
-              <span className="text-sm md:text-base">{card.icon}</span>
-              <span className="text-[8px] md:text-[9px] font-black bg-white/70 dark:bg-slate-900/50 px-1 py-0.2 rounded border border-current/10">سالم: {card.active}</span>
-            </div>
-            <div className="mt-1">
-              <div className="text-[9px] md:text-[10px] font-black text-slate-500 dark:text-slate-400 truncate">{card.label}</div>
-              <div className="text-xs md:text-sm font-black mt-0.5 font-mono flex items-baseline gap-0.5">
-                <span>{card.count}</span>
-                <span className="text-[9px] text-slate-400 font-sans font-normal">عدد</span>
+            <div className="flex items-center gap-1 min-w-0">
+              <span className="text-xs shrink-0">{card.icon}</span>
+              <div className="min-w-0 flex flex-col justify-center leading-none">
+                <div className="text-[8px] md:text-[9px] font-black text-slate-500 dark:text-slate-400 truncate leading-none">{card.label}</div>
+                <div className="text-[10px] md:text-xs font-black mt-0.5 font-mono flex items-baseline gap-0.5 leading-none">
+                  <span>{card.count}</span>
+                  <span className="text-[7px] md:text-[8px] text-slate-400 font-sans font-normal">عدد</span>
+                </div>
               </div>
+            </div>
+            <div className="flex flex-col items-end gap-0.5 shrink-0 select-none">
+              <span className="text-[7px] md:text-[8px] font-black bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-1 py-0.5 rounded border border-emerald-500/10 leading-none" title="دستگاه‌های سالم">سالم: {card.active}</span>
+              {card.repair > 0 && (
+                <span className="text-[7px] md:text-[8px] font-black bg-rose-500/10 text-rose-700 dark:text-rose-400 px-1 py-0.5 rounded border border-rose-500/10 leading-none animate-pulse" title="دستگاه‌های در حال تعمیر">تعمیر: {card.repair}</span>
+              )}
             </div>
           </div>
         ))}
@@ -2002,28 +2045,49 @@ export default function App() {
             <div className={`grid grid-cols-1 gap-1.5 p-1.5 rounded-lg shadow-inner transition-colors ${
               darkMode ? 'bg-slate-950/40 border border-slate-800/60' : 'bg-slate-50 border border-slate-200/50'
             }`}>
-              {[
-                { id: 'personnel-tab', label: 'لیست پرسنل', icon: '👥', show: true },
-                { id: 'add-new-tab', label: 'ثبت جدید(تکی /گروهی)', icon: '➕', show: currentUser?.canEditPersonnel || currentUser?.canEditEquipment || currentUser?.role === 'admin' },
-                { id: 'catalog-tab', label: 'قطعات مرجع', icon: '🛠️', show: true },
-                { id: 'systems-tree-tab', label: 'نمودار درختی', icon: '🌳', show: true },
-                { id: 'define-hardware-tab', label: 'تعریف سخت افزار جدید', icon: '🛠️', show: currentUser?.role === 'admin' }
-              ].filter(t => t.show).map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => { setActiveTab(tab.id); }}
-                  className={`w-full py-1.5 px-2 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-start gap-1.5 border text-right ${
-                    activeTab === tab.id 
-                      ? 'bg-blue-600 border-blue-600 text-white shadow-xs font-black' 
-                      : darkMode 
-                        ? 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100/85 hover:text-blue-600 hover:border-blue-300'
-                  }`}
-                >
-                  <span className="text-[10px] shrink-0">{tab.icon}</span>
-                  <span className="truncate">{tab.label}</span>
-                </button>
-              ))}
+              {(() => {
+                const col1Items = [
+                  { id: 'personnel-tab', label: 'لیست پرسنل', icon: '👥', show: true },
+                  { id: 'add-new-tab', label: 'ثبت جدید(تکی /گروهی)', icon: '➕', show: currentUser?.canEditPersonnel || currentUser?.canEditEquipment || currentUser?.role === 'admin' },
+                  { id: 'catalog-tab', label: 'قطعات مرجع', icon: '🛠️', show: true },
+                  { id: 'systems-tree-tab', label: 'نمودار درختی', icon: '🌳', show: true },
+                  { id: 'define-hardware-tab', label: 'تعریف سخت افزار جدید', icon: '🛠️', show: currentUser?.role === 'admin' }
+                ].filter(t => t.show);
+
+                const visibleItems = col1Expanded ? col1Items : col1Items.slice(0, 3);
+                return (
+                  <>
+                    {visibleItems.map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => { setActiveTab(tab.id); }}
+                        className={`w-full py-1.5 px-2 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-start gap-1.5 border text-right ${
+                          activeTab === tab.id 
+                            ? 'bg-blue-600 border-blue-600 text-white shadow-xs font-black' 
+                            : darkMode 
+                              ? 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
+                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100/85 hover:text-blue-600 hover:border-blue-300'
+                        }`}
+                      >
+                        <span className="text-[10px] shrink-0">{tab.icon}</span>
+                        <span className="truncate">{tab.label}</span>
+                      </button>
+                    ))}
+                    {col1Items.length > 3 && (
+                      <button
+                        onClick={() => setCol1Expanded(!col1Expanded)}
+                        className={`w-full mt-1 py-1 px-2 text-[9px] font-black rounded-md border border-dashed text-center flex items-center justify-center gap-1 cursor-pointer transition-all ${
+                          darkMode 
+                            ? 'bg-slate-900/40 border-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white' 
+                            : 'bg-slate-100/70 border-slate-200 text-slate-500 hover:bg-slate-200 hover:text-slate-700'
+                        }`}
+                      >
+                        <span>{col1Expanded ? '🔼 نمایش کمتر' : `🔽 نمایش بیشتر (${col1Items.length - 3})`}</span>
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
 
@@ -2033,38 +2097,59 @@ export default function App() {
               <span className="text-xs">🖥️</span>
               <span>بخش دوم: تجهیزات سخت‌افزاری</span>
             </div>
-            <div className={`grid grid-cols-1 gap-1.5 p-1.5 rounded-lg shadow-inner transition-colors max-h-[190px] overflow-y-auto ${
+            <div className={`grid grid-cols-1 gap-1.5 p-1.5 rounded-lg shadow-inner transition-colors ${
               darkMode ? 'bg-slate-950/40 border border-slate-800/60' : 'bg-slate-50 border border-slate-200/50'
             }`}>
-              {[
-                { id: 'cases-tab', label: 'کیس', icon: '🖥️' },
-                { id: 'monitors-tab', label: 'مانیتور', icon: '📺' },
-                { id: 'printers-tab', label: 'پرینتر', icon: '🖨️' },
-                { id: 'keyboards-tab', label: 'کیبورد', icon: '⌨️' },
-                { id: 'mice-tab', label: 'ماوس', icon: '🖱️' },
-                { id: 'radios-tab', label: 'بی‌سیم', icon: '📻' },
-                { id: 'cctvs-tab', label: 'دوربین مداربسته', icon: '📹' },
-                ...customCategories.map(cat => ({
-                  id: `custom_${cat.id}`,
-                  label: cat.name,
-                  icon: cat.icon || '⚙️'
-                }))
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => { setActiveTab(tab.id); }}
-                  className={`w-full py-1.5 px-2 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-start gap-1.5 border text-right ${
-                    activeTab === tab.id 
-                      ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs font-black' 
-                      : darkMode 
-                        ? 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100/85 hover:text-emerald-600 hover:border-emerald-300'
-                  }`}
-                >
-                  <span className="text-[10px] shrink-0">{tab.icon}</span>
-                  <span className="truncate">{tab.label}</span>
-                </button>
-              ))}
+              {(() => {
+                const col2Items = [
+                  { id: 'cases-tab', label: 'کیس', icon: '🖥️' },
+                  { id: 'monitors-tab', label: 'مانیتور', icon: '📺' },
+                  { id: 'printers-tab', label: 'پرینتر', icon: '🖨️' },
+                  { id: 'keyboards-tab', label: 'کیبورد', icon: '⌨️' },
+                  { id: 'mice-tab', label: 'ماوس', icon: '🖱️' },
+                  { id: 'radios-tab', label: 'بی‌سیم', icon: '📻' },
+                  { id: 'cctvs-tab', label: 'دوربین مداربسته', icon: '📹' },
+                  ...customCategories.map(cat => ({
+                    id: `custom_${cat.id}`,
+                    label: cat.name,
+                    icon: cat.icon || '⚙️'
+                  }))
+                ];
+
+                const visibleItems = col2Expanded ? col2Items : col2Items.slice(0, 3);
+                return (
+                  <>
+                    {visibleItems.map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => { setActiveTab(tab.id); }}
+                        className={`w-full py-1.5 px-2 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-start gap-1.5 border text-right ${
+                          activeTab === tab.id 
+                            ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs font-black' 
+                            : darkMode 
+                              ? 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
+                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100/85 hover:text-emerald-600 hover:border-emerald-300'
+                        }`}
+                      >
+                        <span className="text-[10px] shrink-0">{tab.icon}</span>
+                        <span className="truncate">{tab.label}</span>
+                      </button>
+                    ))}
+                    {col2Items.length > 3 && (
+                      <button
+                        onClick={() => setCol2Expanded(!col2Expanded)}
+                        className={`w-full mt-1 py-1 px-2 text-[9px] font-black rounded-md border border-dashed text-center flex items-center justify-center gap-1 cursor-pointer transition-all ${
+                          darkMode 
+                            ? 'bg-slate-900/40 border-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white' 
+                            : 'bg-slate-100/70 border-slate-200 text-slate-500 hover:bg-slate-200 hover:text-slate-700'
+                        }`}
+                      >
+                        <span>{col2Expanded ? '🔼 نمایش کمتر' : `🔽 نمایش بیشتر (${col2Items.length - 3})`}</span>
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
 
@@ -2077,29 +2162,50 @@ export default function App() {
             <div className={`grid grid-cols-1 gap-1.5 p-1.5 rounded-lg shadow-inner transition-colors ${
               darkMode ? 'bg-slate-950/40 border border-slate-800/60' : 'bg-slate-50 border border-slate-200/50'
             }`}>
-              {[
-                { id: 'transfer-tab', label: 'جابجایی هوشمند', icon: '🔄', show: currentUser?.canEditEquipment || currentUser?.role === 'admin' },
-                { id: 'history-tab', label: 'تاریخچه لجستیک', icon: '📜', show: true },
-                { id: 'reports-tab', label: 'گزارش و شناسنامه', icon: '📋', show: currentUser?.canExport || currentUser?.role === 'admin' },
-                { id: 'repairs-tab', label: 'تعمیرات و اسقاط', icon: '🛠️', show: true },
-                { id: 'bulk-edit-tab', label: 'ویرایش گروهی تجهیزات', icon: '🛠️', show: currentUser?.canEditEquipment || currentUser?.role === 'admin' },
-                { id: 'bulk-qr-tab', label: 'چاپ گروهی بارکد', icon: '🖨️', show: currentUser?.canExport || currentUser?.role === 'admin' }
-              ].filter(t => t.show).map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => { setActiveTab(tab.id); }}
-                  className={`w-full py-1.5 px-2 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-start gap-1.5 border text-right ${
-                    activeTab === tab.id 
-                      ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs font-black' 
-                      : darkMode 
-                        ? 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100/85 hover:text-indigo-600 hover:border-indigo-300'
-                  }`}
-                >
-                  <span className="text-[10px] shrink-0">{tab.icon}</span>
-                  <span className="truncate">{tab.label}</span>
-                </button>
-              ))}
+              {(() => {
+                const col3Items = [
+                  { id: 'transfer-tab', label: 'جابجایی هوشمند', icon: '🔄', show: currentUser?.canEditEquipment || currentUser?.role === 'admin' },
+                  { id: 'history-tab', label: 'تاریخچه لجستیک', icon: '📜', show: true },
+                  { id: 'reports-tab', label: 'گزارش و شناسنامه', icon: '📋', show: currentUser?.canExport || currentUser?.role === 'admin' },
+                  { id: 'repairs-tab', label: 'تعمیرات و اسقاط', icon: '🛠️', show: true },
+                  { id: 'bulk-edit-tab', label: 'ویرایش گروهی تجهیزات', icon: '🛠️', show: currentUser?.canEditEquipment || currentUser?.role === 'admin' },
+                  { id: 'bulk-qr-tab', label: 'چاپ گروهی بارکد', icon: '🖨️', show: currentUser?.canExport || currentUser?.role === 'admin' }
+                ].filter(t => t.show);
+
+                const visibleItems = col3Expanded ? col3Items : col3Items.slice(0, 3);
+                return (
+                  <>
+                    {visibleItems.map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => { setActiveTab(tab.id); }}
+                        className={`w-full py-1.5 px-2 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-start gap-1.5 border text-right ${
+                          activeTab === tab.id 
+                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs font-black' 
+                            : darkMode 
+                              ? 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
+                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100/85 hover:text-indigo-600 hover:border-indigo-300'
+                        }`}
+                      >
+                        <span className="text-[10px] shrink-0">{tab.icon}</span>
+                        <span className="truncate">{tab.label}</span>
+                      </button>
+                    ))}
+                    {col3Items.length > 3 && (
+                      <button
+                        onClick={() => setCol3Expanded(!col3Expanded)}
+                        className={`w-full mt-1 py-1 px-2 text-[9px] font-black rounded-md border border-dashed text-center flex items-center justify-center gap-1 cursor-pointer transition-all ${
+                          darkMode 
+                            ? 'bg-slate-900/40 border-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white' 
+                            : 'bg-slate-100/70 border-slate-200 text-slate-500 hover:bg-slate-200 hover:text-slate-700'
+                        }`}
+                      >
+                        <span>{col3Expanded ? '🔼 نمایش کمتر' : `🔽 نمایش بیشتر (${col3Items.length - 3})`}</span>
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
 
@@ -2112,27 +2218,48 @@ export default function App() {
             <div className={`grid grid-cols-1 gap-1.5 p-1.5 rounded-lg shadow-inner transition-colors ${
               darkMode ? 'bg-slate-950/40 border border-slate-800/60' : 'bg-slate-50 border border-slate-200/50'
             }`}>
-              {[
-                { id: 'users-tab', label: 'مدیریت کاربران', icon: '🛡️', show: currentUser?.role === 'admin' },
-                { id: 'logs-tab', label: 'لاگ امنیتی سیستم', icon: '🪵', show: currentUser?.role === 'admin' },
-                { id: 'appearance-tab', label: 'تنظیمات زیبایی تم', icon: '🎨', show: currentUser?.role === 'admin' },
-                { id: 'backup-tab', label: 'پشتیبان‌گیری پایگاه داده', icon: '💾', show: currentUser?.canBackup || currentUser?.role === 'admin' }
-              ].filter(t => t.show).map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => { setActiveTab(tab.id); }}
-                  className={`w-full py-1.5 px-2 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-start gap-1.5 border text-right ${
-                    activeTab === tab.id 
-                      ? 'bg-rose-600 border-rose-600 text-white shadow-xs font-black' 
-                      : darkMode 
-                        ? 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100/85 hover:text-rose-600 hover:border-rose-300'
-                  }`}
-                >
-                  <span className="text-[10px] shrink-0">{tab.icon}</span>
-                  <span className="truncate">{tab.label}</span>
-                </button>
-              ))}
+              {(() => {
+                const col4Items = [
+                  { id: 'users-tab', label: 'مدیریت کاربران', icon: '🛡️', show: currentUser?.role === 'admin' },
+                  { id: 'logs-tab', label: 'لاگ امنیتی سیستم', icon: '🪵', show: currentUser?.role === 'admin' },
+                  { id: 'appearance-tab', label: 'تنظیمات زیبایی تم', icon: '🎨', show: currentUser?.role === 'admin' },
+                  { id: 'backup-tab', label: 'پشتیبان‌گیری پایگاه داده', icon: '💾', show: currentUser?.canBackup || currentUser?.role === 'admin' }
+                ].filter(t => t.show);
+
+                const visibleItems = col4Expanded ? col4Items : col4Items.slice(0, 3);
+                return (
+                  <>
+                    {visibleItems.map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => { setActiveTab(tab.id); }}
+                        className={`w-full py-1.5 px-2 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-start gap-1.5 border text-right ${
+                          activeTab === tab.id 
+                            ? 'bg-rose-600 border-rose-600 text-white shadow-xs font-black' 
+                            : darkMode 
+                              ? 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
+                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100/85 hover:text-rose-600 hover:border-rose-300'
+                        }`}
+                      >
+                        <span className="text-[10px] shrink-0">{tab.icon}</span>
+                        <span className="truncate">{tab.label}</span>
+                      </button>
+                    ))}
+                    {col4Items.length > 3 && (
+                      <button
+                        onClick={() => setCol4Expanded(!col4Expanded)}
+                        className={`w-full mt-1 py-1 px-2 text-[9px] font-black rounded-md border border-dashed text-center flex items-center justify-center gap-1 cursor-pointer transition-all ${
+                          darkMode 
+                            ? 'bg-slate-900/40 border-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white' 
+                            : 'bg-slate-100/70 border-slate-200 text-slate-500 hover:bg-slate-200 hover:text-slate-700'
+                        }`}
+                      >
+                        <span>{col4Expanded ? '🔼 نمایش کمتر' : `🔽 نمایش بیشتر (${col4Items.length - 3})`}</span>
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>
