@@ -48,6 +48,11 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
   const [cctvLocation, setCctvLocation] = useState('');
   const [cctvAccessLink, setCctvAccessLink] = useState('');
 
+  // Printer-specific states
+  const [printerIp, setPrinterIp] = useState('');
+  const [printerMac, setPrinterMac] = useState('');
+  const [printerLink, setPrinterLink] = useState('');
+
   // Status state
   const [equipStatus, setEquipStatus] = useState<'working' | 'repair' | 'retired'>('working');
   const [equipDesc, setEquipDesc] = useState('');
@@ -88,6 +93,10 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
         setCctvBrand(item.brand || '');
         setCctvLocation(item.location || '');
         setCctvAccessLink(item.accessLink || '');
+      } else if (type === 'printer') {
+        setPrinterIp(item.ipAddress || '');
+        setPrinterMac(item.macAddress || '');
+        setPrinterLink(item.accessLink || '');
       }
     }
 
@@ -147,6 +156,10 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
         data.brand = cctvBrand;
         data.location = cctvLocation;
         data.accessLink = cctvAccessLink;
+      } else if (type === 'printer') {
+        data.ipAddress = printerIp;
+        data.macAddress = printerMac;
+        data.accessLink = printerLink;
       }
     }
 
@@ -414,6 +427,37 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
                     <input 
                       type="text" value={radioIp} onChange={(e) => setRadioIp(e.target.value)}
                       className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+                </>
+              )}
+              {type === 'printer' && (
+                <>
+                  <div className="space-y-1 animate-fade-in">
+                    <label className="font-bold text-slate-700">آدرس IP پرینتر:</label>
+                    <input 
+                      type="text" value={printerIp} onChange={(e) => setPrinterIp(e.target.value)}
+                      placeholder="مثال: 192.168.1.50"
+                      className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+                      dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-1 animate-fade-in">
+                    <label className="font-bold text-slate-700">آدرس فیزیکی (MAC Address):</label>
+                    <input 
+                      type="text" value={printerMac} onChange={(e) => setPrinterMac(e.target.value)}
+                      placeholder="مثال: 00:11:22:33:44:55"
+                      className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+                      dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-1 animate-fade-in">
+                    <label className="font-bold text-slate-700">لینک صفحه وب مدیریت ریموت پرینتر:</label>
+                    <input 
+                      type="text" value={printerLink} onChange={(e) => setPrinterLink(e.target.value)}
+                      placeholder="مثال: http://192.168.1.50"
+                      className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+                      dir="ltr"
                     />
                   </div>
                 </>

@@ -40,6 +40,9 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
 
   const [prCode, setPrCode] = useState('');
   const [prModel, setPrModel] = useState('');
+  const [prIpAddress, setPrIpAddress] = useState('');
+  const [prMacAddress, setPrMacAddress] = useState('');
+  const [prAccessLink, setPrAccessLink] = useState('');
 
   const [mouCode, setMouCode] = useState('');
   const [mouModel, setMouModel] = useState('');
@@ -93,7 +96,7 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
     setCCode(''); setCMobo(''); setCCpu(''); setCVga(''); setCHdd1(''); setCHdd2(''); setCRamType('DDR4'); setCRamQty('8GB'); setCPower('');
     setCIpAddress(''); setCMacAddress(''); setCHostName('');
     setMCode(''); setMModel('');
-    setPrCode(''); setPrModel('');
+    setPrCode(''); setPrModel(''); setPrIpAddress(''); setPrMacAddress(''); setPrAccessLink('');
     setMouCode(''); setMouModel('');
     setKbCode(''); setKbModel('');
     setRadCode(''); setRadModel('');
@@ -148,7 +151,16 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
         alert('کد چاپگر و نام مدل چاپگر الزامی هستند.');
         return;
       }
-      data = { code: prCode, model: prModel, status: equipStatus, description: equipDesc, lastServiced: lastServiced };
+      data = { 
+        code: prCode, 
+        model: prModel, 
+        status: equipStatus, 
+        description: equipDesc, 
+        lastServiced: lastServiced,
+        ipAddress: prIpAddress,
+        macAddress: prMacAddress,
+        accessLink: prAccessLink
+      };
     } else if (activeType === 'mouse') {
       if (!mouCode.trim() || !mouModel.trim()) {
         alert('کد ماوس و نام مدل ماوس الزامی هستند.');
@@ -610,7 +622,8 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
                   <input 
                     type="text" required value={prCode} onChange={(e) => setPrCode(e.target.value)}
                     placeholder="مثال: PRN-101"
-                    className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+                    className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+                    dir="ltr"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -619,6 +632,33 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
                     type="text" required value={prModel} onChange={(e) => setPrModel(e.target.value)}
                     placeholder="مثال: HP LaserJet Pro M402d"
                     className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700">آدرس IP شبکه پرینتر (اختیاری):</label>
+                  <input 
+                    type="text" value={prIpAddress} onChange={(e) => setPrIpAddress(e.target.value)}
+                    placeholder="مثال: 192.168.1.50"
+                    className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+                    dir="ltr"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700">آدرس فیزیکی MAC پرینتر (اختیاری):</label>
+                  <input 
+                    type="text" value={prMacAddress} onChange={(e) => setPrMacAddress(e.target.value)}
+                    placeholder="مثال: 00:11:22:33:44:55"
+                    className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+                    dir="ltr"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700">لینک صفحه وب مدیریت یا ریموت پرینتر (اختیاری):</label>
+                  <input 
+                    type="text" value={prAccessLink} onChange={(e) => setPrAccessLink(e.target.value)}
+                    placeholder="مثال: http://192.168.1.50"
+                    className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+                    dir="ltr"
                   />
                 </div>
               </div>

@@ -490,7 +490,9 @@ async function startServer() {
       cctvs: readDb("cctvs.json"),
       partsCatalog: readDb("parts_catalog.json"),
       assignments: readDb("assignments.json"),
-      repairs: readDb("repairs.json")
+      repairs: readDb("repairs.json"),
+      customCategories: readDb("custom_categories.json"),
+      customEquipment: readDb("custom_equipment.json")
     });
   });
 
@@ -1263,6 +1265,69 @@ async function startServer() {
       return res.json({ success: true, item });
     }
 
+    if (type === "custom_category") {
+      const categories = readDb("custom_categories.json");
+      const categoryId = isEdit ? id : `cat_${Date.now()}`;
+      
+      const item = {
+        id: categoryId,
+        name: fields.name?.trim(),
+        icon: fields.icon || "⚙️",
+        fields: fields.fields || []
+      };
+
+      if (!item.name) {
+        return res.status(400).json({ error: "نام دسته سخت‌افزاری الزامی است." });
+      }
+
+      if (isEdit) {
+        const idx = categories.findIndex((c) => c.id === categoryId);
+        if (idx !== -1) categories[idx] = item;
+      } else {
+        categories.push(item);
+      }
+
+      writeDb("custom_categories.json", categories);
+      addAuditLog(opUser, opName, clientIp, isEdit ? "edit" : "create", "custom_category", categoryId, `تعریف دسته سخت‌افزاری جدید: ${fields.name}`);
+      return res.json({ success: true, item });
+    }
+
+    // Check if the type matches any custom category
+    const customCategories = readDb("custom_categories.json");
+    if (customCategories.some(c => c.id === type)) {
+      const customEquips = readDb("custom_equipment.json");
+      const isEditing = !!(isEdit || id);
+      const existingIndex = customEquips.findIndex(e => e.code === trimmedCode && (!isEditing || e.id !== id));
+      if (existingIndex !== -1) {
+        return res.status(400).json({ error: "کد اموال وارد شده تکراری است." });
+      }
+
+      const item = {
+        id: isEditing ? id : `eq_${Date.now()}`,
+        categorySlug: type,
+        code: trimmedCode,
+        assignedTo: fields.assignedTo !== undefined ? fields.assignedTo : null,
+        status: fields.status || "working",
+        location: fields.location || "کارگاه بوشهر",
+        lastServiced: fields.lastServiced || "",
+        description: fields.description || "",
+        ...fields
+      };
+
+      if (isEditing) {
+        const idx = customEquips.findIndex(e => e.id === id);
+        if (idx !== -1) {
+          customEquips[idx] = item;
+        }
+      } else {
+        customEquips.push(item);
+      }
+
+      writeDb("custom_equipment.json", customEquips);
+      addAuditLog(opUser, opName, clientIp, isEditing ? "edit" : "create", type, trimmedCode, `ثبت تجهیز سفارشی جدید: ${trimmedCode} در دسته ${type}`);
+      return res.json({ success: true, item });
+    }
+
     return res.status(400).json({ error: "نوع آیتم نامعتبر است." });
   });
 
@@ -1658,6 +1723,45 @@ async function startServer() {
       writeDb("parts_catalog.json", catalog);
 
       addAuditLog(opUser, opName, clientIp, "delete", "catalog", id, `حذف دائمی قطعه مرجع از کاتالوگ قطعات کارگاه بوشهر`);
+      return res.json({ success: true });
+    }
+
+    if (type === "custom_category") {
+      const categories = readDb("custom_categories.json");
+      const customEquips = readDb("custom_equipment.json");
+      const hasItems = customEquips.some(e => e.categorySlug === id);
+      if (hasItems) {
+        return res.status(400).json({ error: "این دسته دارای تجهیز فعال است و امکان حذف آن وجود ندارد." });
+      }
+      const idx = categories.findIndex((c) => c.id === id);
+      if (idx === -1) return res.status(404).json({ error: "دسته‌بندی یافت نشد." });
+      categories.splice(idx, 1);
+      writeDb("custom_categories.json", categories);
+      addAuditLog(opUser, opName, clientIp, "delete", "custom_category", id, `حذف دسته‌بندی سفارشی ${id}`);
+      return res.json({ success: true });
+    }
+
+    const customCategoriesCheck = readDb("custom_categories.json");
+    if (customCategoriesCheck.some(c => c.id === type)) {
+      const customEquips = readDb("custom_equipment.json");
+      const idx = customEquips.findIndex((e) => e.id === id);
+      if (idx === -1) return res.status(404).json({ error: "تجهیز یافت نشد." });
+      
+      const equipCode = customEquips[idx].code;
+      customEquips.splice(idx, 1);
+      writeDb("custom_equipment.json", customEquips);
+
+      // End active assignments
+      const dateStr = getPersianDateString();
+      const assignments = readDb("assignments.json");
+      assignments.forEach((ass) => {
+        if (ass.equipmentCode === equipCode && ass.equipmentType === type && ass.endDate === null) {
+          ass.endDate = dateStr;
+        }
+      });
+      writeDb("assignments.json", assignments);
+
+      addAuditLog(opUser, opName, clientIp, "delete", type, id, `حذف تجهیز سفارشی ${equipCode}`);
       return res.json({ success: true });
     }
 

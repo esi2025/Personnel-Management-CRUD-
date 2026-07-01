@@ -533,6 +533,7 @@ export function PrintersSubTab({
                 <th onClick={() => handleSort('code')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کده پرینتر (اموال) {renderSortIndicator('code')}</th>
                 <th onClick={() => handleSort('model')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">مدل و سازنده {renderSortIndicator('model')}</th>
                 <th onClick={() => handleSort('status')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
+                <th onClick={() => handleSort('ipAddress')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">مشخصات شبکه و ریموت {renderSortIndicator('ipAddress')}</th>
                 <th className="p-2.5 font-bold text-right select-none">توضیحات</th>
                 <th onClick={() => handleSort('assignedTo')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">تحویل به کاربر کارگاه {renderSortIndicator('assignedTo')}</th>
                 <th className="p-2.5 text-center font-bold select-none">عملیات</th>
@@ -541,7 +542,7 @@ export function PrintersSubTab({
             <tbody>
               {sortedPrinters.length === 0 ? (
                 <tr>
-                   <td colSpan={6} className="p-6 text-center text-slate-400">
+                   <td colSpan={7} className="p-6 text-center text-slate-400">
                     پرینتری در سیستم ثبت نگردیده است.
                   </td>
                 </tr>
@@ -576,6 +577,35 @@ export function PrintersSubTab({
                       <td className="p-2.5 text-slate-600">{pr.model}</td>
                       <td className="p-2.5">
                         <StatusBadge status={pr.status} />
+                      </td>
+                      <td className="p-2.5">
+                        {pr.ipAddress || pr.macAddress || pr.accessLink ? (
+                          <div className="flex flex-col gap-1 items-start font-mono text-[10px] md:text-xs" onClick={(e) => e.stopPropagation()}>
+                            {pr.ipAddress && (
+                              <span className="text-[10px] text-blue-600 bg-blue-50/70 border border-blue-100 px-1.5 py-0.5 rounded font-bold" dir="ltr" title="آدرس IP">
+                                IP: {pr.ipAddress}
+                              </span>
+                            )}
+                            {pr.macAddress && (
+                              <span className="text-[9px] text-slate-500" dir="ltr" title="آدرس فیزیکی مک کارت شبکه">
+                                MAC: {pr.macAddress}
+                              </span>
+                            )}
+                            {(pr.accessLink || pr.ipAddress) && (
+                              <a 
+                                href={pr.accessLink || `http://${pr.ipAddress}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[9px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-1 py-0.5 rounded flex items-center gap-1 font-sans font-bold transition select-none"
+                                title="کلیک جهت ورود به صفحه وب مدیریت پرینتر"
+                              >
+                                🌐 ریموت وب
+                              </a>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
                       </td>
                       <td className="p-2.5 text-slate-500 max-w-[150px] truncate" title={pr.description || undefined}>
                         {pr.description || '—'}

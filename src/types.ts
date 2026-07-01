@@ -49,6 +49,9 @@ export interface Printer {
   description?: string; // توضیحات تکمیلی
   location?: string; // موقعیت فیزیکی کالا
   lastServiced?: string; // تاریخ آخرین سرویس (شمسی YYYY/MM/DD)
+  ipAddress?: string; // آدرس IP
+  macAddress?: string; // آدرس MAC
+  accessLink?: string; // لینک دسترسی ریموت یا تحت وب پرینتر
 }
 
 export interface Mouse {

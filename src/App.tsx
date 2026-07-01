@@ -11,6 +11,8 @@ import AddNewTab from './components/AddNewTab';
 import SystemsTreeTab from './components/SystemsTreeTab';
 import EditModal from './components/EditModal';
 import QRCodeModal from './components/QRCodeModal';
+import DefineHardwareTab from './components/DefineHardwareTab';
+import CustomEquipmentSubTab from './components/CustomEquipmentSubTab';
 import LoginScreen from './components/LoginScreen';
 import UsersTab from './components/UsersTab';
 import BulkQRTab from './components/BulkQRTab';
@@ -623,6 +625,8 @@ export default function App() {
   const [partsCatalog, setPartsCatalog] = useState<CatalogItem[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [repairs, setRepairs] = useState<Repair[]>([]);
+  const [customCategories, setCustomCategories] = useState<any[]>([]);
+  const [customEquipment, setCustomEquipment] = useState<any[]>([]);
 
   // Search filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -703,6 +707,8 @@ export default function App() {
       setPartsCatalog(data.partsCatalog || []);
       setAssignments(data.assignments || []);
       setRepairs(data.repairs || []);
+      setCustomCategories(data.customCategories || []);
+      setCustomEquipment(data.customEquipment || []);
 
       // Fetch custom corporate layout theme
       try {
@@ -730,7 +736,9 @@ export default function App() {
         cctvs: data.cctvs || [],
         partsCatalog: data.partsCatalog || [],
         assignments: data.assignments || [],
-        repairs: data.repairs || []
+        repairs: data.repairs || [],
+        customCategories: data.customCategories || [],
+        customEquipment: data.customEquipment || []
       }));
       setIsOfflineMode(false);
     } catch (err) {
@@ -761,6 +769,8 @@ export default function App() {
       setPartsCatalog(localDb.partsCatalog || []);
       setAssignments(localDb.assignments || []);
       setRepairs(localDb.repairs || []);
+      setCustomCategories(localDb.customCategories || []);
+      setCustomEquipment(localDb.customEquipment || []);
       
       setIsOfflineMode(true);
       setError(null); // Bypass red screen of death completely
@@ -969,16 +979,16 @@ export default function App() {
   };
 
   // Save/Edit entity
-  const handleSaveItem = async (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'cctv' | 'catalog', data: any) => {
+  const handleSaveItem = async (type: string, data: any) => {
     // Permission validation checks
     if (type === 'personnel') {
       if (!currentUser?.canEditPersonnel && currentUser?.role !== 'admin') {
         alert("دسترسی غیرمجاز! شما صلاحیت افزودن یا ویرایش پرونده پرسنلی را ندارید.");
         return false;
       }
-    } else if (type === 'catalog') {
+    } else if (type === 'catalog' || type === 'custom_category') {
       if (currentUser?.role !== 'admin') {
-        alert("دسترسی غیرمجاز! ویرایش لیست قطعات مرجع کارگاه منحصراً در اختیار ادمین اصلی است.");
+        alert("دسترسی غیرمجاز! ویرایش لیست قطعات مرجع یا تعریف سخت‌افزار کارگاه منحصراً در اختیار ادمین اصلی است.");
         return false;
       }
     } else {
@@ -1013,6 +1023,52 @@ export default function App() {
     // Local / Offline mutate simulation
     const rawDb = localStorage.getItem('azarestan_ict_db');
     let db = rawDb ? JSON.parse(rawDb) : { ...INITIAL_DEMO_DATA };
+
+    if (type === 'custom_category') {
+      let list = db.customCategories || [];
+      const item = {
+        id: data.id || 'cat_' + Date.now(),
+        name: data.name?.trim(),
+        icon: data.icon || "⚙️",
+        fields: data.fields || []
+      };
+      const index = list.findIndex((c: any) => c.id === item.id);
+      if (index > -1) {
+        list[index] = item;
+      } else {
+        list.push(item);
+      }
+      db.customCategories = list;
+    } else {
+      const customCategoriesCheck = db.customCategories || [];
+      if (customCategoriesCheck.some((c: any) => c.id === type)) {
+        let list = db.customEquipment || [];
+        const isEditing = !!(data.isEdit || data.id);
+        const index = list.findIndex((e: any) => e.code === data.code && (!isEditing || e.id !== data.id));
+        if (index > -1) {
+          alert("کد اموال وارد شده تکراری است.");
+          return false;
+        }
+        const item = {
+          id: isEditing ? data.id : 'eq_' + Date.now(),
+          categorySlug: type,
+          code: data.code?.trim(),
+          assignedTo: data.assignedTo || null,
+          status: data.status || "working",
+          location: data.location || "کارگاه بوشهر",
+          lastServiced: data.lastServiced || "",
+          description: data.description || "",
+          ...data
+        };
+        const editIdx = list.findIndex((e: any) => e.id === item.id);
+        if (editIdx > -1) {
+          list[editIdx] = item;
+        } else {
+          list.push(item);
+        }
+        db.customEquipment = list;
+      }
+    }
 
     if (type === 'personnel') {
       let list = db.personnel || [];
@@ -1278,16 +1334,16 @@ export default function App() {
   };
 
   // Delete entity
-  const handleDeleteItem = async (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'cctv' | 'catalog', id: string) => {
+  const handleDeleteItem = async (type: string, id: string) => {
     // Permission validation checks for deletion
     if (type === 'personnel') {
       if (!currentUser?.canEditPersonnel && currentUser?.role !== 'admin') {
         alert("دسترسی غیرمجاز! شما صلاحیت حذف پرونده پرسنلی را ندارید.");
         return;
       }
-    } else if (type === 'catalog') {
+    } else if (type === 'catalog' || type === 'custom_category') {
       if (currentUser?.role !== 'admin') {
-        alert("دسترسی غیرمجاز! حذف از لیست قطعات مرجع کارگاه منحصراً در اختیار ادمین اصلی است.");
+        alert("دسترسی غیرمجاز! حذف از لیست قطعات مرجع یا تعاریف سخت‌افزار کارگاه منحصراً در اختیار ادمین اصلی است.");
         return;
       }
     } else {
@@ -1320,6 +1376,12 @@ export default function App() {
           alert('مورد با موفقیت از سیستم حذف و بایگانی شد.');
           await loadDatabase();
           return;
+        } else {
+          const errData = await res.json();
+          if (errData && errData.error) {
+            alert(errData.error);
+            return;
+          }
         }
       } catch (err) {
         console.warn('API delete failed. Fallback to Local deletion.', err);
@@ -1330,6 +1392,39 @@ export default function App() {
     const rawDb = localStorage.getItem('azarestan_ict_db');
     let db = rawDb ? JSON.parse(rawDb) : { ...INITIAL_DEMO_DATA };
     const dateStr = getPersianDateString();
+
+    if (type === 'custom_category') {
+      let list = db.customCategories || [];
+      const customEquips = db.customEquipment || [];
+      const hasItems = customEquips.some((e: any) => e.categorySlug === id);
+      if (hasItems) {
+        alert("این دسته دارای تجهیز فعال است و امکان حذف آن وجود ندارد.");
+        return;
+      }
+      const idx = list.findIndex((c: any) => c.id === id);
+      if (idx !== -1) {
+        list.splice(idx, 1);
+        db.customCategories = list;
+      }
+    } else {
+      const customCategoriesCheck = db.customCategories || [];
+      if (customCategoriesCheck.some((c: any) => c.id === type)) {
+        let list = db.customEquipment || [];
+        const idx = list.findIndex((x: any) => x.id === id || x.code === id);
+        if (idx !== -1) {
+          const equipCode = list[idx].code;
+          list.splice(idx, 1);
+          db.customEquipment = list;
+
+          // End active assignments
+          (db.assignments || []).forEach((ass: any) => {
+            if (ass.equipmentCode === equipCode && ass.equipmentType === type && ass.endDate === null) {
+              ass.endDate = dateStr;
+            }
+          });
+        }
+      }
+    }
 
     if (type === 'personnel') {
       let list = db.personnel || [];
@@ -1779,7 +1874,7 @@ export default function App() {
         </div>
         
         {/* Active searches stats indicators */}
-        <div className="text-[10px] sm:text-[11px] text-slate-505 dark:text-slate-400 flex gap-1.5 flex-wrap justify-center font-extrabold">
+        <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 flex gap-1.5 flex-wrap justify-center font-extrabold">
           <span className="bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 px-1.5 py-0.5 rounded">👥 پرسنل: {personnel.length}</span>
           <span className="bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 px-1.5 py-0.5 rounded">🖥️ کیس: {cases.length}</span>
           <span className="bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 px-1.5 py-0.5 rounded">📺 مانیتور: {monitors.length}</span>
@@ -1788,7 +1883,47 @@ export default function App() {
           <span className="bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 px-1.5 py-0.5 rounded">⌨️ کیبورد: {keyboards.length}</span>
           <span className="bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-150/40 text-indigo-700 dark:text-indigo-400 px-1.5 py-0.5 rounded">📻 بی‌سیم: {radios.length}</span>
           <span className="bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-150/40 text-indigo-700 dark:text-indigo-400 px-1.5 py-0.5 rounded">📹 دوربین مداربسته: {cctvs.length}</span>
+          {customCategories.map(cat => (
+            <span key={cat.id} className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded">{cat.icon || '⚙️'} {cat.name}: {customEquipment.filter(e => e.categorySlug === cat.id).length}</span>
+          ))}
         </div>
+      </div>
+
+      {/* Dynamic Summary Cards Grid (Request 2) */}
+      <div className="no-print grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-4">
+        {[
+          { label: 'کیس‌ها', count: cases.length, icon: '🖥️', active: cases.filter(c => c.status === 'working').length, color: 'from-blue-500/10 to-blue-600/5 text-blue-600 border-blue-200/60 dark:border-blue-900/40' },
+          { label: 'مانیتورها', count: monitors.length, icon: '📺', active: monitors.filter(m => m.status === 'working').length, color: 'from-sky-500/10 to-sky-600/5 text-sky-600 border-sky-200/60 dark:border-sky-900/40' },
+          { label: 'پرینترها', count: printers.length, icon: '🖨️', active: printers.filter(p => p.status === 'working').length, color: 'from-amber-500/10 to-amber-600/5 text-amber-600 border-amber-200/60 dark:border-amber-900/40' },
+          { label: 'کیبوردها', count: keyboards.length, icon: '⌨️', active: keyboards.filter(k => k.status === 'working').length, color: 'from-purple-500/10 to-purple-600/5 text-purple-600 border-purple-200/60 dark:border-purple-900/40' },
+          { label: 'ماوس‌ها', count: mice.length, icon: '🖱️', active: mice.filter(m => m.status === 'working').length, color: 'from-indigo-500/10 to-indigo-600/5 text-indigo-600 border-indigo-200/60 dark:border-indigo-900/40' },
+          { label: 'بی‌سیم‌ها', count: radios.length, icon: '📻', active: radios.filter(r => r.status === 'working').length, color: 'from-teal-500/10 to-teal-600/5 text-teal-600 border-teal-200/60 dark:border-teal-900/40' },
+          { label: 'دوربین‌ها', count: cctvs.length, icon: '📹', active: cctvs.filter(c => c.status === 'working').length, color: 'from-pink-500/10 to-pink-600/5 text-pink-600 border-pink-200/60 dark:border-pink-900/40' },
+          ...customCategories.map(cat => ({
+            label: cat.name,
+            count: customEquipment.filter(e => e.categorySlug === cat.id).length,
+            icon: cat.icon || '⚙️',
+            active: customEquipment.filter(e => e.categorySlug === cat.id && e.status === 'working').length,
+            color: 'from-slate-500/10 to-slate-600/5 text-slate-600 border-slate-200/60 dark:border-slate-800'
+          }))
+        ].map((card, idx) => (
+          <div 
+            key={idx}
+            className={`bg-gradient-to-br ${card.color} border py-1.5 px-2 rounded-lg flex flex-col justify-between shadow-2xs hover:shadow-xs transition-all duration-200`}
+          >
+            <div className="flex justify-between items-center">
+              <span className="text-sm md:text-base">{card.icon}</span>
+              <span className="text-[8px] md:text-[9px] font-black bg-white/70 dark:bg-slate-900/50 px-1 py-0.2 rounded border border-current/10">سالم: {card.active}</span>
+            </div>
+            <div className="mt-1">
+              <div className="text-[9px] md:text-[10px] font-black text-slate-500 dark:text-slate-400 truncate">{card.label}</div>
+              <div className="text-xs md:text-sm font-black mt-0.5 font-mono flex items-baseline gap-0.5">
+                <span>{card.count}</span>
+                <span className="text-[9px] text-slate-400 font-sans font-normal">عدد</span>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* 3. Navigation tabs bar (hides in print) */}
@@ -1821,59 +1956,63 @@ export default function App() {
             <span className={darkMode ? 'text-slate-400 font-bold' : 'text-slate-500 font-bold'}>بخش فعال:</span>
             <span>
               {
-                [
-                  { id: 'personnel-tab', label: '👥 لیست پرسنل' },
-                  { id: 'cases-tab', label: '🖥️ کیس‌های کارگاه' },
-                  { id: 'monitors-tab', label: '📺 مانیتورها' },
-                  { id: 'printers-tab', label: '🖨️ پرینترها' },
-                  { id: 'mice-tab', label: '🖱️ ماوس‌ها' },
-                  { id: 'keyboards-tab', label: '⌨️ کیبوردها' },
-                  { id: 'radios-tab', label: '📻 بی‌سیم‌ها دستی' },
-                  { id: 'cctvs-tab', label: '📹 دوربین‌های مداربسته' },
-                  { id: 'catalog-tab', label: '🛠️ قطعات مرجع' },
-                  { id: 'transfer-tab', label: '🔄 جابجایی هوشمند' },
-                  { id: 'history-tab', label: '📜 تاریخچه لجستیک' },
-                  { id: 'reports-tab', label: '📋 گزارش و شناسنامه' },
-                  { id: 'repairs-tab', label: '🛠️ تعمیرات و اسقاط' },
-                  { id: 'bulk-qr-tab', label: '🖨️ چاپ گروهی بارکد' },
-                  { id: 'bulk-edit-tab', label: '🛠️ ویرایش گروهی تجهیزات' },
-                  { id: 'systems-tree-tab', label: '🌳 نمودار درختی سیستم‌ها' },
-                  { id: 'users-tab', label: '🛡️ مدیریت کاربران' },
-                  { id: 'logs-tab', label: '🪵 لاگ امنیتی سیستم' },
-                  { id: 'appearance-tab', label: '🎨 تنظیمات زیبایی تم' },
-                  { id: 'backup-tab', label: '⚙️ پشتیبان‌گیری و سورس' },
-                  { id: 'add-new-tab', label: '➕ ثبت و ایمپورت جدید' }
-                ].find(t => t.id === activeTab)?.label || '—'
+                (() => {
+                  if (activeTab?.startsWith('custom_')) {
+                    const catId = activeTab.replace('custom_', '');
+                    const cat = customCategories.find(c => c.id === catId);
+                    return cat ? `${cat.icon || '⚙️'} ${cat.name}` : '—';
+                  }
+                  return [
+                    { id: 'personnel-tab', label: '👥 لیست پرسنل' },
+                    { id: 'cases-tab', label: '🖥️ کیس' },
+                    { id: 'monitors-tab', label: '📺 مانیتور' },
+                    { id: 'printers-tab', label: '🖨️ پرینتر' },
+                    { id: 'mice-tab', label: '🖱️ ماوس' },
+                    { id: 'keyboards-tab', label: '⌨️ کیبورد' },
+                    { id: 'radios-tab', label: '📻 بی‌سیم دستی' },
+                    { id: 'cctvs-tab', label: '📹 دوربین‌های مداربسته' },
+                    { id: 'catalog-tab', label: '🛠️ قطعات مرجع' },
+                    { id: 'transfer-tab', label: '🔄 جابجایی هوشمند' },
+                    { id: 'history-tab', label: '📜 تاریخچه لجستیک' },
+                    { id: 'reports-tab', label: '📋 گزارش و شناسنامه' },
+                    { id: 'repairs-tab', label: '🛠️ تعمیرات و اسقاط' },
+                    { id: 'bulk-qr-tab', label: '🖨️ چاپ گروهی بارکد' },
+                    { id: 'bulk-edit-tab', label: '🛠️ ویرایش گروهی تجهیزات' },
+                    { id: 'systems-tree-tab', label: '🌳 نمودار درختی' },
+                    { id: 'users-tab', label: '🛡️ مدیریت کاربران' },
+                    { id: 'logs-tab', label: '🪵 لاگ امنیتی سیستم' },
+                    { id: 'appearance-tab', label: '🎨 تنظیمات زیبایی تم' },
+                    { id: 'backup-tab', label: '💾 پشتیبان‌گیری پایگاه داده' },
+                    { id: 'define-hardware-tab', label: '🛠️ تعریف سخت افزار جدید' },
+                    { id: 'add-new-tab', label: '➕ ثبت جدید(تکی /گروهی)' }
+                  ].find(t => t.id === activeTab)?.label || '—';
+                })()
               }
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2.5">
-          {/* Column 1: Assets & Equipment */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+          {/* Column 1: Basics & Personnel */}
           <div className="space-y-1">
             <div className={`flex items-center gap-1 px-1 text-[10px] font-black ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-              <span className="text-xs">📦</span>
-              <span>دفتر پرسنل و فهرست سخت‌افزارها</span>
+              <span className="text-xs">👥</span>
+              <span>بخش اول: تعاریف و پرسنل</span>
             </div>
-            <div className={`grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 p-1.5 rounded-lg shadow-inner transition-colors ${
+            <div className={`grid grid-cols-1 gap-1.5 p-1.5 rounded-lg shadow-inner transition-colors ${
               darkMode ? 'bg-slate-950/40 border border-slate-800/60' : 'bg-slate-50 border border-slate-200/50'
             }`}>
               {[
-                { id: 'personnel-tab', label: 'لیست پرسنل', icon: '👥' },
-                { id: 'cases-tab', label: 'کیس‌های کارگاه', icon: '🖥️' },
-                { id: 'monitors-tab', label: 'مانیتورها', icon: '📺' },
-                { id: 'printers-tab', label: 'پرینترها', icon: '🖨️' },
-                { id: 'mice-tab', label: 'ماوس‌ها', icon: '🖱️' },
-                { id: 'keyboards-tab', label: 'کیبوردها', icon: '⌨️' },
-                { id: 'radios-tab', label: 'بی‌سیم‌های دستی', icon: '📻' },
-                { id: 'cctvs-tab', label: 'دوربین مداربسته', icon: '📹' },
-                { id: 'catalog-tab', label: 'قطعات مرجع', icon: '🛠️' }
-              ].map((tab) => (
+                { id: 'personnel-tab', label: 'لیست پرسنل', icon: '👥', show: true },
+                { id: 'add-new-tab', label: 'ثبت جدید(تکی /گروهی)', icon: '➕', show: currentUser?.canEditPersonnel || currentUser?.canEditEquipment || currentUser?.role === 'admin' },
+                { id: 'catalog-tab', label: 'قطعات مرجع', icon: '🛠️', show: true },
+                { id: 'systems-tree-tab', label: 'نمودار درختی', icon: '🌳', show: true },
+                { id: 'define-hardware-tab', label: 'تعریف سخت افزار جدید', icon: '🛠️', show: currentUser?.role === 'admin' }
+              ].filter(t => t.show).map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => { setActiveTab(tab.id); }}
-                  className={`w-full py-2 px-1 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 border text-center ${
+                  className={`w-full py-1.5 px-2 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-start gap-1.5 border text-right ${
                     activeTab === tab.id 
                       ? 'bg-blue-600 border-blue-600 text-white shadow-xs font-black' 
                       : darkMode 
@@ -1888,28 +2027,33 @@ export default function App() {
             </div>
           </div>
 
-          {/* Column 2: Operations & Actions */}
+          {/* Column 2: Equipment Categories */}
           <div className="space-y-1">
             <div className={`flex items-center gap-1 px-1 text-[10px] font-black ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
-              <span className="text-xs">🔄</span>
-              <span>لجستیک، عملیات تحویل و اسناد</span>
+              <span className="text-xs">🖥️</span>
+              <span>بخش دوم: تجهیزات سخت‌افزاری</span>
             </div>
-            <div className={`grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 p-1.5 rounded-lg shadow-inner transition-colors ${
+            <div className={`grid grid-cols-1 gap-1.5 p-1.5 rounded-lg shadow-inner transition-colors max-h-[190px] overflow-y-auto ${
               darkMode ? 'bg-slate-950/40 border border-slate-800/60' : 'bg-slate-50 border border-slate-200/50'
             }`}>
               {[
-                { id: 'transfer-tab', label: 'جابجایی هوشمند', icon: '🔄', show: currentUser?.canEditEquipment || currentUser?.role === 'admin' },
-                { id: 'history-tab', label: 'تاریخچه لجستیک', icon: '📜', show: true },
-                { id: 'reports-tab', label: 'گزارش و شناسنامه', icon: '📋', show: currentUser?.canExport || currentUser?.role === 'admin' },
-                { id: 'repairs-tab', label: 'تعمیرات و اسقاط', icon: '🛠️', show: true },
-                { id: 'bulk-edit-tab', label: 'ویرایش گروهی تجهیزات', icon: '🛠️', show: currentUser?.canEditEquipment || currentUser?.role === 'admin' },
-                { id: 'bulk-qr-tab', label: 'چاپ گروهی بارکد', icon: '🖨️', show: currentUser?.canExport || currentUser?.role === 'admin' },
-                { id: 'systems-tree-tab', label: 'نمودار درختی', icon: '🌳', show: true }
-              ].filter(t => t.show).map((tab) => (
+                { id: 'cases-tab', label: 'کیس', icon: '🖥️' },
+                { id: 'monitors-tab', label: 'مانیتور', icon: '📺' },
+                { id: 'printers-tab', label: 'پرینتر', icon: '🖨️' },
+                { id: 'keyboards-tab', label: 'کیبورد', icon: '⌨️' },
+                { id: 'mice-tab', label: 'ماوس', icon: '🖱️' },
+                { id: 'radios-tab', label: 'بی‌سیم', icon: '📻' },
+                { id: 'cctvs-tab', label: 'دوربین مداربسته', icon: '📹' },
+                ...customCategories.map(cat => ({
+                  id: `custom_${cat.id}`,
+                  label: cat.name,
+                  icon: cat.icon || '⚙️'
+                }))
+              ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => { setActiveTab(tab.id); }}
-                  className={`w-full py-2 px-1 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 border text-center ${
+                  className={`w-full py-1.5 px-2 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-start gap-1.5 border text-right ${
                     activeTab === tab.id 
                       ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs font-black' 
                       : darkMode 
@@ -1924,35 +2068,65 @@ export default function App() {
             </div>
           </div>
 
-          {/* Column 3: Secure Management & Backup */}
+          {/* Column 3: Logistics & Operations */}
           <div className="space-y-1">
             <div className={`flex items-center gap-1 px-1 text-[10px] font-black ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
-              <span className="text-xs">🛡️</span>
-              <span>امنیت، سیستم و ثبت پنل</span>
+              <span className="text-xs">🔄</span>
+              <span>بخش سوم: عملیات و لجستیک</span>
             </div>
-            <div className={`grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 p-1.5 rounded-lg shadow-inner transition-colors ${
+            <div className={`grid grid-cols-1 gap-1.5 p-1.5 rounded-lg shadow-inner transition-colors ${
+              darkMode ? 'bg-slate-950/40 border border-slate-800/60' : 'bg-slate-50 border border-slate-200/50'
+            }`}>
+              {[
+                { id: 'transfer-tab', label: 'جابجایی هوشمند', icon: '🔄', show: currentUser?.canEditEquipment || currentUser?.role === 'admin' },
+                { id: 'history-tab', label: 'تاریخچه لجستیک', icon: '📜', show: true },
+                { id: 'reports-tab', label: 'گزارش و شناسنامه', icon: '📋', show: currentUser?.canExport || currentUser?.role === 'admin' },
+                { id: 'repairs-tab', label: 'تعمیرات و اسقاط', icon: '🛠️', show: true },
+                { id: 'bulk-edit-tab', label: 'ویرایش گروهی تجهیزات', icon: '🛠️', show: currentUser?.canEditEquipment || currentUser?.role === 'admin' },
+                { id: 'bulk-qr-tab', label: 'چاپ گروهی بارکد', icon: '🖨️', show: currentUser?.canExport || currentUser?.role === 'admin' }
+              ].filter(t => t.show).map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => { setActiveTab(tab.id); }}
+                  className={`w-full py-1.5 px-2 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-start gap-1.5 border text-right ${
+                    activeTab === tab.id 
+                      ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs font-black' 
+                      : darkMode 
+                        ? 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
+                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100/85 hover:text-indigo-600 hover:border-indigo-300'
+                  }`}
+                >
+                  <span className="text-[10px] shrink-0">{tab.icon}</span>
+                  <span className="truncate">{tab.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Column 4: System & Security */}
+          <div className="space-y-1">
+            <div className={`flex items-center gap-1 px-1 text-[10px] font-black ${darkMode ? 'text-rose-400' : 'text-rose-600'}`}>
+              <span className="text-xs">🛡️</span>
+              <span>بخش چهارم: امنیت و مدیریت سیستم</span>
+            </div>
+            <div className={`grid grid-cols-1 gap-1.5 p-1.5 rounded-lg shadow-inner transition-colors ${
               darkMode ? 'bg-slate-950/40 border border-slate-800/60' : 'bg-slate-50 border border-slate-200/50'
             }`}>
               {[
                 { id: 'users-tab', label: 'مدیریت کاربران', icon: '🛡️', show: currentUser?.role === 'admin' },
                 { id: 'logs-tab', label: 'لاگ امنیتی سیستم', icon: '🪵', show: currentUser?.role === 'admin' },
                 { id: 'appearance-tab', label: 'تنظیمات زیبایی تم', icon: '🎨', show: currentUser?.role === 'admin' },
-                { id: 'backup-tab', label: 'پشتیبان‌گیری و سورس', icon: '⚙️', show: currentUser?.canBackup || currentUser?.role === 'admin' },
-                { id: 'add-new-tab', label: 'ثبت جدید (تکی/گروهی)', icon: '➕', show: currentUser?.canEditPersonnel || currentUser?.canEditEquipment || currentUser?.role === 'admin', highlight: true }
+                { id: 'backup-tab', label: 'پشتیبان‌گیری پایگاه داده', icon: '💾', show: currentUser?.canBackup || currentUser?.role === 'admin' }
               ].filter(t => t.show).map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => { setActiveTab(tab.id); }}
-                  className={`w-full py-2 px-1 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 border text-center ${
+                  className={`w-full py-1.5 px-2 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-start gap-1.5 border text-right ${
                     activeTab === tab.id 
-                      ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs font-black' 
-                      : tab.highlight
-                        ? darkMode
-                          ? 'bg-indigo-950/50 border-indigo-900/40 text-indigo-300 hover:bg-slate-800 font-black'
-                          : 'bg-indigo-50 border-indigo-200/80 text-indigo-700 hover:bg-indigo-100/60 font-black'
-                        : darkMode 
-                          ? 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
-                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100/85 hover:text-indigo-600 hover:border-indigo-300'
+                      ? 'bg-rose-600 border-rose-600 text-white shadow-xs font-black' 
+                      : darkMode 
+                        ? 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
+                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100/85 hover:text-rose-600 hover:border-rose-300'
                   }`}
                 >
                   <span className="text-[10px] shrink-0">{tab.icon}</span>
@@ -2164,6 +2338,37 @@ export default function App() {
               keyboards={keyboards}
             />
           )}
+
+          {activeTab === 'define-hardware-tab' && (
+            <DefineHardwareTab 
+              customCategories={customCategories}
+              customEquipment={customEquipment}
+              onSaveCategory={(data) => handleSaveItem('custom_category', data)}
+              onDeleteCategory={(id) => handleDeleteItem('custom_category', id)}
+              currentUser={currentUser}
+            />
+          )}
+
+          {activeTab?.startsWith('custom_') && (() => {
+            const catId = activeTab.replace('custom_', '');
+            const category = customCategories.find(c => c.id === catId);
+            if (category) {
+              const filteredEquips = customEquipment.filter(e => e.categorySlug === catId);
+              return (
+                <CustomEquipmentSubTab
+                  category={category}
+                  equipmentList={filteredEquips}
+                  personnel={personnel}
+                  onSaveItem={handleSaveItem}
+                  onDeleteItem={handleDeleteItem}
+                  onTransfer={handleTriggerTransfer}
+                  onShowQR={handleShowQR}
+                  currentUser={currentUser}
+                />
+              );
+            }
+            return null;
+          })()}
 
           {activeTab === 'backup-tab' && (
             <BackupTab 
