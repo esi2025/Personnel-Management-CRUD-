@@ -1,0 +1,38 @@
+[
+  {
+    "id": "u1",
+    "username": "Admin",
+    "password": "Admin8796",
+    "role": "admin",
+    "name": "مهدی اسماعیلی",
+    "canEditPersonnel": true,
+    "canEditEquipment": true,
+    "canExport": true,
+    "canBackup": true,
+    "allowedIPs": ""
+  },
+  {
+    "id": "u2",
+    "username": "User",
+    "password": "Aa123456",
+    "role": "editor_equipment",
+    "name": "حسین اسماعیلی پور",
+    "canEditPersonnel": false,
+    "canEditEquipment": true,
+    "canExport": true,
+    "canBackup": false,
+    "allowedIPs": ""
+  },
+  {
+    "id": "u3",
+    "username": "Admin",
+    "password": "Aa123456sS",
+    "role": "viewer",
+    "name": "حسن قلی زاده",
+    "canEditPersonnel": false,
+    "canEditEquipment": false,
+    "canExport": false,
+    "canBackup": false,
+    "allowedIPs": ""
+  }
+]

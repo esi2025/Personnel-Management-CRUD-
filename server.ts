@@ -342,10 +342,10 @@ function initializeDatabase() {
     const demoUsers = [
       {
         id: "u1",
-        username: "admin",
-        password: "admin",
+        username: "Admin",
+        password: "Admin8796",
         role: "admin",
-        name: "مهندس علوی (ادمین اصلی)",
+        name: "مهدی اسماعیلی",
         canEditPersonnel: true,
         canEditEquipment: true,
         canExport: true,
@@ -354,10 +354,10 @@ function initializeDatabase() {
       },
       {
         id: "u2",
-        username: "editor",
-        password: "1234",
+        username: "User",
+        password: "Aa123456",
         role: "editor_equipment",
-        name: "اپراتور تجهیزات کارگاه",
+        name: "حسین اسماعیلی پور",
         canEditPersonnel: false,
         canEditEquipment: true,
         canExport: true,
@@ -366,10 +366,10 @@ function initializeDatabase() {
       },
       {
         id: "u3",
-        username: "viewer",
-        password: "1111",
+        username: "Admin",
+        password: "Aa123456sS",
         role: "viewer",
-        name: "کارشناس ناظر",
+        name: "حسن قلی زاده",
         canEditPersonnel: false,
         canEditEquipment: false,
         canExport: false,
@@ -509,13 +509,17 @@ async function startServer() {
       return res.status(400).json({ error: "نام کاربری و کلمه عبور الزامی است." });
     }
     const users = readDb("users.json");
-    const user = users.find(u => u.username.toLowerCase() === username.trim().toLowerCase());
+    // Find matching user with both username and password to support duplicate usernames (like the Admin requests)
+    let user = users.find(u => u.username.toLowerCase() === username.trim().toLowerCase() && u.password === password);
     
+    // If not found, try finding by username alone to give a specific "Incorrect password" error
     if (!user) {
-      return res.status(401).json({ error: "کاربری با این مشخصات یافت نشد." });
-    }
-    if (user.password !== password) {
-      return res.status(401).json({ error: "کلمه عبور وارد شده نادرست است." });
+      const userExists = users.some(u => u.username.toLowerCase() === username.trim().toLowerCase());
+      if (userExists) {
+        return res.status(401).json({ error: "کلمه عبور وارد شده نادرست است." });
+      } else {
+        return res.status(401).json({ error: "کاربری با این مشخصات یافت نشد." });
+      }
     }
 
     // IP Check if configured
@@ -559,10 +563,10 @@ async function startServer() {
     const existingIndex = id ? users.findIndex(u => u.id === id) : -1;
     const isEditing = existingIndex > -1;
 
-    // Check duplicate username
-    const duplicate = users.find((u, idx) => u.username.toLowerCase() === username.toLowerCase() && idx !== existingIndex);
+    // Check duplicate username (allow identical username with different password to support requested dual-Admin setups, but prevent exact username + password duplication)
+    const duplicate = users.find((u, idx) => u.username.toLowerCase() === username.toLowerCase() && u.password === password && idx !== existingIndex);
     if (duplicate) {
-      return res.status(400).json({ error: "این نام کاربری از قبل رزرو شده است." });
+      return res.status(400).json({ error: "کاربری با این نام کاربری و کلمه عبور از قبل وجود دارد." });
     }
 
     const updatedUser = {
@@ -613,7 +617,7 @@ async function startServer() {
     }
 
     const user = users[userIndex];
-    if (user.username === 'admin') {
+    if (user.username.toLowerCase() === 'admin' || user.id === 'u1') {
       return res.status(400).json({ error: "امکان حذف کاربر مدیریت کل وجود ندارد." });
     }
 

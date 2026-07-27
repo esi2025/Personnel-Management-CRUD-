@@ -166,7 +166,7 @@ export default function UsersTab({ currentUser }: UsersTabProps) {
   };
 
   const handleDeleteUser = async (id: string, usernameStr: string) => {
-    if (usernameStr === 'admin') {
+    if (usernameStr.toLowerCase() === 'admin' || id === 'u1') {
       alert("حذف کاربر ارشد ادمین سیستم مسدود است!");
       return;
     }

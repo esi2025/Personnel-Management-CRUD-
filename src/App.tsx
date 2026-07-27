@@ -2452,6 +2452,8 @@ export default function App() {
               mice={mice}
               radios={radios}
               personnel={personnel}
+              customCategories={customCategories}
+              customEquipment={customEquipment}
             />
           )}
 

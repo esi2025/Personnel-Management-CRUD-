@@ -38,6 +38,8 @@ interface RepairsTabProps {
   mice: Mouse[];
   radios: Radio[];
   personnel: Personnel[];
+  customCategories?: any[];
+  customEquipment?: any[];
 }
 
 export default function RepairsTab({
@@ -50,7 +52,9 @@ export default function RepairsTab({
   keyboards,
   mice,
   radios,
-  personnel
+  personnel,
+  customCategories = [],
+  customEquipment = []
 }: RepairsTabProps) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -170,6 +174,44 @@ export default function RepairsTab({
       totalCost
     };
   }, [repairs]);
+
+  // Retired/Scrapped assets quick report calculation
+  const retiredStats = useMemo(() => {
+    const caseRetired = cases.filter(c => c.status === 'retired').length;
+    const monitorRetired = monitors.filter(m => m.status === 'retired').length;
+    const printerRetired = printers.filter(p => p.status === 'retired').length;
+    const keyboardRetired = keyboards.filter(k => k.status === 'retired').length;
+    const mouseRetired = mice.filter(m => m.status === 'retired').length;
+    const radioRetired = radios.filter(r => r.status === 'retired').length;
+
+    const standardList = [
+      { key: 'case', label: 'کیس کامپیوتر', count: caseRetired, icon: '🖥️' },
+      { key: 'monitor', label: 'مانیتور نمایشگر', count: monitorRetired, icon: '📺' },
+      { key: 'printer', label: 'چاپگر / چندکاره', count: printerRetired, icon: '🖨️' },
+      { key: 'keyboard', label: 'کیبورد کارگاهی', count: keyboardRetired, icon: '⌨️' },
+      { key: 'mouse', label: 'ماوس کارگاهی', count: mouseRetired, icon: '🖱️' },
+      { key: 'radio', label: 'بی‌سیم دستی', count: radioRetired, icon: '📻' },
+    ];
+
+    const customList: { key: string; label: string; count: number; icon: string }[] = [];
+    customCategories.forEach(cat => {
+      const count = customEquipment.filter(e => e.categorySlug === cat.id && e.status === 'retired').length;
+      customList.push({
+        key: `custom_${cat.id}`,
+        label: cat.name,
+        count,
+        icon: '📦'
+      });
+    });
+
+    const allList = [...standardList, ...customList];
+    const totalRetired = allList.reduce((sum, item) => sum + item.count, 0);
+
+    return {
+      items: allList,
+      total: totalRetired
+    };
+  }, [cases, monitors, printers, keyboards, mice, radios, customCategories, customEquipment]);
 
   // Filtered repairs
   const filteredRepairs = useMemo(() => {
@@ -555,7 +597,50 @@ export default function RepairsTab({
         </div>
 
         {/* Right Details Panel (Takes 1 Col) */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-4">
+
+          {/* Quick Retired/Scrapped Assets Report */}
+          <div className="bg-white dark:bg-slate-950 border border-rose-100/70 dark:border-rose-950/30 rounded-2xl p-4 shadow-xs">
+            <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 border-b pb-2 mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="p-1.5 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-lg">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                </span>
+                <span>گزارش سریع تجهیزات اسقاطی</span>
+              </div>
+              <span className="font-mono text-[10px] md:text-xs font-black bg-rose-500/10 text-rose-600 dark:text-rose-400 px-2.5 py-0.5 rounded-full">
+                {retiredStats.total.toLocaleString('fa-IR')} مورد کل
+              </span>
+            </h3>
+
+            <div className="grid grid-cols-2 gap-2">
+              {retiredStats.items.map((item) => (
+                <div 
+                  key={item.key}
+                  className={`p-2 rounded-xl border flex items-center justify-between transition-all ${
+                    item.count > 0 
+                      ? 'bg-rose-500/5 border-rose-100/60 dark:bg-rose-950/10 dark:border-rose-900/30' 
+                      : 'bg-slate-50/50 border-slate-100/50 dark:bg-slate-900/20 dark:border-slate-900/30 opacity-60'
+                  }`}
+                >
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="text-xs shrink-0 select-none">{item.icon}</span>
+                    <span className="text-[9px] md:text-[10px] font-black text-slate-600 dark:text-slate-300 truncate leading-none">
+                      {item.label}
+                    </span>
+                  </div>
+                  <span className={`text-[10px] font-black font-mono px-1.5 py-0.5 rounded ${
+                    item.count > 0 
+                      ? 'bg-rose-500/10 text-rose-700 dark:text-rose-400' 
+                      : 'bg-slate-100 text-slate-400 dark:bg-slate-900/40 dark:text-slate-500'
+                  }`}>
+                    {item.count}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="bg-white dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-4 sticky top-4 shadow-sm min-h-[400px]">
             <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 border-b pb-2 mb-3 flex items-center justify-between">
               <span>🔍 جزییات پرونده و مسیر بهینه‌سازی</span>
