@@ -1,0 +1,56 @@
+[
+  {
+    "id": "a1",
+    "equipmentCode": "C-201",
+    "equipmentType": "case",
+    "personnelCode": "1001",
+    "personnelName": "علی علوی",
+    "startDate": "1405/01/15",
+    "endDate": null
+  },
+  {
+    "id": "a2",
+    "equipmentCode": "M-301",
+    "equipmentType": "monitor",
+    "personnelCode": "1001",
+    "personnelName": "علی علوی",
+    "startDate": "1405/01/15",
+    "endDate": null
+  },
+  {
+    "id": "a3",
+    "equipmentCode": "M-302",
+    "equipmentType": "monitor",
+    "personnelCode": "1002",
+    "personnelName": "زهرا حسینی",
+    "startDate": "1405/02/01",
+    "endDate": null
+  },
+  {
+    "id": "a4",
+    "equipmentCode": "P-401",
+    "equipmentType": "printer",
+    "personnelCode": "1002",
+    "personnelName": "زهرا حسینی",
+    "startDate": "1405/02/01",
+    "endDate": null
+  },
+  {
+    "id": "ass_1790599330202_ltmw",
+    "equipmentCode": "C-201",
+    "equipmentType": "case",
+    "personnelCode": "LOC_CHG",
+    "personnelName": "موقعیت فیزیکی جدید : \"اتاق سرور جدید\" (قبلاً \"انبار کارگاه\")",
+    "startDate": "1405/07/06",
+    "endDate": "1405/07/06"
+  },
+  {
+    "id": "ass_1790599336735_goqw",
+    "equipmentCode": "C-201",
+    "equipmentType": "case",
+    "personnelCode": "LOC_CHG",
+    "personnelName": "موقعیت فیزیکی جدید : \"دفتر فنی کارگاه\" (قبلاً \"اتاق سرور جدید\")",
+    "startDate": "1405/07/06",
+    "endDate": "1405/07/06"
+  }
+]

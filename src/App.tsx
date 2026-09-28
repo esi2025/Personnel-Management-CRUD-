@@ -723,7 +723,13 @@ export default function App() {
         setLoading(true);
       }
       setError(null);
-      const res = await fetch('/api/data');
+      const res = await fetch(`/api/data?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
       if (!res.ok) throw new Error('NOT_OK');
       
       const contentType = res.headers.get('content-type') || '';
@@ -826,28 +832,27 @@ export default function App() {
       return { success: false, savedCount: 0, skipped: [] };
     }
 
-    if (!isOfflineMode) {
-      try {
-        const res = await fetch('/api/save-bulk', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'x-operator-username': currentUser?.username || 'system',
-            'x-operator-name': encodeURIComponent(currentUser?.name || '')
-          },
-          body: JSON.stringify({ items })
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          await loadDatabase();
-          return { success: true, savedCount: data.savedCount, skipped: data.skippedCodes || [] };
-        } else {
-          alert(data.error || "خطا در ثبت گروهی اطلاعات بر روی سرور.");
-          return { success: false, savedCount: 0, skipped: [] };
-        }
-      } catch (err) {
-        console.warn('API save-bulk failed. Switching to Local fallback.', err);
+    try {
+      const res = await fetch('/api/save-bulk', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'x-operator-username': currentUser?.username || 'system',
+          'x-operator-name': encodeURIComponent(currentUser?.name || '')
+        },
+        body: JSON.stringify({ items })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        await loadDatabase();
+        return { success: true, savedCount: data.savedCount || items.length, skipped: data.skippedCodes || [] };
+      } else {
+        alert(data.error || "خطا در ثبت گروهی اطلاعات بر روی سرور.");
+        return { success: false, savedCount: 0, skipped: [] };
       }
+    } catch (err) {
+      console.warn('API save-bulk failed. Switching to Local fallback.', err);
     }
 
     // Local / Offline mutate simulation
@@ -945,28 +950,27 @@ export default function App() {
       return { success: false, updatedCount: 0 };
     }
 
-    if (!isOfflineMode) {
-      try {
-        const res = await fetch('/api/save-bulk-edit', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'x-operator-username': currentUser?.username || 'system',
-            'x-operator-name': encodeURIComponent(currentUser?.name || '')
-          },
-          body: JSON.stringify({ updates })
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          await loadDatabase();
-          return { success: true, updatedCount: data.updatedCount };
-        } else {
-          alert(data.error || "خطا در اعمال تغییرات گروهی بر روی سرور.");
-          return { success: false, updatedCount: 0 };
-        }
-      } catch (err) {
-        console.warn('API save-bulk-edit failed. Switching to Local fallback.', err);
+    try {
+      const res = await fetch('/api/save-bulk-edit', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'x-operator-username': currentUser?.username || 'system',
+          'x-operator-name': encodeURIComponent(currentUser?.name || '')
+        },
+        body: JSON.stringify({ updates })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        await loadDatabase();
+        return { success: true, updatedCount: data.updatedCount || updates.length };
+      } else {
+        alert(data.error || "خطا در اعمال تغییرات گروهی بر روی سرور.");
+        return { success: false, updatedCount: 0 };
       }
+    } catch (err) {
+      console.warn('API save-bulk-edit failed. Switching to Local fallback.', err);
     }
 
     // Local / Offline mutate simulation
@@ -1035,25 +1039,27 @@ export default function App() {
       }
     }
 
-    if (!isOfflineMode) {
-      try {
-        const res = await fetch('/api/save', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'x-operator-username': currentUser?.username || 'system',
-            'x-operator-name': encodeURIComponent(currentUser?.name || '')
-          },
-          body: JSON.stringify({ type, ...data })
-        });
-        const contentType = res.headers.get('content-type') || '';
-        if (res.ok && contentType.includes('application/json')) {
-          await loadDatabase();
-          return true;
-        }
-      } catch (err) {
-        console.warn('API save failed. Switching to Local fallback.', err);
+    try {
+      const res = await fetch('/api/save', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'x-operator-username': currentUser?.username || 'system',
+          'x-operator-name': encodeURIComponent(currentUser?.name || '')
+        },
+        body: JSON.stringify({ type, ...data })
+      });
+      const resData = await res.json().catch(() => ({}));
+      if (res.ok && resData.success) {
+        await loadDatabase();
+        return true;
+      } else {
+        alert(resData.error || 'خطا در ثبت اطلاعات بر روی سرور.');
+        return false;
       }
+    } catch (err) {
+      console.warn('API save network issue. Switching to Local fallback.', err);
     }
 
     // Local / Offline mutate simulation
@@ -1392,36 +1398,36 @@ export default function App() {
 
     const confirmationMsg = type === 'personnel' 
       ? 'آیا از حذف این پرسنل اطمینان دارید؟ تمامی تجهیزات تحت تصرف وی آزاد شده و به انبار پروژه بازگردانده می‌شوند.'
+      : type === 'custom_category'
+      ? 'آیا از حذف این دسته‌بندی سخت‌افزاری اطمینان کامل دارید؟'
+      : type === 'catalog'
+      ? 'آیا از حذف این قطعه مرجع از کاتالوگ قطعات اطمینان کامل دارید؟'
       : 'آیا از حذف این سخت‌افزار از سامانه اطمینان کامل دارید؟';
 
     if (!window.confirm(confirmationMsg)) return;
 
-    if (!isOfflineMode) {
-      try {
-        const res = await fetch('/api/delete', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'x-operator-username': currentUser?.username || 'system',
-            'x-operator-name': encodeURIComponent(currentUser?.name || '')
-          },
-          body: JSON.stringify({ type, id, today: getPersianDateString() })
-        });
-        const contentType = res.headers.get('content-type') || '';
-        if (res.ok && contentType.includes('application/json')) {
-          alert('مورد با موفقیت از سیستم حذف و بایگانی شد.');
-          await loadDatabase();
-          return;
-        } else {
-          const errData = await res.json();
-          if (errData && errData.error) {
-            alert(errData.error);
-            return;
-          }
-        }
-      } catch (err) {
-        console.warn('API delete failed. Fallback to Local deletion.', err);
+    try {
+      const res = await fetch('/api/delete', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'x-operator-username': currentUser?.username || 'system',
+          'x-operator-name': encodeURIComponent(currentUser?.name || '')
+        },
+        body: JSON.stringify({ type, id, today: getPersianDateString() })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        alert(data.message || 'مورد با موفقیت از سیستم حذف و بایگانی شد.');
+        await loadDatabase();
+        return;
+      } else {
+        alert(data.error || 'خطا در عملیات حذف آیتم از سیستم.');
+        return;
       }
+    } catch (err) {
+      console.warn('API delete failed. Fallback to Local deletion.', err);
     }
 
     // Local deletion simulation
@@ -1527,25 +1533,27 @@ export default function App() {
   const handleTransferItem = async (equipmentCode: string, targetPersonnelCode: string | null, documentNumber?: string, dateStr?: string) => {
     const today = dateStr || getPersianDateString();
 
-    if (!isOfflineMode) {
-      try {
-        const res = await fetch('/api/transfer', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'x-operator-username': currentUser?.username || 'system',
-            'x-operator-name': encodeURIComponent(currentUser?.name || '')
-          },
-          body: JSON.stringify({ equipmentCode, targetPersonnelCode, today })
-        });
-        const contentType = res.headers.get('content-type') || '';
-        if (res.ok && contentType.includes('application/json')) {
-          await loadDatabase();
-          return;
-        }
-      } catch (err) {
-        console.warn('API transfer failed. Fallback to Local transfer.', err);
+    try {
+      const res = await fetch('/api/transfer', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'x-operator-username': currentUser?.username || 'system',
+          'x-operator-name': encodeURIComponent(currentUser?.name || '')
+        },
+        body: JSON.stringify({ equipmentCode, targetPersonnelCode, today })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        await loadDatabase();
+        return;
+      } else {
+        alert(data.error || 'خطا در ثبت جابه‌جایی و تحویل هوشمند تجهیز.');
+        return;
       }
+    } catch (err) {
+      console.warn('API transfer failed. Fallback to Local transfer.', err);
     }
 
     // Local Transfer simulation
@@ -1633,13 +1641,35 @@ export default function App() {
 
     db.assignments = assignments;
     localStorage.setItem('azarestan_ict_db', JSON.stringify(db));
-    setIsOfflineMode(true);
     await loadDatabase();
   };
 
   // Location Transfer Handler
   const handleLocationTransfer = async (equipmentCode: string, targetLocation: string, documentNumber?: string, dateStr?: string) => {
     const today = dateStr || getPersianDateString();
+
+    try {
+      const res = await fetch('/api/transfer-location', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'x-operator-username': currentUser?.username || 'system',
+          'x-operator-name': encodeURIComponent(currentUser?.name || '')
+        },
+        body: JSON.stringify({ equipmentCode, targetLocation, documentNumber, today })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        await loadDatabase();
+        return;
+      } else {
+        alert(data.error || "خطا در ثبت جابه‌جایی مکانی تجهیز بر روی سرور.");
+        return;
+      }
+    } catch (err) {
+      console.warn('API transfer-location failed. Fallback to Local.', err);
+    }
 
     const rawDb = localStorage.getItem('azarestan_ict_db');
     let db = rawDb ? JSON.parse(rawDb) : { ...INITIAL_DEMO_DATA };
@@ -1684,31 +1714,32 @@ export default function App() {
 
     db.assignments = assignments;
     localStorage.setItem('azarestan_ict_db', JSON.stringify(db));
-    setIsOfflineMode(true);
     await loadDatabase();
   };
 
   // Restore Entire Database
   const handleRestoreDatabase = async (backupData: any) => {
-    if (!isOfflineMode) {
-      try {
-        const res = await fetch('/api/restore', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(backupData)
-        });
-        const contentType = res.headers.get('content-type') || '';
-        if (res.ok && contentType.includes('application/json')) {
-          await loadDatabase();
-          return;
-        }
-      } catch (err) {
-        console.warn('API restore failed. Fallback to Local restore.', err);
+    try {
+      const res = await fetch('/api/restore', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        },
+        body: JSON.stringify(backupData)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        await loadDatabase();
+        return;
+      } else {
+        alert(data.error || 'خطا در بازیابی نسخه پشتیبان بر روی سرور.');
       }
+    } catch (err) {
+      console.warn('API restore failed. Fallback to Local restore.', err);
     }
 
     localStorage.setItem('azarestan_ict_db', JSON.stringify(backupData));
-    setIsOfflineMode(true);
     await loadDatabase();
   };
 

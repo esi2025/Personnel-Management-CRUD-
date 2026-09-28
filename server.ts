@@ -465,6 +465,15 @@ async function startServer() {
   // Middleware for body parsing
   app.use(express.json({ limit: "50mb" }));
 
+  // Disable caching for all API responses to prevent stale data in browsers and IIS reverse proxy
+  app.use("/api", (req, res, next) => {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    res.setHeader("Surrogate-Control", "no-store");
+    next();
+  });
+
   // Helper to extract connection remote client IP
   function getClientIp(req: any): string {
     let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || '';
@@ -1509,267 +1518,190 @@ async function startServer() {
     const dateStr = today || getPersianDateString();
 
     if (!type || !id) {
-      return res.status(400).json({ error: "شناسه یا مانیفست حذف ارسال نگردیده." });
+      return res.status(400).json({ error: "شناسه یا نوع قلم ارسالی جهت حذف نامعتبر است." });
     }
 
-    const opUser = req.headers["x-operator-username"] as string || "system";
-    const opName = req.headers["x-operator-name"] as string || "سیستم";
+    const trimmedId = String(id).trim();
+    const opUser = (req.headers["x-operator-username"] as string) || "system";
+    const opName = (req.headers["x-operator-name"] as string) || "سیستم";
     const clientIp = getClientIp(req);
 
     if (type === "personnel") {
       const personnel = readDb("personnel.json");
-      const idx = personnel.findIndex((p) => p.id === id);
+      const idx = personnel.findIndex((p: any) => 
+        (p.id && String(p.id).trim() === trimmedId) || 
+        (p.code && String(p.code).trim().toLowerCase() === trimmedId.toLowerCase())
+      );
       if (idx === -1) {
-        return res.status(404).json({ error: "پرسنل یافت نشد." });
+        return res.status(404).json({ error: "پرسنل مدنظر در سامانه یافت نشد." });
       }
 
-      const codeToClear = personnel[idx].code;
+      const deletedPerson = personnel[idx];
+      const codeToClear = deletedPerson.code;
       personnel.splice(idx, 1);
       writeDb("personnel.json", personnel);
 
-      // Cascade update to unassign equipment and close history
+      // Cascade update to unassign equipment and close active history across ALL equipment
       if (codeToClear) {
-        // Cases
-        const cases = readDb("cases.json");
-        cases.forEach((c) => {
-          if (c.assignedTo === codeToClear) c.assignedTo = null;
-        });
-        writeDb("cases.json", cases);
+        const eqFiles = [
+          "cases.json",
+          "monitors.json",
+          "printers.json",
+          "mice.json",
+          "keyboards.json",
+          "radios.json",
+          "cctvs.json",
+          "custom_equipment.json"
+        ];
 
-        // Monitors
-        const monitors = readDb("monitors.json");
-        monitors.forEach((m) => {
-          if (m.assignedTo === codeToClear) m.assignedTo = null;
+        eqFiles.forEach((fileName) => {
+          const list = readDb(fileName);
+          let changed = false;
+          list.forEach((item: any) => {
+            if (item.assignedTo && String(item.assignedTo).trim().toLowerCase() === String(codeToClear).trim().toLowerCase()) {
+              item.assignedTo = null;
+              changed = true;
+            }
+          });
+          if (changed) writeDb(fileName, list);
         });
-        writeDb("monitors.json", monitors);
-
-        // Printers
-        const printers = readDb("printers.json");
-        printers.forEach((pr) => {
-          if (pr.assignedTo === codeToClear) pr.assignedTo = null;
-        });
-        writeDb("printers.json", printers);
-
-        // Mice
-        const mice = readDb("mice.json");
-        mice.forEach((m) => {
-          if (m.assignedTo === codeToClear) m.assignedTo = null;
-        });
-        writeDb("mice.json", mice);
-
-        // Keyboards
-        const keyboards = readDb("keyboards.json");
-        keyboards.forEach((k) => {
-          if (k.assignedTo === codeToClear) k.assignedTo = null;
-        });
-        writeDb("keyboards.json", keyboards);
 
         // Assignment History close
         const assignments = readDb("assignments.json");
-        assignments.forEach((ass) => {
-          if (ass.personnelCode === codeToClear && ass.endDate === null) {
+        let assChanged = false;
+        assignments.forEach((ass: any) => {
+          if (ass.personnelCode && String(ass.personnelCode).trim().toLowerCase() === String(codeToClear).trim().toLowerCase() && ass.endDate === null) {
             ass.endDate = dateStr;
+            assChanged = true;
           }
         });
-        writeDb("assignments.json", assignments);
+        if (assChanged) writeDb("assignments.json", assignments);
       }
 
-      addAuditLog(opUser, opName, clientIp, "delete", "personnel", codeToClear, `حذف پرونده کارمند: شماره پرسنلی ${codeToClear} و آزادسازی کلیه تجهیزات تحت تصرف وی`);
-      return res.json({ success: true });
+      addAuditLog(opUser, opName, clientIp, "delete", "personnel", codeToClear || trimmedId, `حذف پرونده کارمند: ${deletedPerson.name || '-'} (شماره پرسنلی ${codeToClear || trimmedId}) و آزادسازی کلیه تجهیزات تحت تصرف وی`);
+      return res.json({ success: true, message: "پرونده پرسنل با موفقیت حذف گردید." });
     }
 
-    if (type === "case") {
-      const cases = readDb("cases.json");
-      const idx = cases.findIndex((c) => c.code === id);
-      if (idx === -1) return res.status(404).json({ error: "کیس یافت نشد." });
+    // Standard Equipment files
+    const standardEquipFiles: Record<string, { file: string; label: string }> = {
+      case: { file: "cases.json", label: "کیس کامپیوتر" },
+      monitor: { file: "monitors.json", label: "مانیتور" },
+      printer: { file: "printers.json", label: "چاپگر" },
+      mouse: { file: "mice.json", label: "ماوس" },
+      keyboard: { file: "keyboards.json", label: "کیبورد" },
+      radio: { file: "radios.json", label: "بی‌سیم" },
+      cctv: { file: "cctvs.json", label: "دوربین مداربسته" }
+    };
 
-      cases.splice(idx, 1);
-      writeDb("cases.json", cases);
+    if (standardEquipFiles[type]) {
+      const { file, label } = standardEquipFiles[type];
+      const items = readDb(file);
+      const idx = items.findIndex((item: any) => 
+        (item.code && String(item.code).trim().toLowerCase() === trimmedId.toLowerCase()) ||
+        (item.id && String(item.id).trim() === trimmedId)
+      );
+      if (idx === -1) {
+        return res.status(404).json({ error: `${label} مدنظر با کد ${trimmedId} یافت نشد.` });
+      }
 
+      const deletedItem = items[idx];
+      const equipCode = deletedItem.code || trimmedId;
+      items.splice(idx, 1);
+      writeDb(file, items);
+
+      // Close active assignments
       const assignments = readDb("assignments.json");
-      assignments.forEach((ass) => {
-        if (ass.equipmentCode === id && ass.equipmentType === "case" && ass.endDate === null) {
+      let assChanged = false;
+      assignments.forEach((ass: any) => {
+        if ((String(ass.equipmentCode).trim().toLowerCase() === String(equipCode).trim().toLowerCase() || String(ass.equipmentCode).trim().toLowerCase() === trimmedId.toLowerCase()) && 
+            ass.equipmentType === type && 
+            ass.endDate === null) {
           ass.endDate = dateStr;
+          assChanged = true;
         }
       });
-      writeDb("assignments.json", assignments);
+      if (assChanged) writeDb("assignments.json", assignments);
 
-      addAuditLog(opUser, opName, clientIp, "delete", "case", id, `حذف کامل دارایی کیس کامپیوتر با شماره اموال ${id}`);
-      return res.json({ success: true });
-    }
-
-    if (type === "monitor") {
-      const monitors = readDb("monitors.json");
-      const idx = monitors.findIndex((m) => m.code === id);
-      if (idx === -1) return res.status(404).json({ error: "مانیتور یافت نشد." });
-
-      monitors.splice(idx, 1);
-      writeDb("monitors.json", monitors);
-
-      const assignments = readDb("assignments.json");
-      assignments.forEach((ass) => {
-        if (ass.equipmentCode === id && ass.equipmentType === "monitor" && ass.endDate === null) {
-          ass.endDate = dateStr;
+      // Archive any active repairs for this deleted equipment
+      const repairs = readDb("repairs.json");
+      let repChanged = false;
+      repairs.forEach((rep: any) => {
+        if (rep.equipmentCode && String(rep.equipmentCode).trim().toLowerCase() === String(equipCode).trim().toLowerCase() && rep.status !== 'completed' && rep.status !== 'scrapped') {
+          rep.status = 'scrapped';
+          rep.actionTaken = (rep.actionTaken ? rep.actionTaken + ' | ' : '') + `تجهیز در تاریخ ${dateStr} از سیستم حذف گردید.`;
+          repChanged = true;
         }
       });
-      writeDb("assignments.json", assignments);
+      if (repChanged) writeDb("repairs.json", repairs);
 
-      addAuditLog(opUser, opName, clientIp, "delete", "monitor", id, `حذف مانیتور از سامانه با کد اموال ${id}`);
-      return res.json({ success: true });
-    }
-
-    if (type === "printer") {
-      const printers = readDb("printers.json");
-      const idx = printers.findIndex((pr) => pr.code === id);
-      if (idx === -1) return res.status(404).json({ error: "چاپگر یافت نشد." });
-
-      printers.splice(idx, 1);
-      writeDb("printers.json", printers);
-
-      const assignments = readDb("assignments.json");
-      assignments.forEach((ass) => {
-        if (ass.equipmentCode === id && ass.equipmentType === "printer" && ass.endDate === null) {
-          ass.endDate = dateStr;
-        }
-      });
-      writeDb("assignments.json", assignments);
-
-      addAuditLog(opUser, opName, clientIp, "delete", "printer", id, `حذف چاپگر با شماره پرونده اموال ${id}`);
-      return res.json({ success: true });
-    }
-
-    if (type === "mouse") {
-      const mice = readDb("mice.json");
-      const idx = mice.findIndex((m) => m.code === id);
-      if (idx === -1) return res.status(404).json({ error: "ماوس یافت نشد." });
-
-      mice.splice(idx, 1);
-      writeDb("mice.json", mice);
-
-      const assignments = readDb("assignments.json");
-      assignments.forEach((ass) => {
-        if (ass.equipmentCode === id && ass.equipmentType === "mouse" && ass.endDate === null) {
-          ass.endDate = dateStr;
-        }
-      });
-      writeDb("assignments.json", assignments);
-
-      addAuditLog(opUser, opName, clientIp, "delete", "mouse", id, `حذف فیزیکی ماوس با شماره پرونده اموال ${id}`);
-      return res.json({ success: true });
-    }
-
-    if (type === "keyboard") {
-      const keyboards = readDb("keyboards.json");
-      const idx = keyboards.findIndex((k) => k.code === id);
-      if (idx === -1) return res.status(404).json({ error: "کیبورد یافت نشد." });
-
-      keyboards.splice(idx, 1);
-      writeDb("keyboards.json", keyboards);
-
-      const assignments = readDb("assignments.json");
-      assignments.forEach((ass) => {
-        if (ass.equipmentCode === id && ass.equipmentType === "keyboard" && ass.endDate === null) {
-          ass.endDate = dateStr;
-        }
-      });
-      writeDb("assignments.json", assignments);
-
-      addAuditLog(opUser, opName, clientIp, "delete", "keyboard", id, `حذف فیزیکی کیبورد با شماره پرونده اموال ${id}`);
-      return res.json({ success: true });
-    }
-
-    if (type === "radio") {
-      const radios = readDb("radios.json");
-      const idx = radios.findIndex((r) => r.code === id);
-      if (idx === -1) return res.status(404).json({ error: "بی‌سیم یافت نشد." });
-
-      radios.splice(idx, 1);
-      writeDb("radios.json", radios);
-
-      const assignments = readDb("assignments.json");
-      assignments.forEach((ass) => {
-        if (ass.equipmentCode === id && ass.equipmentType === "radio" && ass.endDate === null) {
-          ass.endDate = dateStr;
-        }
-      });
-      writeDb("assignments.json", assignments);
-
-      addAuditLog(opUser, opName, clientIp, "delete", "radio", id, `حذف فیزیکی بی‌سیم با شماره پرونده اموال ${id}`);
-      return res.json({ success: true });
-    }
-
-    if (type === "cctv") {
-      const cctvs = readDb("cctvs.json");
-      const idx = cctvs.findIndex((c) => c.code === id);
-      if (idx === -1) return res.status(404).json({ error: "دوربین مداربسته یافت نشد." });
-
-      cctvs.splice(idx, 1);
-      writeDb("cctvs.json", cctvs);
-
-      const assignments = readDb("assignments.json");
-      assignments.forEach((ass) => {
-        if (ass.equipmentCode === id && ass.equipmentType === "cctv" && ass.endDate === null) {
-          ass.endDate = dateStr;
-        }
-      });
-      writeDb("assignments.json", assignments);
-
-      addAuditLog(opUser, opName, clientIp, "delete", "cctv", id, `حذف فیزیکی دوربین مداربسته با شماره پرونده اموال ${id}`);
-      return res.json({ success: true });
+      addAuditLog(opUser, opName, clientIp, "delete", type, equipCode, `حذف دائم دارایی ${label} با کد اموال ${equipCode}`);
+      return res.json({ success: true, message: `${label} با کد اموال ${equipCode} با موفقیت حذف گردید.` });
     }
 
     if (type === "catalog") {
       const catalog = readDb("parts_catalog.json");
-      const idx = catalog.findIndex((c) => c.id === id);
+      const idx = catalog.findIndex((c: any) => 
+        (c.id && String(c.id).trim() === trimmedId) || 
+        (c.code && String(c.code).trim().toLowerCase() === trimmedId.toLowerCase())
+      );
       if (idx === -1) return res.status(404).json({ error: "قطعه مرجع یافت نشد." });
 
+      const item = catalog[idx];
       catalog.splice(idx, 1);
       writeDb("parts_catalog.json", catalog);
 
-      addAuditLog(opUser, opName, clientIp, "delete", "catalog", id, `حذف دائمی قطعه مرجع از کاتالوگ قطعات کارگاه بوشهر`);
-      return res.json({ success: true });
+      addAuditLog(opUser, opName, clientIp, "delete", "catalog", trimmedId, `حذف قطعه مرجع «${item.name || trimmedId}» از کاتالوگ قطعات`);
+      return res.json({ success: true, message: "قطعه مرجع با موفقیت حذف گردید." });
     }
 
     if (type === "custom_category") {
       const categories = readDb("custom_categories.json");
       const customEquips = readDb("custom_equipment.json");
-      const hasItems = customEquips.some(e => e.categorySlug === id);
+      const hasItems = customEquips.some((e: any) => e.categorySlug === trimmedId);
       if (hasItems) {
-        return res.status(400).json({ error: "این دسته دارای تجهیز فعال است و امکان حذف آن وجود ندارد." });
+        return res.status(400).json({ error: "این دسته‌بندی دارای تجهیزات فعال در سیستم است. لطفاً ابتدا تجهیزات زیرمجموعه آن را حذف یا جابه‌جا کنید." });
       }
-      const idx = categories.findIndex((c) => c.id === id);
-      if (idx === -1) return res.status(404).json({ error: "دسته‌بندی یافت نشد." });
+      const idx = categories.findIndex((c: any) => c.id === trimmedId || c.slug === trimmedId);
+      if (idx === -1) return res.status(404).json({ error: "دسته‌بندی سخت‌افزاری یافت نشد." });
+
+      const catName = categories[idx].name || trimmedId;
       categories.splice(idx, 1);
       writeDb("custom_categories.json", categories);
-      addAuditLog(opUser, opName, clientIp, "delete", "custom_category", id, `حذف دسته‌بندی سفارشی ${id}`);
-      return res.json({ success: true });
+      addAuditLog(opUser, opName, clientIp, "delete", "custom_category", trimmedId, `حذف دسته‌بندی سخت‌افزاری «${catName}»`);
+      return res.json({ success: true, message: "دسته‌بندی با موفقیت حذف شد." });
     }
 
+    // Custom Equipment (by category slug or 'custom_equipment')
     const customCategoriesCheck = readDb("custom_categories.json");
-    if (customCategoriesCheck.some(c => c.id === type)) {
+    if (type === "custom_equipment" || customCategoriesCheck.some((c: any) => c.id === type || c.slug === type)) {
       const customEquips = readDb("custom_equipment.json");
-      const idx = customEquips.findIndex((e) => e.id === id);
-      if (idx === -1) return res.status(404).json({ error: "تجهیز یافت نشد." });
+      const idx = customEquips.findIndex((e: any) => 
+        (e.id && String(e.id).trim() === trimmedId) || 
+        (e.code && String(e.code).trim().toLowerCase() === trimmedId.toLowerCase())
+      );
+      if (idx === -1) return res.status(404).json({ error: "تجهیز سفارشی یافت نشد." });
       
-      const equipCode = customEquips[idx].code;
+      const equipCode = customEquips[idx].code || trimmedId;
       customEquips.splice(idx, 1);
       writeDb("custom_equipment.json", customEquips);
 
       // End active assignments
-      const dateStr = getPersianDateString();
       const assignments = readDb("assignments.json");
-      assignments.forEach((ass) => {
-        if (ass.equipmentCode === equipCode && ass.equipmentType === type && ass.endDate === null) {
+      let assChanged = false;
+      assignments.forEach((ass: any) => {
+        if ((String(ass.equipmentCode).trim().toLowerCase() === String(equipCode).trim().toLowerCase() || String(ass.equipmentCode).trim().toLowerCase() === trimmedId.toLowerCase()) && 
+            ass.endDate === null) {
           ass.endDate = dateStr;
+          assChanged = true;
         }
       });
-      writeDb("assignments.json", assignments);
+      if (assChanged) writeDb("assignments.json", assignments);
 
-      addAuditLog(opUser, opName, clientIp, "delete", type, id, `حذف تجهیز سفارشی ${equipCode}`);
-      return res.json({ success: true });
+      addAuditLog(opUser, opName, clientIp, "delete", type, equipCode, `حذف تجهیز سفارشی با کد اموال ${equipCode}`);
+      return res.json({ success: true, message: "تجهیز سفارشی با موفقیت حذف گردید." });
     }
 
-    return res.status(400).json({ error: "نوع آیتم نامعتبر است." });
+    return res.status(400).json({ error: `نوع قلم «${type}» جهت حذف در سیستم پشتیبانی نمی‌شود.` });
   });
 
   // API: Intelligent Equipment Transfer
@@ -1785,7 +1717,7 @@ async function startServer() {
     }
 
     // 1. Locate Equipment
-    let equipType: "case" | "monitor" | "printer" | "mouse" | "keyboard" | "radio" | "cctv" | null = null;
+    let equipType: string | null = null;
     let equipItem: any = null;
 
     const cases = readDb("cases.json");
@@ -1846,6 +1778,18 @@ async function startServer() {
       if (cIdx !== -1) {
         equipType = "cctv";
         equipItem = cctvs[cIdx];
+      }
+    }
+
+    if (!equipItem) {
+      const customEquip = readDb("custom_equipment.json");
+      const cIdx = customEquip.findIndex((c: any) => 
+        (c.code && String(c.code).trim().toLowerCase() === String(equipmentCode).trim().toLowerCase()) ||
+        (c.id && String(c.id).trim() === String(equipmentCode).trim())
+      );
+      if (cIdx !== -1) {
+        equipType = customEquip[cIdx].categorySlug || "custom_equipment";
+        equipItem = customEquip[cIdx];
       }
     }
 
@@ -1912,6 +1856,13 @@ async function startServer() {
       const idx = cctvs.findIndex((c) => c.code === equipmentCode);
       cctvs[idx] = equipItem;
       writeDb("cctvs.json", cctvs);
+    } else {
+      const customEquip = readDb("custom_equipment.json");
+      const idx = customEquip.findIndex((c: any) => c.code === equipmentCode || c.id === equipmentCode);
+      if (idx !== -1) {
+        customEquip[idx] = equipItem;
+        writeDb("custom_equipment.json", customEquip);
+      }
     }
 
     // History log mapping
@@ -1920,7 +1871,7 @@ async function startServer() {
     // Close active assignment if existed
     if (currentOwnerCode !== null) {
       assignments.forEach((ass) => {
-        if (ass.equipmentCode === equipmentCode && ass.equipmentType === equipType && ass.endDate === null) {
+        if (ass.equipmentCode === equipmentCode && ass.endDate === null) {
           ass.endDate = dateStr;
         }
       });
@@ -1963,6 +1914,80 @@ async function startServer() {
       newOwner: targetCode,
       newOwnerName: targetName,
     });
+  });
+
+  // API: Location Transfer (Site / Room / Warehouse physical movement)
+  app.post("/api/transfer-location", (req, res) => {
+    const { equipmentCode, targetLocation, documentNumber, today } = req.body;
+    const dateStr = today || getPersianDateString();
+    const opUser = (req.headers["x-operator-username"] as string) || "system";
+    const opName = (req.headers["x-operator-name"] as string) || "سیستم";
+    const clientIp = getClientIp(req);
+
+    if (!equipmentCode || !targetLocation) {
+      return res.status(400).json({ error: "کد اموال و محل استقرار جدید الزامی است." });
+    }
+
+    const trimmedCode = String(equipmentCode).trim().toLowerCase();
+    const targetLoc = String(targetLocation).trim();
+
+    const eqTypes = [
+      { type: "case" as const, file: "cases.json" },
+      { type: "monitor" as const, file: "monitors.json" },
+      { type: "printer" as const, file: "printers.json" },
+      { type: "mouse" as const, file: "mice.json" },
+      { type: "keyboard" as const, file: "keyboards.json" },
+      { type: "radio" as const, file: "radios.json" },
+      { type: "cctv" as const, file: "cctvs.json" },
+      { type: "custom_equipment" as const, file: "custom_equipment.json" }
+    ];
+
+    let foundType: string | null = null;
+    let foundItem: any = null;
+    let foundFile: string | null = null;
+    let list: any[] = [];
+    let foundIdx = -1;
+
+    for (const eq of eqTypes) {
+      const items = readDb(eq.file);
+      const idx = items.findIndex((it: any) => 
+        (it.code && String(it.code).trim().toLowerCase() === trimmedCode) ||
+        (it.id && String(it.id).trim() === String(equipmentCode).trim())
+      );
+      if (idx !== -1) {
+        foundType = eq.type;
+        foundItem = items[idx];
+        foundFile = eq.file;
+        list = items;
+        foundIdx = idx;
+        break;
+      }
+    }
+
+    if (!foundItem || !foundFile) {
+      return res.status(404).json({ error: "تجهیزی با این کد اموال در سامانه یافت نشد." });
+    }
+
+    const oldLocation = foundItem.location || "انبار کارگاه";
+    foundItem.location = targetLoc;
+    writeDb(foundFile, list);
+
+    // Record in assignments history
+    const assignments = readDb("assignments.json");
+    assignments.push({
+      id: `ass_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      equipmentCode: foundItem.code || equipmentCode,
+      equipmentType: foundType,
+      personnelCode: 'LOC_CHG',
+      personnelName: `موقعیت فیزیکی جدید ${documentNumber ? `(سند ${documentNumber})` : ''}: "${targetLoc}" (قبلاً "${oldLocation}")`,
+      startDate: dateStr,
+      endDate: dateStr
+    });
+    writeDb("assignments.json", assignments);
+
+    addAuditLog(opUser, opName, clientIp, "transfer_location", foundType || "equipment", foundItem.code || equipmentCode, `جابه‌جایی مکانی تجهیز ${foundItem.code || equipmentCode} به موقعیت "${targetLoc}" (موقعیت قبلی: "${oldLocation}")`);
+
+    res.json({ success: true, newLocation: targetLoc });
   });
 
   // API: Restore Backup (Replace completely with requested payload)

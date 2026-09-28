@@ -278,7 +278,7 @@ export default function PersonnelTab({
                             ✏️ ویرایش
                           </button>
                           <button 
-                            onClick={() => onDelete(p.id!)}
+                            onClick={() => onDelete(p.id || p.code)}
                             className="bg-red-50 hover:bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
                           >
                             🗑️ حذف

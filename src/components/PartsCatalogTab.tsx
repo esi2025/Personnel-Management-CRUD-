@@ -72,9 +72,7 @@ export default function PartsCatalogTab({ catalog = [], onSave, onDelete }: Part
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('آیا از حذف این قطعه مرجع از کاتالوگ اطمینان دارید؟')) return;
     await onDelete('catalog', id);
-    alert('قطعه با موفقیت از سیستم حذف شد.');
   };
 
   const filteredCatalog = selectedCategory === 'all'

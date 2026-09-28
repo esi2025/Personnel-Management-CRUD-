@@ -1,0 +1,27 @@
+[
+  {
+    "code": "C-201",
+    "motherboard": "ASUS H610M-K",
+    "cpu": "Intel Core i5-12400",
+    "vga": "Desktop Intel UHD Graphics",
+    "hdd1": "SSD 512GB NVMe",
+    "hdd2": "HDD 1TB WD Blue",
+    "ramType": "DDR4",
+    "ramQty": "16GB",
+    "power": "Green GP400A-ECO 400W",
+    "assignedTo": "1001",
+    "location": "دفتر فنی کارگاه"
+  },
+  {
+    "code": "C-202",
+    "motherboard": "MSI B760-P",
+    "cpu": "Intel Core i7-13700",
+    "vga": "NVIDIA RTX 3050 8GB",
+    "hdd1": "SSD 1TB NVMe",
+    "hdd2": "-",
+    "ramType": "DDR5",
+    "ramQty": "32GB",
+    "power": "Cooler Master MWE 550W Bronz",
+    "assignedTo": null
+  }
+]

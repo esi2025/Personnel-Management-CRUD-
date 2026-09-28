@@ -1,0 +1,93 @@
+[
+  {
+    "id": "log_1790599336735_94kia",
+    "username": "system",
+    "name": "سیستم",
+    "ip": "127.0.0.1",
+    "action": "transfer_location",
+    "targetType": "case",
+    "targetId": "C-201",
+    "details": "جابه‌جایی مکانی تجهیز C-201 به موقعیت \"دفتر فنی کارگاه\" (موقعیت قبلی: \"اتاق سرور جدید\")",
+    "timestamp": "1405/07/06 ساعت ۱۲:۴۲:۱۶",
+    "before": null,
+    "after": null
+  },
+  {
+    "id": "log_1790599330203_58gzh",
+    "username": "system",
+    "name": "سیستم",
+    "ip": "127.0.0.1",
+    "action": "transfer_location",
+    "targetType": "case",
+    "targetId": "C-201",
+    "details": "جابه‌جایی مکانی تجهیز C-201 به موقعیت \"اتاق سرور جدید\" (موقعیت قبلی: \"انبار کارگاه\")",
+    "timestamp": "1405/07/06 ساعت ۱۲:۴۲:۱۰",
+    "before": null,
+    "after": null
+  },
+  {
+    "id": "log_1790599323766_91f19",
+    "username": "system",
+    "name": "سیستم",
+    "ip": "127.0.0.1",
+    "action": "delete",
+    "targetType": "case",
+    "targetId": "C-TEST-99",
+    "details": "حذف دائم دارایی کیس کامپیوتر با کد اموال C-TEST-99",
+    "timestamp": "1405/07/06 ساعت ۱۲:۴۲:۰۳",
+    "before": null,
+    "after": null
+  },
+  {
+    "id": "log_1790599321052_fy0tn",
+    "username": "system",
+    "name": "سیستم",
+    "ip": "127.0.0.1",
+    "action": "create",
+    "targetType": "case",
+    "targetId": "C-TEST-99",
+    "details": "ثبت کیس کامپیوتر جدید در کارگاه: مادربرد Test Mobo، پردازنده Test CPU",
+    "timestamp": "1405/07/06 ساعت ۱۲:۴۲:۰۱",
+    "before": null,
+    "after": null
+  },
+  {
+    "id": "log_1790599315776_sh94m",
+    "username": "system",
+    "name": "سیستم",
+    "ip": "127.0.0.1",
+    "action": "delete",
+    "targetType": "personnel",
+    "targetId": "9999",
+    "details": "حذف پرونده کارمند: پرسنل آزمایشی (شماره پرسنلی 9999) و آزادسازی کلیه تجهیزات تحت تصرف وی",
+    "timestamp": "1405/07/06 ساعت ۱۲:۴۱:۵۵",
+    "before": null,
+    "after": null
+  },
+  {
+    "id": "log_1790599309994_9fefw",
+    "username": "system",
+    "name": "سیستم",
+    "ip": "127.0.0.1",
+    "action": "create",
+    "targetType": "personnel",
+    "targetId": "9999",
+    "details": "ایجاد پرونده پرسنلی جدید: پرسنل آزمایشی (9999) - دپارتمان فناوری",
+    "timestamp": "1405/07/06 ساعت ۱۲:۴۱:۴۹",
+    "before": null,
+    "after": null
+  },
+  {
+    "id": "log_1790598759000_np0i2",
+    "username": "Admin",
+    "name": "مهدی اسماعیلی",
+    "ip": "108.181.122.97",
+    "action": "login",
+    "targetType": "auth",
+    "targetId": "u1",
+    "details": "ورود موفقیت‌آمیز به سامانه",
+    "timestamp": "1405/07/06 ساعت ۱۲:۳۲:۳۸",
+    "before": null,
+    "after": null
+  }
+]

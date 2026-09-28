@@ -287,11 +287,7 @@ export default function CustomEquipmentSubTab({
                             📝 ویرایش
                           </button>
                           <button
-                            onClick={() => {
-                              if (confirm('آیا مطمئن هستید که می‌خواهید این تجهیز را به طور کامل حذف کنید؟')) {
-                                onDeleteItem(category.id, item.id);
-                              }
-                            }}
+                            onClick={() => onDeleteItem(category.id, item.id || item.code)}
                             className="bg-red-50 hover:bg-red-100 text-red-600 px-2 py-1 rounded text-[10px] font-bold transition cursor-pointer"
                           >
                             🗑️ حذف

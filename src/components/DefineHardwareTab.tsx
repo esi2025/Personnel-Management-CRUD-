@@ -313,9 +313,7 @@ export default function DefineHardwareTab({
                       <span className="text-[10px] text-slate-400">ثبت در پایگاه داده مرکزی کارگاه</span>
                       <button
                         onClick={async () => {
-                          if (confirm(`آیا از حذف دسته‌بندی "${cat.name}" اطمینان کامل دارید؟`)) {
-                            await onDeleteCategory(cat.id);
-                          }
+                          await onDeleteCategory(cat.id);
                         }}
                         className="text-red-600 hover:text-red-800 text-[10px] font-bold transition cursor-pointer px-2 py-1 rounded bg-red-50 hover:bg-red-100"
                       >
