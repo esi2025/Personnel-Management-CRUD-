@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Case, Monitor, Printer, Mouse, Keyboard, Radio, Personnel } from '../types';
+import { Case, Monitor, Printer, Mouse, Keyboard, Radio, Personnel, Cctv } from '../types';
 
 interface BulkEditTabProps {
   cases: Case[];
@@ -8,6 +8,9 @@ interface BulkEditTabProps {
   mice: Mouse[];
   keyboards: Keyboard[];
   radios: Radio[];
+  cctvs?: Cctv[];
+  customEquipment?: any[];
+  equipmentCategories?: any;
   personnel: Personnel[];
   onSaveBulkEdit: (updates: { type: string, code: string, fields: any }[]) => Promise<{ success: boolean; updatedCount: number }>;
 }
@@ -19,6 +22,9 @@ export function BulkEditTab({
   mice,
   keyboards,
   radios,
+  cctvs = [],
+  customEquipment = [],
+  equipmentCategories,
   personnel,
   onSaveBulkEdit
 }: BulkEditTabProps) {
@@ -130,6 +136,18 @@ export function BulkEditTab({
         return;
       }
 
+      const cctvItem = (cctvs || []).find((c) => (c.code || '').toUpperCase() === code);
+      if (cctvItem) {
+        found.push({ type: 'cctv', code, original: cctvItem });
+        return;
+      }
+
+      const customItem = (customEquipment || []).find((c) => (c.code || '').toUpperCase() === code);
+      if (customItem) {
+        found.push({ type: customItem.categorySlug || 'custom', code, original: customItem });
+        return;
+      }
+
       notFound.push(code);
     });
 
@@ -138,8 +156,12 @@ export function BulkEditTab({
     setIsFetched(true);
   };
 
-  // Helper to translate code to Persian label
+  // Helper to translate code to Persian label using equipmentCategories as single source of truth
   const getCategoryLabel = (type: string) => {
+    if (equipmentCategories?.get) {
+      const cat = equipmentCategories.get(type);
+      if (cat) return `${cat.icon} ${cat.shortName || cat.name}`;
+    }
     switch (type) {
       case 'case': return '🖥️ کیس';
       case 'monitor': return '📺 مانیتور';
@@ -147,6 +169,7 @@ export function BulkEditTab({
       case 'mouse': return '🖱️ ماوس';
       case 'keyboard': return '⌨️ کیبورد';
       case 'radio': return '📻 بی‌سیم';
+      case 'cctv': return '📹 دوربین مداربسته';
       default: return 'سایر';
     }
   };
@@ -518,19 +541,21 @@ export function BulkEditTab({
                 {/* Subcategory split counts */}
                 <div className="text-[11px] space-y-1.5 bg-white dark:bg-slate-950 p-3 rounded-lg border border-slate-200/60 dark:border-slate-800/80">
                   <span className="font-black text-slate-600 dark:text-slate-400 block pb-1 border-b text-[10px] mb-1">تفکیک اقلام بارگذاری شده:</span>
-                  {[
-                    { type: 'case', name: 'کیس‌های کامپیوتر', color: 'text-blue-600' },
-                    { type: 'monitor', name: 'مانیتورهای کارگاه', color: 'text-indigo-600' },
-                    { type: 'printer', name: 'چاپگرهای مستقر', color: 'text-purple-600' },
-                    { type: 'mouse', name: 'ماوس انبار سخت‌افزار', color: 'text-teal-600' },
-                    { type: 'keyboard', name: 'کیبوردهای ساماندهی', color: 'text-rose-600' },
-                    { type: 'radio', name: 'بی‌سیم‌های کارگاهی دستی', color: 'text-amber-600' }
-                  ].map((cat) => {
-                    const count = matchedItems.filter(i => i.type === cat.type).length;
+                  {(equipmentCategories?.list || [
+                    { id: 'case', name: 'کیس‌های کامپیوتر', color: 'text-blue-600' },
+                    { id: 'monitor', name: 'مانیتورهای کارگاه', color: 'text-indigo-600' },
+                    { id: 'printer', name: 'چاپگرهای مستقر', color: 'text-purple-600' },
+                    { id: 'mouse', name: 'ماوس انبار سخت‌افزار', color: 'text-teal-600' },
+                    { id: 'keyboard', name: 'کیبوردهای ساماندهی', color: 'text-rose-600' },
+                    { id: 'radio', name: 'بی‌سیم‌های کارگاهی دستی', color: 'text-amber-600' },
+                    { id: 'cctv', name: 'دوربین‌های مداربسته', color: 'text-pink-600' }
+                  ]).map((cat: any) => {
+                    const catId = cat.id || cat.type;
+                    const count = matchedItems.filter(i => i.type === catId).length;
                     if (count === 0) return null;
                     return (
-                      <div key={cat.type} className="flex justify-between items-center text-xs">
-                        <span className="font-bold">{getCategoryLabel(cat.type)}:</span>
+                      <div key={catId} className="flex justify-between items-center text-xs">
+                        <span className="font-bold">{getCategoryLabel(catId)}:</span>
                         <span className="font-mono bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded font-black text-slate-700 dark:text-slate-200">
                           {count} عدد
                         </span>

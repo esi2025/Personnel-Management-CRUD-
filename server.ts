@@ -1407,61 +1407,110 @@ async function startServer() {
     // Process each type
     for (const [type, typeItems] of Object.entries(itemsByType)) {
       const fileName = fileMap[type];
-      if (!fileName) continue;
+      if (fileName) {
+        const dbList = readDb(fileName);
 
-      const dbList = readDb(fileName);
+        for (const rawItem of typeItems) {
+          const trimmedCode = String(rawItem.code).trim().toUpperCase();
+          if (!trimmedCode) continue;
 
-      for (const rawItem of typeItems) {
-        const trimmedCode = String(rawItem.code).trim().toUpperCase();
-        if (!trimmedCode) continue;
+          // Check duplicate
+          const exists = dbList.some((x: any) => String(x.code).toUpperCase() === trimmedCode);
+          if (exists) {
+            skipped.push(trimmedCode);
+            continue;
+          }
 
-        // Check duplicate
-        const exists = dbList.some((x: any) => String(x.code).toUpperCase() === trimmedCode);
-        if (exists) {
-          skipped.push(trimmedCode);
-          continue;
+          // Build item object
+          let itemObj: any = {
+            code: trimmedCode,
+            assignedTo: null,
+            status: rawItem.status || "working",
+            description: rawItem.description?.trim() || "ایمپورت گروهی به انبار"
+          };
+
+          if (type === "case") {
+            itemObj = {
+              ...itemObj,
+              motherboard: rawItem.motherboard?.trim() || "Gigabyte",
+              cpu: rawItem.cpu?.trim() || "Intel Core i5",
+              vga: rawItem.vga?.trim() || "Onboard",
+              hdd1: rawItem.hdd1?.trim() || "256GB SSD",
+              hdd2: rawItem.hdd2?.trim() || "1TB HDD",
+              ramType: rawItem.ramType || "DDR4",
+              ramQty: rawItem.ramQty || "8GB",
+              power: rawItem.power?.trim() || "Green 400W"
+            };
+          } else if (type === "radio") {
+            itemObj = {
+              ...itemObj,
+              model: rawItem.model?.trim() || "Motorola GP338",
+              frequencyRange: rawItem.frequencyRange?.trim() || "UHF",
+              ipRating: rawItem.ipRating?.trim() || "IP54"
+            };
+          } else if (type === "cctv") {
+            itemObj = {
+              ...itemObj,
+              brand: rawItem.brand?.trim() || "سایر",
+              model: rawItem.model?.trim() || "سایر",
+              location: rawItem.location?.trim() || "کارگاه بوشهر",
+              accessLink: rawItem.accessLink?.trim() || ""
+            };
+          } else {
+            // monitor, printer, mouse, keyboard
+            itemObj = {
+              ...itemObj,
+              model: rawItem.model?.trim() || "سایر"
+            };
+          }
+
+          dbList.push(itemObj);
+          totalSaved++;
         }
 
-        // Build item object
-        let itemObj: any = {
-          code: trimmedCode,
-          assignedTo: null,
-          status: rawItem.status || "working",
-          description: rawItem.description?.trim() || "ایمپورت گروهی به انبار"
-        };
+        writeDb(fileName, dbList);
+      } else {
+        // Check if type matches a custom category
+        const customCategories = readDb("custom_categories.json");
+        const matchedCategory = customCategories.find((c: any) => 
+          c.id === type || 
+          `custom_${c.id}` === type || 
+          (c.id && c.id.replace(/^custom_/, '') === String(type).replace(/^custom_/, ''))
+        );
 
-        if (type === "case") {
-          itemObj = {
-            ...itemObj,
-            motherboard: rawItem.motherboard?.trim() || "Gigabyte",
-            cpu: rawItem.cpu?.trim() || "Intel Core i5",
-            vga: rawItem.vga?.trim() || "Onboard",
-            hdd1: rawItem.hdd1?.trim() || "256GB SSD",
-            hdd2: rawItem.hdd2?.trim() || "1TB HDD",
-            ramType: rawItem.ramType || "DDR4",
-            ramQty: rawItem.ramQty || "8GB",
-            power: rawItem.power?.trim() || "Green 400W"
-          };
-        } else if (type === "radio") {
-          itemObj = {
-            ...itemObj,
-            model: rawItem.model?.trim() || "Motorola GP338",
-            frequencyRange: rawItem.frequencyRange?.trim() || "UHF",
-            ipRating: rawItem.ipRating?.trim() || "IP54"
-          };
-        } else {
-          // monitor, printer, mouse, keyboard
-          itemObj = {
-            ...itemObj,
-            model: rawItem.model?.trim() || "سایر"
-          };
+        if (matchedCategory) {
+          const customEquips = readDb("custom_equipment.json");
+
+          for (const rawItem of typeItems) {
+            const trimmedCode = String(rawItem.code).trim().toUpperCase();
+            if (!trimmedCode) continue;
+
+            // Check duplicate
+            const exists = customEquips.some((x: any) => String(x.code).toUpperCase() === trimmedCode);
+            if (exists) {
+              skipped.push(trimmedCode);
+              continue;
+            }
+
+            const itemObj: any = {
+              id: `eq_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+              categorySlug: matchedCategory.id,
+              code: trimmedCode,
+              assignedTo: null,
+              status: rawItem.status || "working",
+              location: rawItem.location || "کارگاه بوشهر",
+              lastServiced: rawItem.lastServiced || "",
+              description: rawItem.description?.trim() || "ایمپورت گروهی به انبار",
+              ...rawItem
+            };
+
+            customEquips.push(itemObj);
+            totalSaved++;
+          }
+
+          writeDb("custom_equipment.json", customEquips);
         }
-
-        dbList.push(itemObj);
-        totalSaved++;
       }
-
-      writeDb(fileName, dbList);
     }
 
     if (totalSaved > 0) {
@@ -1552,7 +1601,18 @@ async function startServer() {
     const opName = (req.headers["x-operator-name"] as string) || "سیستم";
     const clientIp = getClientIp(req);
 
-    if (type === "personnel") {
+    // Normalize type string
+    const rawType = String(type).trim();
+    let targetType = rawType.toLowerCase();
+    if (targetType === 'cases') targetType = 'case';
+    else if (targetType === 'monitors') targetType = 'monitor';
+    else if (targetType === 'printers') targetType = 'printer';
+    else if (targetType === 'mice') targetType = 'mouse';
+    else if (targetType === 'keyboards') targetType = 'keyboard';
+    else if (targetType === 'radios') targetType = 'radio';
+    else if (targetType === 'cctvs') targetType = 'cctv';
+
+    if (rawType === "personnel") {
       const personnel = readDb("personnel.json");
       const idx = personnel.findIndex((p: any) => 
         (p.id && String(p.id).trim() === trimmedId) || 
@@ -1596,7 +1656,7 @@ async function startServer() {
         const assignments = readDb("assignments.json");
         let assChanged = false;
         assignments.forEach((ass: any) => {
-          if (ass.personnelCode && String(ass.personnelCode).trim().toLowerCase() === String(codeToClear).trim().toLowerCase() && ass.endDate === null) {
+          if (ass.personnelCode && String(ass.personnelCode).trim().toLowerCase() === String(codeToClear).trim().toLowerCase() && (!ass.endDate || ass.endDate === null || ass.endDate === '')) {
             ass.endDate = dateStr;
             assChanged = true;
           }
@@ -1619,8 +1679,8 @@ async function startServer() {
       cctv: { file: "cctvs.json", label: "دوربین مداربسته" }
     };
 
-    if (standardEquipFiles[type]) {
-      const { file, label } = standardEquipFiles[type];
+    if (standardEquipFiles[targetType]) {
+      const { file, label } = standardEquipFiles[targetType];
       const items = readDb(file);
       const idx = items.findIndex((item: any) => 
         (item.code && String(item.code).trim().toLowerCase() === trimmedId.toLowerCase()) ||
@@ -1640,8 +1700,8 @@ async function startServer() {
       let assChanged = false;
       assignments.forEach((ass: any) => {
         if ((String(ass.equipmentCode).trim().toLowerCase() === String(equipCode).trim().toLowerCase() || String(ass.equipmentCode).trim().toLowerCase() === trimmedId.toLowerCase()) && 
-            ass.equipmentType === type && 
-            ass.endDate === null) {
+            ass.equipmentType === targetType && 
+            (!ass.endDate || ass.endDate === null || ass.endDate === '')) {
           ass.endDate = dateStr;
           assChanged = true;
         }
@@ -1660,11 +1720,11 @@ async function startServer() {
       });
       if (repChanged) writeDb("repairs.json", repairs);
 
-      addAuditLog(opUser, opName, clientIp, "delete", type, equipCode, `حذف دائم دارایی ${label} با کد اموال ${equipCode}`);
-      return res.json({ success: true, message: `${label} با کد اموال ${equipCode} با موفقیت حذف گردید.` });
+      addAuditLog(opUser, opName, clientIp, "delete", targetType, equipCode, `حذف کامل و دائم دارایی ${label} با کد اموال ${equipCode}`);
+      return res.json({ success: true, message: `${label} با کد اموال ${equipCode} با موفقیت و به طور کامل از سیستم حذف گردید.` });
     }
 
-    if (type === "catalog") {
+    if (rawType === "catalog" || targetType === "catalog") {
       const catalog = readDb("parts_catalog.json");
       const idx = catalog.findIndex((c: any) => 
         (c.id && String(c.id).trim() === trimmedId) || 
@@ -1680,7 +1740,7 @@ async function startServer() {
       return res.json({ success: true, message: "قطعه مرجع با موفقیت حذف گردید." });
     }
 
-    if (type === "custom_category") {
+    if (rawType === "custom_category" || targetType === "custom_category") {
       const categories = readDb("custom_categories.json");
       const customEquips = readDb("custom_equipment.json");
       const rawTrimmedId = trimmedId.replace(/^custom_/, '');
@@ -1707,17 +1767,27 @@ async function startServer() {
       return res.json({ success: true, message: "دسته‌بندی با موفقیت حذف شد." });
     }
 
-    // Custom Equipment (by category slug or 'custom_equipment')
+    // Custom Equipment (by category slug or 'custom_equipment' or cat_id)
     const customCategoriesCheck = readDb("custom_categories.json");
-    if (type === "custom_equipment" || customCategoriesCheck.some((c: any) => c.id === type || c.slug === type)) {
+    const matchedCategory = customCategoriesCheck.find((c: any) => 
+      c.id === rawType || 
+      c.id === targetType || 
+      `custom_${c.id}` === rawType || 
+      `custom_${c.id}` === targetType || 
+      (c.id && c.id.replace(/^custom_/, '') === rawType.replace(/^custom_/, '')) ||
+      c.slug === rawType
+    );
+
+    if (rawType === "custom_equipment" || targetType === "custom_equipment" || matchedCategory) {
       const customEquips = readDb("custom_equipment.json");
       const idx = customEquips.findIndex((e: any) => 
         (e.id && String(e.id).trim() === trimmedId) || 
         (e.code && String(e.code).trim().toLowerCase() === trimmedId.toLowerCase())
       );
-      if (idx === -1) return res.status(404).json({ error: "تجهیز سفارشی یافت نشد." });
+      if (idx === -1) return res.status(404).json({ error: "تجهیز سفارشی مدنظر در سامانه یافت نشد." });
       
-      const equipCode = customEquips[idx].code || trimmedId;
+      const deletedItem = customEquips[idx];
+      const equipCode = deletedItem.code || trimmedId;
       customEquips.splice(idx, 1);
       writeDb("custom_equipment.json", customEquips);
 
@@ -1726,15 +1796,28 @@ async function startServer() {
       let assChanged = false;
       assignments.forEach((ass: any) => {
         if ((String(ass.equipmentCode).trim().toLowerCase() === String(equipCode).trim().toLowerCase() || String(ass.equipmentCode).trim().toLowerCase() === trimmedId.toLowerCase()) && 
-            ass.endDate === null) {
+            (!ass.endDate || ass.endDate === null || ass.endDate === '')) {
           ass.endDate = dateStr;
           assChanged = true;
         }
       });
       if (assChanged) writeDb("assignments.json", assignments);
 
-      addAuditLog(opUser, opName, clientIp, "delete", type, equipCode, `حذف تجهیز سفارشی با کد اموال ${equipCode}`);
-      return res.json({ success: true, message: "تجهیز سفارشی با موفقیت حذف گردید." });
+      // Archive any active repairs for this custom equipment
+      const repairs = readDb("repairs.json");
+      let repChanged = false;
+      repairs.forEach((rep: any) => {
+        if (rep.equipmentCode && String(rep.equipmentCode).trim().toLowerCase() === String(equipCode).trim().toLowerCase() && rep.status !== 'completed' && rep.status !== 'scrapped') {
+          rep.status = 'scrapped';
+          rep.actionTaken = (rep.actionTaken ? rep.actionTaken + ' | ' : '') + `تجهیز در تاریخ ${dateStr} از سیستم حذف گردید.`;
+          repChanged = true;
+        }
+      });
+      if (repChanged) writeDb("repairs.json", repairs);
+
+      const catLabel = matchedCategory ? ` «${matchedCategory.name}»` : '';
+      addAuditLog(opUser, opName, clientIp, "delete", matchedCategory ? matchedCategory.id : "custom_equipment", equipCode, `حذف کامل تجهیز سفارشی${catLabel} با کد اموال ${equipCode}`);
+      return res.json({ success: true, message: `تجهیز سفارشی${catLabel} با کد اموال ${equipCode} با موفقیت و به طور کامل از سامانه حذف گردید.` });
     }
 
     return res.status(400).json({ error: `نوع قلم «${type}» جهت حذف در سیستم پشتیبانی نمی‌شود.` });

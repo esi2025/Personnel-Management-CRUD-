@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import PersonnelTab from './components/PersonnelTab';
 import { CasesSubTab, MonitorsSubTab, PrintersSubTab, MiceSubTab, KeyboardsSubTab, RadiosSubTab, CctvsSubTab } from './components/EquipmentTabs';
@@ -22,6 +22,7 @@ import { BulkEditTab } from './components/BulkEditTab';
 import AppearanceTab from './components/AppearanceTab';
 import { Personnel, Case, Monitor, Printer, Assignment, Mouse, Keyboard, CatalogItem, Repair, Radio, ThemeSettings, Cctv } from './types';
 import { getPersianDateString } from './utils/date';
+import { createEquipmentCategories, SharedEquipmentCategories } from './utils/categories';
 
 export interface BackupData {
   personnel: Personnel[];
@@ -632,6 +633,11 @@ export default function App() {
   const [customCategories, setCustomCategories] = useState<any[]>([]);
   const [customEquipment, setCustomEquipment] = useState<any[]>([]);
 
+  // Shared Equipment Categories: Single Source of Truth including standard & custom types
+  const equipmentCategories = useMemo<SharedEquipmentCategories>(() => {
+    return createEquipmentCategories(customCategories);
+  }, [customCategories]);
+
   // Auto-expand navigation categories if active tab is in the collapsed list
   useEffect(() => {
     // Column 1
@@ -641,13 +647,8 @@ export default function App() {
     }
 
     // Column 2
-    const col2StandardIds = ['cases-tab', 'monitors-tab', 'printers-tab', 'keyboards-tab', 'mice-tab', 'radios-tab', 'cctvs-tab'];
-    const isCustomCat = activeTab?.startsWith('custom_');
-    const col2Index = [
-      ...col2StandardIds,
-      ...customCategories.map(cat => cat.id.startsWith('custom_') ? cat.id : `custom_${cat.id}`)
-    ].indexOf(activeTab);
-    if (customCategories.length > 0 || col2Index >= 0 || isCustomCat) {
+    const isEquipmentTab = equipmentCategories.list.some(cat => cat.tabId === activeTab) || activeTab?.startsWith('custom_');
+    if (customCategories.length > 0 || isEquipmentTab) {
       setCol2Expanded(true);
     }
 
@@ -875,60 +876,90 @@ export default function App() {
     items.forEach((rawItem: any) => {
       const type = rawItem.type;
       const dbKey = keyMap[type];
-      if (!dbKey) return;
 
-      db[dbKey] = db[dbKey] || [];
       const trimmedCode = String(rawItem.code).trim().toUpperCase();
       if (!trimmedCode) return;
 
-      const exists = db[dbKey].some((x: any) => String(x.code).toUpperCase() === trimmedCode);
-      if (exists) {
-        skipped.push(trimmedCode);
-        return;
-      }
+      if (dbKey) {
+        db[dbKey] = db[dbKey] || [];
+        const exists = db[dbKey].some((x: any) => String(x.code).toUpperCase() === trimmedCode);
+        if (exists) {
+          skipped.push(trimmedCode);
+          return;
+        }
 
-      let itemObj: any = {
-        code: trimmedCode,
-        assignedTo: null,
-        status: rawItem.status || "working",
-        description: rawItem.description?.trim() || "ایمپورت گروهی به انبار"
-      };
+        let itemObj: any = {
+          code: trimmedCode,
+          assignedTo: null,
+          status: rawItem.status || "working",
+          description: rawItem.description?.trim() || "ایمپورت گروهی به انبار"
+        };
 
-      if (type === 'case') {
-        itemObj = {
-          ...itemObj,
-          motherboard: rawItem.motherboard || "Gigabyte",
-          cpu: rawItem.cpu || "Intel Core i5",
-          vga: rawItem.vga || "Onboard",
-          hdd1: rawItem.hdd1 || "256GB SSD",
-          hdd2: rawItem.hdd2 || "1TB HDD",
-          ramType: rawItem.ramType || "DDR4",
-          ramQty: rawItem.ramQty || "8GB",
-          power: rawItem.power || "Green 400W"
-        };
-      } else if (type === 'radio') {
-        itemObj = {
-          ...itemObj,
-          model: rawItem.model || "Motorola GP338",
-          frequencyRange: rawItem.frequencyRange || "UHF",
-          ipRating: rawItem.ipRating || "IP54"
-        };
-      } else if (type === 'cctv') {
-        itemObj = {
-          ...itemObj,
-          brand: rawItem.brand || "سایر",
-          model: rawItem.model || "سایر",
-          location: rawItem.location || ""
-        };
+        if (type === 'case') {
+          itemObj = {
+            ...itemObj,
+            motherboard: rawItem.motherboard || "Gigabyte",
+            cpu: rawItem.cpu || "Intel Core i5",
+            vga: rawItem.vga || "Onboard",
+            hdd1: rawItem.hdd1 || "256GB SSD",
+            hdd2: rawItem.hdd2 || "1TB HDD",
+            ramType: rawItem.ramType || "DDR4",
+            ramQty: rawItem.ramQty || "8GB",
+            power: rawItem.power || "Green 400W"
+          };
+        } else if (type === 'radio') {
+          itemObj = {
+            ...itemObj,
+            model: rawItem.model || "Motorola GP338",
+            frequencyRange: rawItem.frequencyRange || "UHF",
+            ipRating: rawItem.ipRating || "IP54"
+          };
+        } else if (type === 'cctv') {
+          itemObj = {
+            ...itemObj,
+            brand: rawItem.brand || "سایر",
+            model: rawItem.model || "سایر",
+            location: rawItem.location || ""
+          };
+        } else {
+          itemObj = {
+            ...itemObj,
+            model: rawItem.model || "سایر"
+          };
+        }
+
+        db[dbKey].push(itemObj);
+        savedCount++;
       } else {
-        itemObj = {
-          ...itemObj,
-          model: rawItem.model || "سایر"
-        };
-      }
+        // Custom Category Equipment
+        const customCategoriesCheck = db.customCategories || [];
+        const matched = customCategoriesCheck.find((c: any) => 
+          c.id === type || `custom_${c.id}` === type || c.id === String(type).replace(/^custom_/, '')
+        );
+        if (matched) {
+          db.customEquipment = db.customEquipment || [];
+          const exists = db.customEquipment.some((x: any) => String(x.code).toUpperCase() === trimmedCode);
+          if (exists) {
+            skipped.push(trimmedCode);
+            return;
+          }
 
-      db[dbKey].push(itemObj);
-      savedCount++;
+          const itemObj: any = {
+            id: `eq_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+            categorySlug: matched.id,
+            code: trimmedCode,
+            assignedTo: null,
+            status: rawItem.status || "working",
+            location: rawItem.location || "کارگاه بوشهر",
+            lastServiced: rawItem.lastServiced || "",
+            description: rawItem.description?.trim() || "ایمپورت گروهی به انبار",
+            ...rawItem
+          };
+
+          db.customEquipment.push(itemObj);
+          savedCount++;
+        }
+      }
     });
 
     localStorage.setItem('azarestan_ict_db', JSON.stringify(db));
@@ -939,6 +970,7 @@ export default function App() {
     setKeyboards(db.keyboards || []);
     setRadios(db.radios || []);
     setCctvs(db.cctvs || []);
+    setCustomEquipment(db.customEquipment || []);
 
     return { success: true, savedCount, skipped };
   };
@@ -1396,13 +1428,29 @@ export default function App() {
       }
     }
 
+    let itemLabel = 'سخت‌افزار';
+    if (type === 'personnel') itemLabel = 'پرونده پرسنل';
+    else if (type === 'case') itemLabel = 'کیس کامپیوتر';
+    else if (type === 'monitor') itemLabel = 'مانیتور';
+    else if (type === 'printer') itemLabel = 'چاپگر';
+    else if (type === 'keyboard') itemLabel = 'کیبورد';
+    else if (type === 'mouse') itemLabel = 'ماوس';
+    else if (type === 'radio') itemLabel = 'بی‌سیم دستی';
+    else if (type === 'cctv') itemLabel = 'دوربین مداربسته';
+    else if (type === 'custom_category') itemLabel = 'دسته‌بندی سخت‌افزاری';
+    else if (type === 'catalog') itemLabel = 'قطعه مرجع کاتالوگ';
+    else {
+      const cat = customCategories.find((c: any) => c.id === type || `custom_${c.id}` === type);
+      if (cat) itemLabel = `تجهیز سفارشی «${cat.name}»`;
+    }
+
     const confirmationMsg = type === 'personnel' 
-      ? 'آیا از حذف این پرسنل اطمینان دارید؟ تمامی تجهیزات تحت تصرف وی آزاد شده و به انبار پروژه بازگردانده می‌شوند.'
+      ? `آیا از حذف کامل پرونده پرسنلی «${id}» اطمینان دارید؟ تمامی تجهیزات تحت تصرف وی آزاد شده و به انبار پروژه بازگردانده می‌شوند.`
       : type === 'custom_category'
-      ? 'آیا از حذف این دسته‌بندی سخت‌افزاری اطمینان کامل دارید؟'
+      ? `آیا از حذف کامل این دسته‌بندی سخت‌افزاری اطمینان کامل دارید؟`
       : type === 'catalog'
-      ? 'آیا از حذف این قطعه مرجع از کاتالوگ قطعات اطمینان کامل دارید؟'
-      : 'آیا از حذف این سخت‌افزار از سامانه اطمینان کامل دارید؟';
+      ? `آیا از حذف این قطعه مرجع از کاتالوگ قطعات اطمینان کامل دارید؟`
+      : `آیا از حذف کامل ${itemLabel} با کد اموال «${id}» از سامانه اطمینان کامل دارید؟\n⚠️ توجه: این عملیات غیرقابل بازگشت است و تجهیز به طور کامل از موجودی، تخصیص‌ها و سوابق جاری حذف خواهد شد.`;
 
     if (!window.confirm(confirmationMsg)) return;
 
@@ -1956,48 +2004,72 @@ export default function App() {
         </div>
       </div>
 
-      {/* Dynamic Summary Cards Grid (Request 2) */}
+      {/* Dynamic Summary Cards Grid (Single source of truth) */}
       <div className="no-print grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-4">
-        {[
-          { label: 'کیس‌ها', count: cases.length, icon: '🖥️', active: cases.filter(c => !c.status || c.status === 'working' || c.status === null).length, repair: cases.filter(c => c.status === 'repair').length, color: 'from-blue-500/10 to-blue-600/5 text-blue-600 border-blue-200/60 dark:border-blue-900/40' },
-          { label: 'مانیتورها', count: monitors.length, icon: '📺', active: monitors.filter(m => !m.status || m.status === 'working' || m.status === null).length, repair: monitors.filter(m => m.status === 'repair').length, color: 'from-sky-500/10 to-sky-600/5 text-sky-600 border-sky-200/60 dark:border-sky-900/40' },
-          { label: 'پرینترها', count: printers.length, icon: '🖨️', active: printers.filter(p => !p.status || p.status === 'working' || p.status === null).length, repair: printers.filter(p => p.status === 'repair').length, color: 'from-amber-500/10 to-amber-600/5 text-amber-600 border-amber-200/60 dark:border-amber-900/40' },
-          { label: 'کیبوردها', count: keyboards.length, icon: '⌨️', active: keyboards.filter(k => !k.status || k.status === 'working' || k.status === null).length, repair: keyboards.filter(k => k.status === 'repair').length, color: 'from-purple-500/10 to-purple-600/5 text-purple-600 border-purple-200/60 dark:border-purple-900/40' },
-          { label: 'ماوس‌ها', count: mice.length, icon: '🖱️', active: mice.filter(m => !m.status || m.status === 'working' || m.status === null).length, repair: mice.filter(m => m.status === 'repair').length, color: 'from-indigo-500/10 to-indigo-600/5 text-indigo-600 border-indigo-200/60 dark:border-indigo-900/40' },
-          { label: 'بی‌سیم‌ها', count: radios.length, icon: '📻', active: radios.filter(r => !r.status || r.status === 'working' || r.status === null).length, repair: radios.filter(r => r.status === 'repair').length, color: 'from-teal-500/10 to-teal-600/5 text-teal-600 border-teal-200/60 dark:border-teal-900/40' },
-          { label: 'دوربین‌ها', count: cctvs.length, icon: '📹', active: cctvs.filter(c => !c.status || c.status === 'working' || c.status === null).length, repair: cctvs.filter(c => c.status === 'repair').length, color: 'from-pink-500/10 to-pink-600/5 text-pink-600 border-pink-200/60 dark:border-pink-900/40' },
-          ...customCategories.map(cat => ({
-            label: cat.name,
-            count: customEquipment.filter(e => e.categorySlug === cat.id).length,
-            icon: cat.icon || '⚙️',
-            active: customEquipment.filter(e => e.categorySlug === cat.id && (!e.status || e.status === 'working' || e.status === null)).length,
-            repair: customEquipment.filter(e => e.categorySlug === cat.id && e.status === 'repair').length,
-            color: 'from-slate-500/10 to-slate-600/5 text-slate-600 border-slate-200/60 dark:border-slate-800'
-          }))
-        ].map((card, idx) => (
-          <div 
-            key={idx}
-            className={`bg-gradient-to-br ${card.color} border py-1 px-1.5 rounded-lg flex items-center justify-between shadow-2xs hover:shadow-xs transition-all duration-200 text-xs`}
-            style={{ minHeight: '36px' }}
-          >
-            <div className="flex items-center gap-1 min-w-0">
-              <span className="text-xs shrink-0">{card.icon}</span>
-              <div className="min-w-0 flex flex-col justify-center leading-none">
-                <div className="text-[8px] md:text-[9px] font-black text-slate-500 dark:text-slate-400 truncate leading-none">{card.label}</div>
-                <div className="text-[10px] md:text-xs font-black mt-0.5 font-mono flex items-baseline gap-0.5 leading-none">
-                  <span>{card.count}</span>
-                  <span className="text-[7px] md:text-[8px] text-slate-400 font-sans font-normal">عدد</span>
+        {equipmentCategories.list.map((cat) => {
+          let count = 0;
+          let active = 0;
+          let repair = 0;
+          if (cat.id === 'case') {
+            count = cases.length;
+            active = cases.filter(c => !c.status || c.status === 'working' || c.status === null).length;
+            repair = cases.filter(c => c.status === 'repair').length;
+          } else if (cat.id === 'monitor') {
+            count = monitors.length;
+            active = monitors.filter(m => !m.status || m.status === 'working' || m.status === null).length;
+            repair = monitors.filter(m => m.status === 'repair').length;
+          } else if (cat.id === 'printer') {
+            count = printers.length;
+            active = printers.filter(p => !p.status || p.status === 'working' || p.status === null).length;
+            repair = printers.filter(p => p.status === 'repair').length;
+          } else if (cat.id === 'keyboard') {
+            count = keyboards.length;
+            active = keyboards.filter(k => !k.status || k.status === 'working' || k.status === null).length;
+            repair = keyboards.filter(k => k.status === 'repair').length;
+          } else if (cat.id === 'mouse') {
+            count = mice.length;
+            active = mice.filter(m => !m.status || m.status === 'working' || m.status === null).length;
+            repair = mice.filter(m => m.status === 'repair').length;
+          } else if (cat.id === 'radio') {
+            count = radios.length;
+            active = radios.filter(r => !r.status || r.status === 'working' || r.status === null).length;
+            repair = radios.filter(r => r.status === 'repair').length;
+          } else if (cat.id === 'cctv') {
+            count = cctvs.length;
+            active = cctvs.filter(c => !c.status || c.status === 'working' || c.status === null).length;
+            repair = cctvs.filter(c => c.status === 'repair').length;
+          } else {
+            const list = customEquipment.filter(e => e.categorySlug === cat.id);
+            count = list.length;
+            active = list.filter(e => !e.status || e.status === 'working' || e.status === null).length;
+            repair = list.filter(e => e.status === 'repair').length;
+          }
+
+          return (
+            <div 
+              key={cat.id}
+              className={`bg-gradient-to-br ${cat.color || 'from-slate-500/10 to-slate-600/5 text-slate-600 border-slate-200/60 dark:border-slate-800'} border py-1 px-1.5 rounded-lg flex items-center justify-between shadow-2xs hover:shadow-xs transition-all duration-200 text-xs`}
+              style={{ minHeight: '36px' }}
+            >
+              <div className="flex items-center gap-1 min-w-0">
+                <span className="text-xs shrink-0">{cat.icon}</span>
+                <div className="min-w-0 flex flex-col justify-center leading-none">
+                  <div className="text-[8px] md:text-[9px] font-black text-slate-500 dark:text-slate-400 truncate leading-none">{cat.shortName || cat.name}</div>
+                  <div className="text-[10px] md:text-xs font-black mt-0.5 font-mono flex items-baseline gap-0.5 leading-none">
+                    <span>{count}</span>
+                    <span className="text-[7px] md:text-[8px] text-slate-400 font-sans font-normal">عدد</span>
+                  </div>
                 </div>
               </div>
+              <div className="flex flex-col items-end gap-0.5 shrink-0 select-none">
+                <span className="text-[7px] md:text-[8px] font-black bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-1 py-0.5 rounded border border-emerald-500/10 leading-none" title="دستگاه‌های سالم">سالم: {active}</span>
+                {repair > 0 && (
+                  <span className="text-[7px] md:text-[8px] font-black bg-rose-500/10 text-rose-700 dark:text-rose-400 px-1 py-0.5 rounded border border-rose-500/10 leading-none animate-pulse" title="دستگاه‌های در حال تعمیر">تعمیر: {repair}</span>
+                )}
+              </div>
             </div>
-            <div className="flex flex-col items-end gap-0.5 shrink-0 select-none">
-              <span className="text-[7px] md:text-[8px] font-black bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-1 py-0.5 rounded border border-emerald-500/10 leading-none" title="دستگاه‌های سالم">سالم: {card.active}</span>
-              {card.repair > 0 && (
-                <span className="text-[7px] md:text-[8px] font-black bg-rose-500/10 text-rose-700 dark:text-rose-400 px-1 py-0.5 rounded border border-rose-500/10 leading-none animate-pulse" title="دستگاه‌های در حال تعمیر">تعمیر: {card.repair}</span>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* 3. Navigation tabs bar (hides in print) */}
@@ -2031,20 +2103,12 @@ export default function App() {
             <span>
               {
                 (() => {
-                  if (activeTab?.startsWith('custom_')) {
-                    const catId = activeTab.replace('custom_', '');
-                    const cat = customCategories.find(c => c.id === catId);
-                    return cat ? `${cat.icon || '⚙️'} ${cat.name}` : '—';
+                  const cat = equipmentCategories.get(activeTab);
+                  if (cat) {
+                    return `${cat.icon || '⚙️'} ${cat.name}`;
                   }
                   return [
                     { id: 'personnel-tab', label: '👥 لیست پرسنل' },
-                    { id: 'cases-tab', label: '🖥️ کیس' },
-                    { id: 'monitors-tab', label: '📺 مانیتور' },
-                    { id: 'printers-tab', label: '🖨️ پرینتر' },
-                    { id: 'mice-tab', label: '🖱️ ماوس' },
-                    { id: 'keyboards-tab', label: '⌨️ کیبورد' },
-                    { id: 'radios-tab', label: '📻 بی‌سیم دستی' },
-                    { id: 'cctvs-tab', label: '📹 دوربین‌های مداربسته' },
                     { id: 'catalog-tab', label: '🛠️ قطعات مرجع' },
                     { id: 'transfer-tab', label: '🔄 جابجایی هوشمند' },
                     { id: 'history-tab', label: '📜 تاریخچه لجستیک' },
@@ -2132,21 +2196,12 @@ export default function App() {
               darkMode ? 'bg-slate-950/40 border border-slate-800/60' : 'bg-slate-50 border border-slate-200/50'
             }`}>
               {(() => {
-                const col2Items = [
-                  { id: 'cases-tab', label: 'کیس', icon: '🖥️' },
-                  { id: 'monitors-tab', label: 'مانیتور', icon: '📺' },
-                  { id: 'printers-tab', label: 'پرینتر', icon: '🖨️' },
-                  { id: 'keyboards-tab', label: 'کیبورد', icon: '⌨️' },
-                  { id: 'mice-tab', label: 'ماوس', icon: '🖱️' },
-                  { id: 'radios-tab', label: 'بی‌سیم', icon: '📻' },
-                  { id: 'cctvs-tab', label: 'دوربین مداربسته', icon: '📹' },
-                  ...customCategories.map(cat => ({
-                    id: cat.id.startsWith('custom_') ? cat.id : `custom_${cat.id}`,
-                    label: cat.name,
-                    icon: cat.icon || '⚙️',
-                    isCustom: true
-                  }))
-                ];
+                const col2Items = equipmentCategories.list.map(cat => ({
+                  id: cat.tabId,
+                  label: cat.shortName || cat.name,
+                  icon: cat.icon || '⚙️',
+                  isCustom: cat.isCustom
+                }));
 
                 const visibleItems = col2Expanded ? col2Items : col2Items.slice(0, 3);
                 return (
@@ -2450,6 +2505,9 @@ export default function App() {
               mice={mice}
               keyboards={keyboards}
               radios={radios}
+              cctvs={cctvs}
+              customEquipment={customEquipment}
+              equipmentCategories={equipmentCategories}
               personnel={personnel}
               onSaveBulkEdit={handleSaveBulkEdit}
             />
@@ -2595,6 +2653,9 @@ export default function App() {
               mice={mice}
               keyboards={keyboards}
               radios={radios}
+              cctvs={cctvs}
+              customEquipment={customEquipment}
+              equipmentCategories={equipmentCategories}
               personnel={personnel}
             />
           )}
@@ -2603,6 +2664,7 @@ export default function App() {
             <AddNewTab 
               onSave={handleSaveItem} 
               onSaveBulk={handleSaveBulkItems} 
+              equipmentCategories={equipmentCategories}
               customCategories={customCategories}
             />
           )}
@@ -2616,6 +2678,7 @@ export default function App() {
           type={editType} 
           onClose={() => { setEditItem(null); setEditType(null); }}
           onSave={handleSaveItem}
+          onDelete={handleDeleteItem}
         />
       )}
 

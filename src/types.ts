@@ -190,3 +190,5 @@ export interface ThemeSettings {
   lightButtonTextColor?: string;
   lightContainerBackground?: string;
 }
+
+export type { EquipmentCategory, CategoryField, SharedEquipmentCategories, EquipmentCategoriesState } from './utils/categories';

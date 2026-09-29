@@ -1,12 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { EquipmentCategory, SharedEquipmentCategories, createEquipmentCategories, findCategory } from '../utils/categories';
 
 interface AddNewTabProps {
   onSave: (type: any, data: any) => Promise<boolean>;
   onSaveBulk: (items: any[]) => Promise<{ success: boolean; savedCount: number; skipped: string[] }>;
+  equipmentCategories?: SharedEquipmentCategories | EquipmentCategory[];
   customCategories?: any[];
 }
 
-export default function AddNewTab({ onSave, onSaveBulk, customCategories = [] }: AddNewTabProps) {
+export default function AddNewTab({ 
+  onSave, 
+  onSaveBulk, 
+  equipmentCategories, 
+  customCategories = [] 
+}: AddNewTabProps) {
+  // Shared equipment categories: single source of truth for standard and custom types
+  const categories: SharedEquipmentCategories = useMemo(() => {
+    if (equipmentCategories && (equipmentCategories as any).get && (equipmentCategories as any).list) {
+      return equipmentCategories as SharedEquipmentCategories;
+    }
+    if (Array.isArray(equipmentCategories) && equipmentCategories.length > 0) {
+      return createEquipmentCategories(equipmentCategories.filter(c => c.isCustom));
+    }
+    return createEquipmentCategories(customCategories);
+  }, [equipmentCategories, customCategories]);
+
   const [activeType, setActiveType] = useState<string>('personnel');
   const [isBulkMode, setIsBulkMode] = useState(false);
 
@@ -72,11 +90,11 @@ export default function AddNewTab({ onSave, onSaveBulk, customCategories = [] }:
   const [lastServiced, setLastServiced] = useState('');
 
   // --- BULK MODE STATE ---
-  const [bulkType, setBulkType] = useState<'case' | 'monitor' | 'printer' | 'radio'>('case');
+  const [bulkType, setBulkType] = useState<string>('case');
   const [bulkMethod, setBulkMethod] = useState<'sequential' | 'pasted'>('sequential');
 
   // Bulk Sequential Method State
-  const [seqPrefix, setSeqPrefix] = useState('MNT-');
+  const [seqPrefix, setSeqPrefix] = useState('CAS-');
   const [seqStartNum, setSeqStartNum] = useState('1001');
   const [seqCount, setSeqCount] = useState(10);
 
@@ -92,6 +110,23 @@ export default function AddNewTab({ onSave, onSaveBulk, customCategories = [] }:
   const [commonPower, setCommonPower] = useState('Green 400W');
   const [radioFreq, setRadioFreq] = useState('UHF');
   const [radioIp, setRadioIp] = useState('IP54');
+
+  // Bulk CCTV State
+  const [bulkCctvBrand, setBulkCctvBrand] = useState('داهوا (Dahua)');
+  const [bulkCctvModel, setBulkCctvModel] = useState('');
+  const [bulkCctvLocation, setBulkCctvLocation] = useState('کارگاه بوشهر');
+  const [bulkCctvAccessLink, setBulkCctvAccessLink] = useState('');
+
+  // Bulk Custom Category State
+  const [bulkCustomFields, setBulkCustomFields] = useState<Record<string, string>>({});
+  const [bulkCustomLocation, setBulkCustomLocation] = useState('کارگاه بوشهر');
+
+  // Helper to change bulkType and set smart prefix using unified categories
+  const handleSelectBulkType = (type: string) => {
+    setBulkType(type);
+    const prefix = categories.getPrefix ? categories.getPrefix(type) : (findCategory(categories, type)?.defaultPrefix || 'EQ-');
+    setSeqPrefix(prefix);
+  };
 
   // Bulk Pasted Text Method State
   const [pastedText, setPastedText] = useState('');
@@ -205,8 +240,8 @@ export default function AddNewTab({ onSave, onSaveBulk, customCategories = [] }:
       };
     } else {
       // Custom category equipment submission
-      const cat = customCategories.find((c: any) => c.id === activeType);
-      if (cat) {
+      const cat = findCategory(categories, activeType);
+      if (cat && cat.isCustom) {
         if (!customEquipCode.trim()) {
           alert(`کد اموال برای سخت‌افزار «${cat.name}» الزامی است.`);
           return;
@@ -281,11 +316,31 @@ export default function AddNewTab({ onSave, onSaveBulk, customCategories = [] }:
             frequencyRange: radioFreq || 'UHF',
             ipRating: radioIp || 'IP54'
           };
-        } else {
+        } else if (bulkType === 'cctv') {
           itemObj = {
             ...itemObj,
-            model: commonModel || 'سایر'
+            brand: bulkCctvBrand || 'داهوا (Dahua)',
+            model: bulkCctvModel || commonModel || 'سایر',
+            location: bulkCctvLocation || 'کارگاه بوشهر',
+            accessLink: bulkCctvAccessLink || ''
           };
+        } else {
+          const customCat = findCategory(categories, bulkType);
+          if (customCat && customCat.isCustom) {
+            itemObj = {
+              ...itemObj,
+              type: customCat.id,
+              categorySlug: customCat.id,
+              ...bulkCustomFields,
+              location: bulkCustomLocation || 'کارگاه بوشهر'
+            };
+          } else {
+            // monitor, printer, keyboard, mouse, etc.
+            itemObj = {
+              ...itemObj,
+              model: commonModel || 'سایر'
+            };
+          }
         }
 
         itemsToSave.push(itemObj);
@@ -335,11 +390,39 @@ export default function AddNewTab({ onSave, onSaveBulk, customCategories = [] }:
             frequencyRange: parts[2]?.trim() || radioFreq,
             ipRating: parts[3]?.trim() || radioIp
           };
-        } else {
+        } else if (bulkType === 'cctv') {
           itemObj = {
             ...itemObj,
-            model: modelOrSpec || 'سایر'
+            brand: parts[1]?.trim() || bulkCctvBrand || 'سایر',
+            model: parts[2]?.trim() || bulkCctvModel || commonModel || 'سایر',
+            location: parts[3]?.trim() || bulkCctvLocation || 'کارگاه بوشهر',
+            accessLink: parts[4]?.trim() || bulkCctvAccessLink || ''
           };
+        } else {
+          const customCat = findCategory(categories, bulkType);
+          if (customCat && customCat.isCustom) {
+            const parsedCustoms: Record<string, string> = { ...bulkCustomFields };
+            if (customCat.fields && customCat.fields.length > 0) {
+              customCat.fields.forEach((f: any, idx: number) => {
+                if (parts[idx + 1]) {
+                  parsedCustoms[f.key] = parts[idx + 1].trim();
+                }
+              });
+            }
+            itemObj = {
+              ...itemObj,
+              type: customCat.id,
+              categorySlug: customCat.id,
+              ...parsedCustoms,
+              location: bulkCustomLocation || 'کارگاه بوشهر'
+            };
+          } else {
+            // monitor, printer, keyboard, mouse
+            itemObj = {
+              ...itemObj,
+              model: modelOrSpec || 'سایر'
+            };
+          }
         }
 
         itemsToSave.push(itemObj);
@@ -389,12 +472,9 @@ export default function AddNewTab({ onSave, onSaveBulk, customCategories = [] }:
             type="button"
             onClick={() => {
               setIsBulkMode(true);
-              // default to equipment type compatible with database
-              if (activeType === 'personnel' || activeType === 'mouse' || activeType === 'keyboard') {
-                setBulkType('case');
-              } else {
-                setBulkType(activeType as any);
-              }
+              const targetType = activeType === 'personnel' ? 'case' : activeType;
+              setBulkType(targetType);
+              handleSelectBulkType(targetType);
             }}
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
               isBulkMode ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
@@ -411,42 +491,41 @@ export default function AddNewTab({ onSave, onSaveBulk, customCategories = [] }:
           
           {/* Select active type */}
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2">
-            {(['personnel', 'case', 'monitor', 'printer', 'mouse', 'keyboard', 'radio', 'cctv'] as const).map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => { setActiveType(type); }}
-                className={`p-2.5 rounded-lg text-xs font-bold transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
-                  activeType === type 
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10' 
-                    : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100'
-                }`}
-              >
-                {type === 'personnel' && <span>👥 پرسنل</span>}
-                {type === 'case' && <span>🖥️ کیس</span>}
-                {type === 'monitor' && <span>📺 مانیتور</span>}
-                {type === 'printer' && <span>🖨️ پرینتر</span>}
-                {type === 'mouse' && <span>🖱️ ماوس</span>}
-                {type === 'keyboard' && <span>⌨️ کیبورد</span>}
-                {type === 'radio' && <span>📻 بی‌سیم</span>}
-                {type === 'cctv' && <span>🎥 دوربین</span>}
-              </button>
-            ))}
-            {customCategories.map((cat: any) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => { setActiveType(cat.id); }}
-                className={`p-2.5 rounded-lg text-xs font-bold transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
-                  activeType === cat.id 
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/10' 
-                    : 'bg-emerald-50/60 border border-emerald-200 text-emerald-800 hover:bg-emerald-100'
-                }`}
-              >
-                <span className="text-sm">{cat.icon || '⚙️'}</span>
-                <span className="truncate max-w-[85px]">{cat.name}</span>
-              </button>
-            ))}
+            <button
+              type="button"
+              onClick={() => { setActiveType('personnel'); }}
+              className={`p-2.5 rounded-lg text-xs font-bold transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                activeType === 'personnel' 
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10' 
+                  : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <span className="text-sm">👥</span>
+              <span>پرسنل</span>
+            </button>
+            {categories.map((cat) => {
+              const isActive = activeType === cat.id || 
+                (cat.isCustom && (activeType === `custom_${cat.id}` || cat.id === activeType.replace(/^custom_/, '')));
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => { setActiveType(cat.id); }}
+                  className={`p-2.5 rounded-lg text-xs font-bold transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                    isActive 
+                      ? cat.isCustom 
+                        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/10' 
+                        : 'bg-blue-600 text-white shadow-md shadow-blue-500/10' 
+                      : cat.isCustom 
+                        ? 'bg-emerald-50/60 border border-emerald-200 text-emerald-800 hover:bg-emerald-100' 
+                        : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <span className="text-sm">{cat.icon}</span>
+                  <span className="truncate max-w-[85px]">{cat.shortName || cat.name}</span>
+                </button>
+              );
+            })}
           </div>
 
           <div className="border-t border-slate-100/70 pt-4">
@@ -823,8 +902,8 @@ export default function AddNewTab({ onSave, onSaveBulk, customCategories = [] }:
 
             {/* Render Form for Custom Hardware Category */}
             {(() => {
-              const currentCat = customCategories.find((c: any) => c.id === activeType);
-              if (!currentCat) return null;
+              const currentCat = categories.get ? categories.get(activeType) : findCategory(categories, activeType);
+              if (!currentCat || !currentCat.isCustom) return null;
               return (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs md:text-sm animate-fade-in text-right font-sans">
                   <div className="space-y-1.5 sm:col-span-2 bg-emerald-50/70 p-3 rounded-lg border border-emerald-200/80 flex items-center justify-between">
@@ -968,25 +1047,50 @@ export default function AddNewTab({ onSave, onSaveBulk, customCategories = [] }:
             {/* 1. Select Equipment Type to Bulk-Add */}
             <div className="space-y-1.5 ms-0 md:border-l md:border-slate-100 md:pl-4">
               <label className="font-semibold text-slate-700 block">۱. انتخاب نوع تجهیز هدف:</label>
-              <div className="grid grid-cols-2 gap-2 mt-1">
-                {(['case', 'monitor', 'printer', 'radio'] as const).map((type) => (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => { setBulkType(type); }}
-                    className={`p-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer border ${
-                      bulkType === type 
-                        ? 'bg-blue-600 text-white border-blue-600' 
-                        : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    {type === 'case' && <span>🖥️ کیس سیستم</span>}
-                    {type === 'monitor' && <span>📺 مانیتور</span>}
-                    {type === 'printer' && <span>🖨️ پرینتر</span>}
-                    {type === 'radio' && <span>📻 بی‌سیم دستی</span>}
-                  </button>
-                ))}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
+                {(categories.list || categories).map((item) => {
+                  const isSelected = bulkType === item.id || 
+                    bulkType === `custom_${item.id}` || 
+                    item.id === `custom_${bulkType}` ||
+                    (item.id && bulkType && String(bulkType).replace(/^custom_/, '') === String(item.id).replace(/^custom_/, ''));
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => { handleSelectBulkType(item.id); }}
+                      className={`p-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer border ${
+                        isSelected 
+                          ? item.isCustom 
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                            : 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                          : item.isCustom
+                            ? 'bg-emerald-50/70 border-emerald-200 text-emerald-800 hover:bg-emerald-100'
+                            : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span>{item.icon}</span>
+                      <span className="truncate">{item.shortName || item.name}</span>
+                      {item.isCustom && (
+                        <span className={`text-[8px] px-1 py-0.5 rounded font-black ${
+                          isSelected ? 'bg-emerald-800 text-white' : 'bg-emerald-200/80 text-emerald-900'
+                        }`}>
+                          سفارشی
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
+              {(categories.custom?.length ?? customCategories.length) > 0 ? (
+                <div className="text-[11px] text-emerald-700 mt-1 font-semibold flex items-center gap-1">
+                  <span>✨</span>
+                  <span>تعداد {categories.custom?.length ?? customCategories.length} سخت‌افزار سفارشی تعریف‌شده نیز در این بخش جهت ایمپورت گروهی در دسترس است.</span>
+                </div>
+              ) : (
+                <div className="text-[11px] text-slate-400 mt-1">
+                  💡 با تعریف هر سخت‌افزار جدید در زبانه «تعریف سخت افزار جدید»، آن دسته نیز بلافاصله در گزینه‌های فوق قرار خواهد گرفت.
+                </div>
+              )}
             </div>
 
             {/* 2. Select Method */}
@@ -1180,16 +1284,103 @@ export default function AddNewTab({ onSave, onSaveBulk, customCategories = [] }:
                     />
                   </div>
                 </div>
+              ) : bulkType === 'cctv' ? (
+                /* Specs for CCTV Camera */
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="space-y-1">
+                    <label className="text-slate-600 font-semibold">برند دوربین مداربسته:</label>
+                    <input
+                      type="text" value={bulkCctvBrand} onChange={(e) => setBulkCctvBrand(e.target.value)}
+                      placeholder="مثال: داهوا (Dahua) یا هایک‌ویژن"
+                      className="w-full text-right p-2 bg-white border border-slate-200 rounded"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-slate-600 font-semibold">مدل دوربین مداربسته:</label>
+                    <input
+                      type="text" value={bulkCctvModel} onChange={(e) => setBulkCctvModel(e.target.value)}
+                      placeholder="مثال: DH-IPC-HFW1230S"
+                      className="w-full text-right p-2 bg-white border border-slate-200 rounded"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-slate-600 font-semibold">موقعیت استقرار فیزیکی پیش‌فرض:</label>
+                    <input
+                      type="text" value={bulkCctvLocation} onChange={(e) => setBulkCctvLocation(e.target.value)}
+                      placeholder="مثال: محوطه کارگاه بوشهر"
+                      className="w-full text-right p-2 bg-white border border-slate-200 rounded"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-slate-600 font-semibold">لینک وب دسترسی (اختیاری):</label>
+                    <input
+                      type="text" value={bulkCctvAccessLink} onChange={(e) => setBulkCctvAccessLink(e.target.value)}
+                      placeholder="مثال: http://192.168.1.100"
+                      className="w-full text-right p-2 bg-white border border-slate-200 rounded font-mono"
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
+              ) : (categories.get ? categories.get(bulkType)?.isCustom : categories.some((c: any) => c.id === bulkType && c.isCustom)) ? (
+                /* Specs for Custom Hardware Category */
+                (() => {
+                  const currentCat = categories.get ? categories.get(bulkType) : findCategory(categories, bulkType);
+                  if (!currentCat) return null;
+                  return (
+                    <div className="space-y-3 text-xs">
+                      <div className="flex items-center gap-2 p-2 bg-emerald-50 rounded-lg border border-emerald-200 text-emerald-900 font-bold">
+                        <span>{currentCat?.icon || '⚙️'}</span>
+                        <span>تنظیم پارامترهای مشترک برای دسته سخت‌افزاری «{currentCat?.name}»</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-slate-600 font-semibold">موقعیت استقرار فیزیکی پیش‌فرض:</label>
+                          <input
+                            type="text" value={bulkCustomLocation} onChange={(e) => setBulkCustomLocation(e.target.value)}
+                            placeholder="مثال: کارگاه بوشهر"
+                            className="w-full text-right p-2 bg-white border border-slate-200 rounded"
+                          />
+                        </div>
+                        {currentCat?.fields && currentCat.fields.map((f: any) => (
+                          <div key={f.key} className="space-y-1">
+                            <label className="text-slate-600 font-semibold">{f.name}:</label>
+                            <input
+                              type={f.type === 'number' ? 'number' : 'text'}
+                              value={bulkCustomFields[f.key] || ''}
+                              onChange={(e) => setBulkCustomFields({ ...bulkCustomFields, [f.key]: e.target.value })}
+                              placeholder={`مقدار مشترک برای ${f.name}...`}
+                              className="w-full text-right p-2 bg-white border border-slate-200 rounded"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()
               ) : (
-                /* Specs for Monitor / Printer */
+                /* Specs for Monitor / Printer / Keyboard / Mouse */
                 <div className="space-y-1.5 text-xs">
-                  <label className="text-slate-600 font-semibold">مدل و برند مشترک دستگاه:</label>
+                  <label className="text-slate-600 font-semibold">
+                    {bulkType === 'keyboard' 
+                      ? 'مدل و مارک کیبورد:' 
+                      : bulkType === 'mouse' 
+                      ? 'مدل و مارک ماوس:' 
+                      : 'مدل و برند مشترک دستگاه:'}
+                  </label>
                   <input
                     type="text"
                     required={bulkMethod === 'sequential'}
                     value={commonModel}
                     onChange={(e) => setCommonModel(e.target.value)}
-                    placeholder={bulkType === 'monitor' ? 'مثال: LG 24MK600-H' : 'مثال: HP LaserJet Pro M402dn'}
+                    placeholder={
+                      bulkType === 'monitor' 
+                        ? 'مثال: LG 24MK600-H' 
+                        : bulkType === 'printer' 
+                        ? 'مثال: HP LaserJet Pro M402dn' 
+                        : bulkType === 'keyboard' 
+                        ? 'مثال: فراسو FCR-8900 USB' 
+                        : 'مثال: لاجیتک B100 USB'
+                    }
                     className="w-full text-right p-2 bg-white border border-slate-200 rounded"
                   />
                   {bulkMethod === 'pasted' && (

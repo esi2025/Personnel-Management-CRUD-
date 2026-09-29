@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Printer, Search, CheckSquare, Square, RefreshCcw, Minus, Plus, Settings } from 'lucide-react';
-import { Case, Monitor, Printer as PrinterType, Mouse, Keyboard, Personnel, Radio } from '../types';
+import { Case, Monitor, Printer as PrinterType, Mouse, Keyboard, Personnel, Radio, Cctv } from '../types';
 
 interface BulkQRTabProps {
   cases: Case[];
@@ -10,6 +10,9 @@ interface BulkQRTabProps {
   mice: Mouse[];
   keyboards: Keyboard[];
   radios?: Radio[];
+  cctvs?: Cctv[];
+  customEquipment?: any[];
+  equipmentCategories?: any;
   personnel: Personnel[];
 }
 
@@ -24,7 +27,18 @@ interface PrintableItem {
   assignedToCode: string;
 }
 
-export default function BulkQRTab({ cases, monitors, printers, mice, keyboards, radios = [], personnel }: BulkQRTabProps) {
+export default function BulkQRTab({ 
+  cases, 
+  monitors, 
+  printers, 
+  mice, 
+  keyboards, 
+  radios = [], 
+  cctvs = [],
+  customEquipment = [],
+  equipmentCategories,
+  personnel 
+}: BulkQRTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set());
@@ -127,8 +141,37 @@ export default function BulkQRTab({ cases, monitors, printers, mice, keyboards, 
       });
     });
 
+    // CCTVs
+    (cctvs || []).forEach(c => {
+      list.push({
+        id: `cctv_${c.code}`,
+        type: 'cctv',
+        categoryName: '📹 دوربین مداربسته',
+        code: c.code,
+        brand: c.brand || 'Dahua',
+        model: c.model || '—',
+        assignedToName: c.assignedTo ? (personnelMap[c.assignedTo] || 'نامشخص') : 'موجود در انبار',
+        assignedToCode: c.assignedTo || ''
+      });
+    });
+
+    // Custom Equipment
+    (customEquipment || []).forEach(e => {
+      const cat = equipmentCategories?.get ? equipmentCategories.get(e.categorySlug) : null;
+      list.push({
+        id: `custom_${e.id || e.code}`,
+        type: e.categorySlug || 'custom',
+        categoryName: cat ? `${cat.icon} ${cat.name}` : '⚙️ سخت‌افزار سفارشی',
+        code: e.code,
+        brand: cat?.name || 'سفارشی',
+        model: e.model || e.location || '—',
+        assignedToName: e.assignedTo ? (personnelMap[e.assignedTo] || 'نامشخص') : 'موجود در انبار',
+        assignedToCode: e.assignedTo || ''
+      });
+    });
+
     return list;
-  }, [cases, monitors, printers, mice, keyboards, radios, personnelMap]);
+  }, [cases, monitors, printers, mice, keyboards, radios, cctvs, customEquipment, equipmentCategories, personnelMap]);
 
   // Apply filters and searches
   const filteredHardwares = useMemo(() => {
@@ -253,12 +296,19 @@ export default function BulkQRTab({ cases, monitors, printers, mice, keyboards, 
               className="w-full p-2.5 bg-slate-50 border border-slate-250 rounded-lg text-xs md:text-sm font-bold"
             >
               <option value="all">📁 همه سخت‌افزارهای سامانه</option>
-              <option value="case">🖥️ کیس‌های کارگاهی</option>
-              <option value="monitor">📺 مانیتور سیستم‌ها</option>
-              <option value="printer">🖨️ پرینترها و چندکاره</option>
-              <option value="mouse">🖱️ ماوس‌ها</option>
-              <option value="keyboard">⌨️ کیبوردها</option>
-              <option value="radio">📻 بی‌سیم‌ها</option>
+              {(equipmentCategories?.list || [
+                { id: 'case', name: 'کیس‌های کارگاهی', icon: '🖥️' },
+                { id: 'monitor', name: 'مانیتور سیستم‌ها', icon: '📺' },
+                { id: 'printer', name: 'پرینترها و چندکاره', icon: '🖨️' },
+                { id: 'mouse', name: 'ماوس‌ها', icon: '🖱️' },
+                { id: 'keyboard', name: 'کیبوردها', icon: '⌨️' },
+                { id: 'radio', name: 'بی‌سیم‌ها', icon: '📻' },
+                { id: 'cctv', name: 'دوربین‌های مداربسته', icon: '📹' }
+              ]).map((c: any) => (
+                <option key={c.id} value={c.id}>
+                  {c.icon} {c.name}
+                </option>
+              ))}
             </select>
           </div>
 

@@ -5,9 +5,10 @@ interface EditModalProps {
   type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'cctv' | null;
   onClose: () => void;
   onSave: (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'cctv', data: any) => Promise<boolean>;
+  onDelete?: (type: string, id: string) => void;
 }
 
-export default function EditModal({ item, type, onClose, onSave }: EditModalProps) {
+export default function EditModal({ item, type, onClose, onSave, onDelete }: EditModalProps) {
   if (!item || !type) return null;
 
   // Personnel states
@@ -530,7 +531,7 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
           )}
 
           {/* Action Row */}
-          <div className="pt-4 border-t border-slate-100 flex gap-3">
+          <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center gap-3">
             <button
               type="submit"
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold p-2.5 rounded text-xs md:text-sm shadow transition cursor-pointer"
@@ -540,10 +541,32 @@ export default function EditModal({ item, type, onClose, onSave }: EditModalProp
             <button
               type="button"
               onClick={onClose}
-              className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded text-xs md:text-sm transition cursor-pointer"
+              className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded text-xs md:text-sm transition cursor-pointer font-medium"
             >
               لغو ویرایش
             </button>
+            {onDelete && type && (
+              <button
+                type="button"
+                onClick={() => {
+                  const targetCode = type === 'personnel' ? (item.id || item.code) : (item.code || item.id);
+                  const typeTitle = type === 'personnel' ? 'پرونده پرسنل' : 'سخت‌افزار';
+                  const confirmMsg = type === 'personnel'
+                    ? `آیا از حذف کامل پرونده پرسنلی «${item.name || targetCode}» از سامانه اطمینان کامل دارید؟\nکلیه تجهیزات در تصرف وی آزاد شده و به انبار پروژه بازگردانده می‌شوند.`
+                    : `آیا از حذف کامل این ${typeTitle} با کد اموال «${targetCode}» به طور کامل از سامانه اطمینان دارید؟\n⚠️ توجه: این عملیات غیرقابل بازگشت است و کلیه تخصیص‌ها و سوابق جاری آن آزاد و نهایی می‌شوند.`;
+                  
+                  if (window.confirm(confirmMsg)) {
+                    onDelete(type, targetCode);
+                    onClose();
+                  }
+                }}
+                className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 hover:border-red-300 px-3.5 py-2.5 rounded text-xs md:text-sm font-bold transition cursor-pointer flex items-center gap-1.5"
+                title="حذف کامل و دائمی از سیستم"
+              >
+                <span>🗑️</span>
+                <span>حذف کامل {type === 'personnel' ? 'پرسنل' : 'تجهیز'}</span>
+              </button>
+            )}
           </div>
 
         </form>

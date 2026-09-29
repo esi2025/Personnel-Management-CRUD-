@@ -404,20 +404,38 @@ export default function CustomEquipmentSubTab({
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg cursor-pointer"
-                >
-                  انصراف
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer shadow-xs"
-                >
-                  💾 ذخیره تغییرات
-                </button>
+              <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100">
+                {editingItem && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const itemCode = editingItem.code || editingItem.id;
+                      if (window.confirm(`آیا از حذف کامل تجهیز سفارشی «${category.name}» با کد اموال «${itemCode}» از سامانه اطمینان کامل دارید؟\nاین عملیات غیرقابل بازگشت است.`)) {
+                        onDeleteItem(category.id, editingItem.id || editingItem.code);
+                        setShowModal(false);
+                      }
+                    }}
+                    className="px-3 py-2 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg cursor-pointer flex items-center gap-1 transition"
+                  >
+                    <span>🗑️</span>
+                    <span>حذف کامل تجهیز</span>
+                  </button>
+                )}
+                <div className="flex items-center gap-2 mr-auto">
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg cursor-pointer"
+                  >
+                    انصراف
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer shadow-xs"
+                  >
+                    💾 ذخیره تغییرات
+                  </button>
+                </div>
               </div>
             </form>
           </div>
