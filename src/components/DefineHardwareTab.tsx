@@ -18,6 +18,7 @@ interface DefineHardwareTabProps {
   customEquipment: any[];
   onSaveCategory: (categoryData: any) => Promise<boolean>;
   onDeleteCategory: (id: string) => Promise<void>;
+  onTabChange?: (tabId: string) => void;
   currentUser: any;
 }
 
@@ -41,6 +42,7 @@ export default function DefineHardwareTab({
   customEquipment,
   onSaveCategory,
   onDeleteCategory,
+  onTabChange,
   currentUser,
 }: DefineHardwareTabProps) {
   const [name, setName] = useState('');
@@ -97,7 +99,7 @@ export default function DefineHardwareTab({
     }
 
     setIsSubmitting(true);
-    const catId = 'custom_' + Date.now();
+    const catId = 'cat_' + Date.now();
     const success = await onSaveCategory({
       id: catId,
       name: name.trim(),
@@ -107,7 +109,7 @@ export default function DefineHardwareTab({
 
     setIsSubmitting(false);
     if (success) {
-      alert('دسته سخت‌افزاری جدید با موفقیت تعریف گردید و به بخش دوم منوی ناوبری اضافه شد.');
+      alert(`دسته‌بندی سخت‌افزاری «${name.trim()}» با موفقیت تعریف گردید و به بخش دوم منوی ناوبری (تجهیزات سخت‌افزاری) اضافه شد.`);
       setName('');
       setIcon('📟');
       setParameters([]);
@@ -309,13 +311,24 @@ export default function DefineHardwareTab({
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center pt-2 border-t border-slate-200/40">
-                      <span className="text-[10px] text-slate-400">ثبت در پایگاه داده مرکزی کارگاه</span>
+                    <div className="flex flex-wrap justify-between items-center gap-2 pt-2 border-t border-slate-200/40">
+                      {onTabChange && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const targetId = cat.id.startsWith('custom_') ? cat.id : `custom_${cat.id}`;
+                            onTabChange(targetId);
+                          }}
+                          className="text-emerald-700 hover:text-emerald-900 text-[10px] font-black transition cursor-pointer px-2.5 py-1 rounded bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/70 flex items-center gap-1"
+                        >
+                          <span>🖥️ ورود به بخش دوم: مدیریت {cat.name} ⬅️</span>
+                        </button>
+                      )}
                       <button
                         onClick={async () => {
                           await onDeleteCategory(cat.id);
                         }}
-                        className="text-red-600 hover:text-red-800 text-[10px] font-bold transition cursor-pointer px-2 py-1 rounded bg-red-50 hover:bg-red-100"
+                        className="text-red-600 hover:text-red-800 text-[10px] font-bold transition cursor-pointer px-2 py-1 rounded bg-red-50 hover:bg-red-100 mr-auto"
                       >
                         🗑️ حذف دسته‌بندی
                       </button>

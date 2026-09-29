@@ -379,6 +379,16 @@ function initializeDatabase() {
     ];
     fs.writeFileSync(usersFile, JSON.stringify(demoUsers, null, 2), "utf-8");
   }
+
+  const customCategoriesFile = path.join(DATA_DIR, "custom_categories.json");
+  if (!fs.existsSync(customCategoriesFile)) {
+    fs.writeFileSync(customCategoriesFile, JSON.stringify([], null, 2), "utf-8");
+  }
+
+  const customEquipmentFile = path.join(DATA_DIR, "custom_equipment.json");
+  if (!fs.existsSync(customEquipmentFile)) {
+    fs.writeFileSync(customEquipmentFile, JSON.stringify([], null, 2), "utf-8");
+  }
 }
 
 // Read database helper
@@ -747,11 +757,15 @@ async function startServer() {
   app.post("/api/save", (req, res) => {
     const { type, isEdit, id, code, oldCode, ...fields } = req.body;
 
-    if (!type || !code) {
-      return res.status(400).json({ error: "اطلاعات ارسالی ناقص است." });
+    if (!type) {
+      return res.status(400).json({ error: "نوع آیتم مشخص نشده است." });
     }
 
-    const trimmedCode = code.trim();
+    if (type !== "custom_category" && type !== "catalog" && !code) {
+      return res.status(400).json({ error: "کد اموال یا کد پرسنلی الزامی است." });
+    }
+
+    const trimmedCode = code ? String(code).trim() : "";
     const opUser = req.headers["x-operator-username"] as string || "system";
     const opName = req.headers["x-operator-name"] as string || "سیستم";
     const clientIp = getClientIp(req);
@@ -1280,44 +1294,56 @@ async function startServer() {
 
     if (type === "custom_category") {
       const categories = readDb("custom_categories.json");
-      const categoryId = isEdit ? id : `cat_${Date.now()}`;
+      const categoryId = (id && String(id).trim()) || (isEdit ? id : `cat_${Date.now()}`);
       
-      const item = {
-        id: categoryId,
-        name: fields.name?.trim(),
-        icon: fields.icon || "⚙️",
-        fields: fields.fields || []
-      };
+      const catName = (fields.name || req.body.name)?.trim();
+      const catIcon = fields.icon || req.body.icon || "⚙️";
+      const catFields = fields.fields || req.body.fields || [];
 
-      if (!item.name) {
+      if (!catName) {
         return res.status(400).json({ error: "نام دسته سخت‌افزاری الزامی است." });
       }
 
-      if (isEdit) {
-        const idx = categories.findIndex((c) => c.id === categoryId);
-        if (idx !== -1) categories[idx] = item;
+      const item = {
+        id: categoryId,
+        name: catName,
+        icon: catIcon,
+        fields: catFields
+      };
+
+      const idx = categories.findIndex((c) => c.id === categoryId);
+      if (idx !== -1) {
+        categories[idx] = item;
       } else {
         categories.push(item);
       }
 
       writeDb("custom_categories.json", categories);
-      addAuditLog(opUser, opName, clientIp, isEdit ? "edit" : "create", "custom_category", categoryId, `تعریف دسته سخت‌افزاری جدید: ${fields.name}`);
+      addAuditLog(opUser, opName, clientIp, isEdit ? "edit" : "create", "custom_category", categoryId, `تعریف دسته سخت‌افزاری جدید: ${catName}`);
       return res.json({ success: true, item });
     }
 
     // Check if the type matches any custom category
     const customCategories = readDb("custom_categories.json");
-    if (customCategories.some(c => c.id === type)) {
+    const matchedCategory = customCategories.find((c: any) => 
+      c.id === type || 
+      `custom_${c.id}` === type || 
+      (c.id && c.id.replace(/^custom_/, '') === String(type).replace(/^custom_/, ''))
+    );
+
+    if (matchedCategory) {
       const customEquips = readDb("custom_equipment.json");
       const isEditing = !!(isEdit || id);
-      const existingIndex = customEquips.findIndex(e => e.code === trimmedCode && (!isEditing || e.id !== id));
+      const existingIndex = customEquips.findIndex((e: any) => 
+        e.code && String(e.code).trim().toLowerCase() === trimmedCode.toLowerCase() && (!isEditing || e.id !== id)
+      );
       if (existingIndex !== -1) {
         return res.status(400).json({ error: "کد اموال وارد شده تکراری است." });
       }
 
       const item = {
         id: isEditing ? id : `eq_${Date.now()}`,
-        categorySlug: type,
+        categorySlug: matchedCategory.id,
         code: trimmedCode,
         assignedTo: fields.assignedTo !== undefined ? fields.assignedTo : null,
         status: fields.status || "working",
@@ -1337,7 +1363,7 @@ async function startServer() {
       }
 
       writeDb("custom_equipment.json", customEquips);
-      addAuditLog(opUser, opName, clientIp, isEditing ? "edit" : "create", type, trimmedCode, `ثبت تجهیز سفارشی جدید: ${trimmedCode} در دسته ${type}`);
+      addAuditLog(opUser, opName, clientIp, isEditing ? "edit" : "create", matchedCategory.id, trimmedCode, `ثبت/ویرایش تجهیز در دسته «${matchedCategory.name}» با کد اموال ${trimmedCode}`);
       return res.json({ success: true, item });
     }
 
@@ -1657,11 +1683,21 @@ async function startServer() {
     if (type === "custom_category") {
       const categories = readDb("custom_categories.json");
       const customEquips = readDb("custom_equipment.json");
-      const hasItems = customEquips.some((e: any) => e.categorySlug === trimmedId);
+      const rawTrimmedId = trimmedId.replace(/^custom_/, '');
+      const hasItems = customEquips.some((e: any) => 
+        e.categorySlug === trimmedId || 
+        e.categorySlug === rawTrimmedId ||
+        `custom_${e.categorySlug}` === trimmedId
+      );
       if (hasItems) {
         return res.status(400).json({ error: "این دسته‌بندی دارای تجهیزات فعال در سیستم است. لطفاً ابتدا تجهیزات زیرمجموعه آن را حذف یا جابه‌جا کنید." });
       }
-      const idx = categories.findIndex((c: any) => c.id === trimmedId || c.slug === trimmedId);
+      const idx = categories.findIndex((c: any) => 
+        c.id === trimmedId || 
+        c.id === rawTrimmedId || 
+        `custom_${c.id}` === trimmedId || 
+        c.slug === trimmedId
+      );
       if (idx === -1) return res.status(404).json({ error: "دسته‌بندی سخت‌افزاری یافت نشد." });
 
       const catName = categories[idx].name || trimmedId;

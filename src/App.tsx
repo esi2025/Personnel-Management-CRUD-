@@ -199,7 +199,7 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('personnel-tab');
   const [col1Expanded, setCol1Expanded] = useState(false);
-  const [col2Expanded, setCol2Expanded] = useState(false);
+  const [col2Expanded, setCol2Expanded] = useState(true);
   const [col3Expanded, setCol3Expanded] = useState(false);
   const [col4Expanded, setCol4Expanded] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -645,9 +645,9 @@ export default function App() {
     const isCustomCat = activeTab?.startsWith('custom_');
     const col2Index = [
       ...col2StandardIds,
-      ...customCategories.map(cat => `custom_${cat.id}`)
+      ...customCategories.map(cat => cat.id.startsWith('custom_') ? cat.id : `custom_${cat.id}`)
     ].indexOf(activeTab);
-    if (col2Index >= 3 || isCustomCat) {
+    if (customCategories.length > 0 || col2Index >= 0 || isCustomCat) {
       setCol2Expanded(true);
     }
 
@@ -2141,9 +2141,10 @@ export default function App() {
                   { id: 'radios-tab', label: 'بی‌سیم', icon: '📻' },
                   { id: 'cctvs-tab', label: 'دوربین مداربسته', icon: '📹' },
                   ...customCategories.map(cat => ({
-                    id: `custom_${cat.id}`,
+                    id: cat.id.startsWith('custom_') ? cat.id : `custom_${cat.id}`,
                     label: cat.name,
-                    icon: cat.icon || '⚙️'
+                    icon: cat.icon || '⚙️',
+                    isCustom: true
                   }))
                 ];
 
@@ -2164,6 +2165,9 @@ export default function App() {
                       >
                         <span className="text-[10px] shrink-0">{tab.icon}</span>
                         <span className="truncate">{tab.label}</span>
+                        {(tab as any).isCustom && (
+                          <span className="mr-auto text-[8px] bg-emerald-500/25 text-emerald-600 dark:text-emerald-300 px-1 py-0.5 rounded font-black border border-emerald-500/30">سفارشی</span>
+                        )}
                       </button>
                     ))}
                     {col2Items.length > 3 && (
@@ -2175,7 +2179,7 @@ export default function App() {
                             : 'bg-slate-100/70 border-slate-200 text-slate-500 hover:bg-slate-200 hover:text-slate-700'
                         }`}
                       >
-                        <span>{col2Expanded ? '🔼 نمایش کمتر' : `🔽 نمایش بیشتر (${col2Items.length - 3})`}</span>
+                        <span>{col2Expanded ? '🔼 نمایش کمتر' : `🔽 نمایش سایر سخت‌افزارها (${col2Items.length - 3})`}</span>
                       </button>
                     )}
                   </>
@@ -2503,17 +2507,37 @@ export default function App() {
             <DefineHardwareTab 
               customCategories={customCategories}
               customEquipment={customEquipment}
-              onSaveCategory={(data) => handleSaveItem('custom_category', data)}
+              onSaveCategory={async (data) => {
+                const res = await handleSaveItem('custom_category', data);
+                if (res) {
+                  setCol2Expanded(true);
+                  if (data.id) {
+                    const newTabId = data.id.startsWith('custom_') ? data.id : `custom_${data.id}`;
+                    setActiveTab(newTabId);
+                  }
+                }
+                return res;
+              }}
               onDeleteCategory={(id) => handleDeleteItem('custom_category', id)}
+              onTabChange={setActiveTab}
               currentUser={currentUser}
             />
           )}
 
           {activeTab?.startsWith('custom_') && (() => {
-            const catId = activeTab.replace('custom_', '');
-            const category = customCategories.find(c => c.id === catId);
+            const rawId = activeTab.replace(/^custom_/, '');
+            const category = customCategories.find(c => 
+              c.id === activeTab || 
+              c.id === rawId || 
+              `custom_${c.id}` === activeTab
+            );
             if (category) {
-              const filteredEquips = customEquipment.filter(e => e.categorySlug === catId);
+              const filteredEquips = customEquipment.filter(e => 
+                e.categorySlug === category.id || 
+                e.categorySlug === rawId ||
+                `custom_${e.categorySlug}` === activeTab ||
+                (e.categorySlug && e.categorySlug.replace(/^custom_/, '') === category.id.replace(/^custom_/, ''))
+              );
               return (
                 <CustomEquipmentSubTab
                   category={category}
@@ -2576,7 +2600,11 @@ export default function App() {
           )}
 
           {activeTab === 'add-new-tab' && (
-            <AddNewTab onSave={handleSaveItem} onSaveBulk={handleSaveBulkItems} />
+            <AddNewTab 
+              onSave={handleSaveItem} 
+              onSaveBulk={handleSaveBulkItems} 
+              customCategories={customCategories}
+            />
           )}
         </main>
       )}

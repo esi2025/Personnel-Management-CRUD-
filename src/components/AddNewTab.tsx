@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 
 interface AddNewTabProps {
-  onSave: (type: 'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'cctv', data: any) => Promise<boolean>;
+  onSave: (type: any, data: any) => Promise<boolean>;
   onSaveBulk: (items: any[]) => Promise<{ success: boolean; savedCount: number; skipped: string[] }>;
+  customCategories?: any[];
 }
 
-export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
-  const [activeType, setActiveType] = useState<'personnel' | 'case' | 'monitor' | 'printer' | 'mouse' | 'keyboard' | 'radio' | 'cctv'>('personnel');
+export default function AddNewTab({ onSave, onSaveBulk, customCategories = [] }: AddNewTabProps) {
+  const [activeType, setActiveType] = useState<string>('personnel');
   const [isBulkMode, setIsBulkMode] = useState(false);
 
   // Personnel fields
@@ -60,6 +61,11 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
   const [cctvLocation, setCctvLocation] = useState('');
   const [cctvAccessLink, setCctvAccessLink] = useState('');
 
+  // Custom Category State
+  const [customEquipCode, setCustomEquipCode] = useState('');
+  const [customEquipLoc, setCustomEquipLoc] = useState('کارگاه بوشهر');
+  const [customFields, setCustomFields] = useState<Record<string, string>>({});
+
   // Common Equipment State
   const [equipStatus, setEquipStatus] = useState<'working' | 'repair' | 'retired'>('working');
   const [equipDesc, setEquipDesc] = useState('');
@@ -101,6 +107,9 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
     setKbCode(''); setKbModel('');
     setRadCode(''); setRadModel('');
     setCctvCode(''); setCctvBrand(''); setCctvModel(''); setCctvLocation(''); setCctvAccessLink('');
+    setCustomEquipCode('');
+    setCustomEquipLoc('کارگاه بوشهر');
+    setCustomFields({});
     setEquipStatus('working');
     setEquipDesc('');
     setLastServiced('');
@@ -194,6 +203,26 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
         description: equipDesc,
         lastServiced: lastServiced
       };
+    } else {
+      // Custom category equipment submission
+      const cat = customCategories.find((c: any) => c.id === activeType);
+      if (cat) {
+        if (!customEquipCode.trim()) {
+          alert(`کد اموال برای سخت‌افزار «${cat.name}» الزامی است.`);
+          return;
+        }
+        data = {
+          code: customEquipCode.trim().toUpperCase(),
+          location: customEquipLoc.trim(),
+          status: equipStatus,
+          description: equipDesc.trim(),
+          lastServiced: lastServiced,
+          ...customFields
+        };
+      } else {
+        alert('دسته‌بندی تجهیز انتخاب شده نامعتبر است.');
+        return;
+      }
     }
 
     const success = await onSave(activeType, data);
@@ -381,7 +410,7 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
         <form onSubmit={handleFormSubmit} className="space-y-5">
           
           {/* Select active type */}
-          <div className="grid grid-cols-2 sm:grid-cols-8 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2">
             {(['personnel', 'case', 'monitor', 'printer', 'mouse', 'keyboard', 'radio', 'cctv'] as const).map((type) => (
               <button
                 key={type}
@@ -401,6 +430,21 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
                 {type === 'keyboard' && <span>⌨️ کیبورد</span>}
                 {type === 'radio' && <span>📻 بی‌سیم</span>}
                 {type === 'cctv' && <span>🎥 دوربین</span>}
+              </button>
+            ))}
+            {customCategories.map((cat: any) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => { setActiveType(cat.id); }}
+                className={`p-2.5 rounded-lg text-xs font-bold transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                  activeType === cat.id 
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/10' 
+                    : 'bg-emerald-50/60 border border-emerald-200 text-emerald-800 hover:bg-emerald-100'
+                }`}
+              >
+                <span className="text-sm">{cat.icon || '⚙️'}</span>
+                <span className="truncate max-w-[85px]">{cat.name}</span>
               </button>
             ))}
           </div>
@@ -776,6 +820,56 @@ export default function AddNewTab({ onSave, onSaveBulk }: AddNewTabProps) {
                 </div>
               </div>
             )}
+
+            {/* Render Form for Custom Hardware Category */}
+            {(() => {
+              const currentCat = customCategories.find((c: any) => c.id === activeType);
+              if (!currentCat) return null;
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs md:text-sm animate-fade-in text-right font-sans">
+                  <div className="space-y-1.5 sm:col-span-2 bg-emerald-50/70 p-3 rounded-lg border border-emerald-200/80 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">{currentCat.icon || '⚙️'}</span>
+                      <div>
+                        <span className="font-bold text-slate-800">ثبت تجهیز جدید در دسته سفارشی «{currentCat.name}»</span>
+                        <p className="text-[10px] text-slate-500">مشخصات انحصاری تعریف شده برای این سخت‌افزار را تکمیل نمایید.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-semibold text-slate-700">کد سخت‌افزار (اموال) <span className="text-red-500">*</span>:</label>
+                    <input 
+                      type="text" required value={customEquipCode} onChange={(e) => setCustomEquipCode(e.target.value)}
+                      placeholder="مثال: ATT-101 یا SW-201"
+                      className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none font-mono"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-semibold text-slate-700">موقعیت استقرار فیزیکی:</label>
+                    <input 
+                      type="text" value={customEquipLoc} onChange={(e) => setCustomEquipLoc(e.target.value)}
+                      placeholder="مثال: درب ورودی سایت بوشهر یا اتاق سرور"
+                      className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+
+                  {currentCat.fields && currentCat.fields.map((f: any) => (
+                    <div key={f.key} className="space-y-1.5">
+                      <label className="font-semibold text-slate-700">{f.name}:</label>
+                      <input 
+                        type={f.type === 'number' ? 'number' : 'text'}
+                        value={customFields[f.key] || ''}
+                        onChange={(e) => setCustomFields({ ...customFields, [f.key]: e.target.value })}
+                        placeholder={`وارد کردن ${f.name}...`}
+                        className="w-full text-right p-2.5 bg-slate-50 border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+                      />
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
 
             {/* Status & Desc inside single form */}
             {activeType !== 'personnel' && (
