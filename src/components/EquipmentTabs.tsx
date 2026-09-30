@@ -22,22 +22,22 @@ export function StatusBadge({ status }: { status?: 'working' | 'repair' | 'retir
   switch (currentStatus) {
     case 'working':
       return (
-        <span className="inline-flex items-center gap-1.5 bg-emerald-100/80 border border-emerald-400 text-emerald-800 dark:bg-emerald-950/60 dark:border-emerald-600 dark:text-emerald-300 px-2.5 py-1 rounded-md text-[11px] font-black shrink-0 shadow-sm transition">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-xs" />
+        <span className="inline-flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-lg text-xs font-semibold shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           سالم
         </span>
       );
     case 'repair':
       return (
-        <span className="inline-flex items-center gap-1.5 bg-orange-100 border border-orange-500 text-orange-850 dark:bg-orange-950/60 dark:border-orange-500 dark:text-orange-300 px-2.5 py-1 rounded-md text-[11px] font-black shrink-0 shadow-sm animate-pulse transition">
-          <span className="w-2 h-2 rounded-full bg-orange-500 shadow-xs" />
+        <span className="inline-flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-lg text-xs font-semibold shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
           نیاز به تعمیر
         </span>
       );
     case 'retired':
       return (
-        <span className="inline-flex items-center gap-1.5 bg-red-100 border border-red-400 text-red-800 dark:bg-red-950/60 dark:border-red-600 dark:text-red-300 px-2.5 py-1 rounded-md text-[11px] font-black shrink-0 shadow-sm transition">
-          <span className="w-2 h-2 rounded-full bg-red-500 shadow-xs" />
+        <span className="inline-flex items-center gap-1.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded-lg text-xs font-semibold shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
           اسقاط شده
         </span>
       );

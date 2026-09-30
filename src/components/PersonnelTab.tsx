@@ -156,12 +156,14 @@ export default function PersonnelTab({
                       <td className="p-2.5 text-slate-600">{p.location}</td>
                       <td className="p-2.5">
                         {p.status === 'terminated' ? (
-                          <span className="bg-red-50 border border-red-200 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold">
-                            🔴 خاتمه همکاری
+                          <span className="inline-flex items-center gap-1.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded-lg text-xs font-semibold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                            خاتمه همکاری
                           </span>
                         ) : (
-                          <span className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold">
-                            🟢 شاغل (فعال)
+                          <span className="inline-flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-lg text-xs font-semibold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            شاغل (فعال)
                           </span>
                         )}
                       </td>

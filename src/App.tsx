@@ -1977,35 +1977,58 @@ export default function App() {
       </div>
 
       {/* 2. Global search bar (hides in print mode) */}
-      <div className="no-print bg-white dark:bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row justify-between items-center gap-2 mb-3 text-right">
-        <div className="flex-1 w-full max-w-md">
+      {/* 2. Executive Search & Metrics Strip */}
+      <div className="no-print bg-white dark:bg-slate-900 px-4 py-2 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xs flex flex-col md:flex-row justify-between items-center gap-3 mb-3 text-right transition-colors">
+        <div className="relative flex-1 w-full max-w-md">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="🔎 جستجوی هوشمند در لیست پرسنل، شماره اموال، مدل سخت‌افزار و..."
-            className="w-full text-right py-1 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 focus:outline-none placeholder-slate-400 dark:text-slate-100"
+            placeholder="جستجوی سریع پرسنل، شماره اموال، مدل سخت‌افزار، IP..."
+            className="w-full text-right py-2 pr-9 pl-8 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 focus:outline-none placeholder-slate-400 dark:text-slate-100 transition-all font-sans"
           />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm select-none pointer-events-none">🔍</span>
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center text-[10px] font-bold cursor-pointer transition"
+              title="پاک کردن جستجو"
+            >
+              ✕
+            </button>
+          )}
         </div>
         
-        {/* Active searches stats indicators */}
-        <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 flex gap-1.5 flex-wrap justify-center font-extrabold">
-          <span className="bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 px-1.5 py-0.5 rounded">👥 پرسنل: {personnel.length}</span>
-          <span className="bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 px-1.5 py-0.5 rounded">🖥️ کیس: {cases.length}</span>
-          <span className="bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 px-1.5 py-0.5 rounded">📺 مانیتور: {monitors.length}</span>
-          <span className="bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 px-1.5 py-0.5 rounded">🖨️ چاپگر: {printers.length}</span>
-          <span className="bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 px-1.5 py-0.5 rounded">🖱️ ماوس: {mice.length}</span>
-          <span className="bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 px-1.5 py-0.5 rounded">⌨️ کیبورد: {keyboards.length}</span>
-          <span className="bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-150/40 text-indigo-700 dark:text-indigo-400 px-1.5 py-0.5 rounded">📻 بی‌سیم: {radios.length}</span>
-          <span className="bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-150/40 text-indigo-700 dark:text-indigo-400 px-1.5 py-0.5 rounded">📹 دوربین مداربسته: {cctvs.length}</span>
-          {customCategories.map(cat => (
-            <span key={cat.id} className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded">{cat.icon || '⚙️'} {cat.name}: {customEquipment.filter(e => e.categorySlug === cat.id).length}</span>
-          ))}
+        {/* Real-time Summary Indicator */}
+        <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-3 font-medium select-none">
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-400">کل تجهیزات:</span>
+            <span className="font-mono font-bold text-slate-800 dark:text-slate-100 tabular-nums">
+              {cases.length + monitors.length + printers.length + keyboards.length + mice.length + radios.length + cctvs.length + customEquipment.length}
+            </span>
+            <span className="text-[11px] text-slate-400">دستگاه</span>
+          </div>
+          <span className="text-slate-300 dark:text-slate-700">·</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-400">پرسنل کارگاه:</span>
+            <span className="font-mono font-bold text-slate-800 dark:text-slate-100 tabular-nums">
+              {personnel.length}
+            </span>
+            <span className="text-[11px] text-slate-400">نفر</span>
+          </div>
+          {searchQuery.trim() && (
+            <>
+              <span className="text-slate-300 dark:text-slate-700">·</span>
+              <span className="text-blue-600 dark:text-blue-400 font-bold text-[11px] animate-fade-in">
+                فیلتر جستجو فعال
+              </span>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Dynamic Summary Cards Grid (Single source of truth) */}
-      <div className="no-print grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-4">
+      {/* Dynamic Summary Cards Grid (Interactive KPI Tiles) */}
+      <div className="no-print grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 mb-4">
         {equipmentCategories.list.map((cat) => {
           let count = 0;
           let active = 0;
@@ -2045,61 +2068,74 @@ export default function App() {
             repair = list.filter(e => e.status === 'repair').length;
           }
 
+          const isSelected = activeTab === cat.tabId;
+
           return (
-            <div 
+            <button
               key={cat.id}
-              className={`bg-gradient-to-br ${cat.color || 'from-slate-500/10 to-slate-600/5 text-slate-600 border-slate-200/60 dark:border-slate-800'} border py-1 px-1.5 rounded-lg flex items-center justify-between shadow-2xs hover:shadow-xs transition-all duration-200 text-xs`}
-              style={{ minHeight: '36px' }}
+              type="button"
+              onClick={() => setActiveTab(cat.tabId)}
+              className={`text-right group py-2 px-2.5 rounded-xl border flex items-center justify-between transition-all duration-150 cursor-pointer ${
+                isSelected
+                  ? 'bg-blue-50/90 dark:bg-blue-950/40 border-blue-500/80 shadow-xs ring-1 ring-blue-500/40'
+                  : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs hover:-translate-y-0.5'
+              }`}
+              title={`مشاهده فهرست و مدیریت ${cat.name}`}
             >
-              <div className="flex items-center gap-1 min-w-0">
-                <span className="text-xs shrink-0">{cat.icon}</span>
-                <div className="min-w-0 flex flex-col justify-center leading-none">
-                  <div className="text-[8px] md:text-[9px] font-black text-slate-500 dark:text-slate-400 truncate leading-none">{cat.shortName || cat.name}</div>
-                  <div className="text-[10px] md:text-xs font-black mt-0.5 font-mono flex items-baseline gap-0.5 leading-none">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-base shrink-0 transition-transform group-hover:scale-110 duration-150">{cat.icon}</span>
+                <div className="min-w-0 flex flex-col justify-center leading-tight">
+                  <div className="text-[11px] font-bold text-slate-600 dark:text-slate-400 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {cat.shortName || cat.name}
+                  </div>
+                  <div className="text-xs font-black font-mono tabular-nums text-slate-900 dark:text-slate-100 flex items-baseline gap-0.5">
                     <span>{count}</span>
-                    <span className="text-[7px] md:text-[8px] text-slate-400 font-sans font-normal">عدد</span>
+                    <span className="text-[9px] text-slate-400 font-sans font-normal">عدد</span>
                   </div>
                 </div>
               </div>
-              <div className="flex flex-col items-end gap-0.5 shrink-0 select-none">
-                <span className="text-[7px] md:text-[8px] font-black bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-1 py-0.5 rounded border border-emerald-500/10 leading-none" title="دستگاه‌های سالم">سالم: {active}</span>
+              <div className="flex flex-col items-end gap-1 shrink-0 select-none">
+                <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800/50 leading-none">
+                  {active} سالم
+                </span>
                 {repair > 0 && (
-                  <span className="text-[7px] md:text-[8px] font-black bg-rose-500/10 text-rose-700 dark:text-rose-400 px-1 py-0.5 rounded border border-rose-500/10 leading-none animate-pulse" title="دستگاه‌های در حال تعمیر">تعمیر: {repair}</span>
+                  <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-200/60 dark:border-amber-800/50 leading-none">
+                    {repair} تعمیر
+                  </span>
                 )}
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
 
       {/* 3. Navigation tabs bar (hides in print) */}
       <div 
-        className={`no-print border rounded-xl p-2.5 mb-3.5 shadow-xs text-right transition-all duration-250 ${
+        className={`no-print border rounded-2xl p-3.5 mb-4 shadow-2xs text-right transition-all duration-200 ${
           darkMode 
-            ? 'border-slate-800 text-slate-100' 
-            : 'border-slate-300/60 text-slate-800'
+            ? 'bg-slate-900/90 border-slate-800 text-slate-100' 
+            : 'bg-white border-slate-200/90 text-slate-800'
         }`}
         style={{ 
-          backgroundColor: darkMode ? '#0f172a' : '#ffffff',
-          boxShadow: currentTheme.cardGlow && darkMode ? `0 4px 20px -5px ${currentTheme.accentColor}33` : 'none'
+          boxShadow: currentTheme.cardGlow && darkMode ? `0 4px 20px -5px ${currentTheme.accentColor}33` : undefined
         }}
       >
-        <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between pb-1.5 mb-2 border-b gap-1.5 ${
-          darkMode ? 'border-slate-800' : 'border-slate-200'
+        <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between pb-2 mb-3 border-b gap-2 ${
+          darkMode ? 'border-slate-800' : 'border-slate-100'
         }`}>
-          <div className="flex items-center gap-1.5">
-            <span className="text-base">🎛️</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm">🎛️</span>
             <div>
-              <h4 className="text-xs md:text-xs font-black">میز کار و منوی ناوبری کارگاه بوشهر</h4>
+              <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">میز کار و منوی ناوبری کارگاه</h4>
             </div>
           </div>
           {/* Active selection badge */}
-          <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-black border transition-colors ${
+          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold border transition-colors ${
             darkMode 
-              ? 'bg-blue-950/70 text-blue-300 border-blue-900/40' 
-              : 'bg-blue-50 text-blue-700 border-blue-200/70'
+              ? 'bg-blue-950/70 text-blue-300 border-blue-900/60' 
+              : 'bg-blue-50 text-blue-700 border-blue-200/80 shadow-2xs'
           }`}>
-            <span className={darkMode ? 'text-slate-400 font-bold' : 'text-slate-500 font-bold'}>بخش فعال:</span>
+            <span className={darkMode ? 'text-blue-400/80 font-medium' : 'text-blue-600/80 font-medium'}>بخش فعال:</span>
             <span>
               {
                 (() => {
@@ -2132,13 +2168,13 @@ export default function App() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
           {/* Column 1: Basics & Personnel */}
-          <div className="space-y-1">
-            <div className={`flex items-center gap-1 px-1 text-[10px] font-black ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+          <div className="space-y-1.5">
+            <div className={`flex items-center gap-1.5 px-1 text-xs font-bold ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
               <span className="text-xs">👥</span>
               <span>بخش اول: تعاریف و پرسنل</span>
             </div>
-            <div className={`grid grid-cols-1 gap-1.5 p-1.5 rounded-lg shadow-inner transition-colors ${
-              darkMode ? 'bg-slate-950/40 border border-slate-800/60' : 'bg-slate-50 border border-slate-200/50'
+            <div className={`grid grid-cols-1 gap-1.5 p-2 rounded-xl transition-colors ${
+              darkMode ? 'bg-slate-950/50 border border-slate-800/80' : 'bg-slate-50/70 border border-slate-200/60'
             }`}>
               {(() => {
                 const col1Items = [
@@ -2149,51 +2185,36 @@ export default function App() {
                   { id: 'define-hardware-tab', label: 'تعریف سخت افزار جدید', icon: '🛠️', show: currentUser?.role === 'admin' }
                 ].filter(t => t.show);
 
-                const visibleItems = col1Expanded ? col1Items : col1Items.slice(0, 3);
                 return (
-                  <>
-                    {visibleItems.map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => { setActiveTab(tab.id); }}
-                        className={`w-full py-1.5 px-2 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-start gap-1.5 border text-right ${
-                          activeTab === tab.id 
-                            ? 'bg-blue-600 border-blue-600 text-white shadow-xs font-black' 
-                            : darkMode 
-                              ? 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
-                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100/85 hover:text-blue-600 hover:border-blue-300'
-                        }`}
-                      >
-                        <span className="text-[10px] shrink-0">{tab.icon}</span>
-                        <span className="truncate">{tab.label}</span>
-                      </button>
-                    ))}
-                    {col1Items.length > 3 && (
-                      <button
-                        onClick={() => setCol1Expanded(!col1Expanded)}
-                        className={`w-full mt-1 py-1 px-2 text-[9px] font-black rounded-md border border-dashed text-center flex items-center justify-center gap-1 cursor-pointer transition-all ${
-                          darkMode 
-                            ? 'bg-slate-900/40 border-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white' 
-                            : 'bg-slate-100/70 border-slate-200 text-slate-500 hover:bg-slate-200 hover:text-slate-700'
-                        }`}
-                      >
-                        <span>{col1Expanded ? '🔼 نمایش کمتر' : `🔽 نمایش بیشتر (${col1Items.length - 3})`}</span>
-                      </button>
-                    )}
-                  </>
+                  col1Items.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => { setActiveTab(tab.id); }}
+                      className={`w-full py-1.5 px-2.5 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer flex items-center justify-start gap-2 border text-right ${
+                        activeTab === tab.id 
+                          ? 'bg-blue-600 border-blue-600 text-white shadow-xs font-black' 
+                          : darkMode 
+                            ? 'bg-slate-900/80 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white' 
+                            : 'bg-white border-slate-200/80 text-slate-700 hover:bg-slate-100 hover:text-blue-600 hover:border-blue-200 shadow-2xs'
+                      }`}
+                    >
+                      <span className="text-xs shrink-0">{tab.icon}</span>
+                      <span className="truncate">{tab.label}</span>
+                    </button>
+                  ))
                 );
               })()}
             </div>
           </div>
 
           {/* Column 2: Equipment Categories */}
-          <div className="space-y-1">
-            <div className={`flex items-center gap-1 px-1 text-[10px] font-black ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
+          <div className="space-y-1.5">
+            <div className={`flex items-center gap-1.5 px-1 text-xs font-bold ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
               <span className="text-xs">🖥️</span>
               <span>بخش دوم: تجهیزات سخت‌افزاری</span>
             </div>
-            <div className={`grid grid-cols-1 gap-1.5 p-1.5 rounded-lg shadow-inner transition-colors ${
-              darkMode ? 'bg-slate-950/40 border border-slate-800/60' : 'bg-slate-50 border border-slate-200/50'
+            <div className={`grid grid-cols-1 gap-1.5 p-2 rounded-xl transition-colors ${
+              darkMode ? 'bg-slate-950/50 border border-slate-800/80' : 'bg-slate-50/70 border border-slate-200/60'
             }`}>
               {(() => {
                 const col2Items = equipmentCategories.list.map(cat => ({
@@ -2203,54 +2224,39 @@ export default function App() {
                   isCustom: cat.isCustom
                 }));
 
-                const visibleItems = col2Expanded ? col2Items : col2Items.slice(0, 3);
                 return (
-                  <>
-                    {visibleItems.map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => { setActiveTab(tab.id); }}
-                        className={`w-full py-1.5 px-2 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-start gap-1.5 border text-right ${
-                          activeTab === tab.id 
-                            ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs font-black' 
-                            : darkMode 
-                              ? 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
-                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100/85 hover:text-emerald-600 hover:border-emerald-300'
-                        }`}
-                      >
-                        <span className="text-[10px] shrink-0">{tab.icon}</span>
-                        <span className="truncate">{tab.label}</span>
-                        {(tab as any).isCustom && (
-                          <span className="mr-auto text-[8px] bg-emerald-500/25 text-emerald-600 dark:text-emerald-300 px-1 py-0.5 rounded font-black border border-emerald-500/30">سفارشی</span>
-                        )}
-                      </button>
-                    ))}
-                    {col2Items.length > 3 && (
-                      <button
-                        onClick={() => setCol2Expanded(!col2Expanded)}
-                        className={`w-full mt-1 py-1 px-2 text-[9px] font-black rounded-md border border-dashed text-center flex items-center justify-center gap-1 cursor-pointer transition-all ${
-                          darkMode 
-                            ? 'bg-slate-900/40 border-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white' 
-                            : 'bg-slate-100/70 border-slate-200 text-slate-500 hover:bg-slate-200 hover:text-slate-700'
-                        }`}
-                      >
-                        <span>{col2Expanded ? '🔼 نمایش کمتر' : `🔽 نمایش سایر سخت‌افزارها (${col2Items.length - 3})`}</span>
-                      </button>
-                    )}
-                  </>
+                  col2Items.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => { setActiveTab(tab.id); }}
+                      className={`w-full py-1.5 px-2.5 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer flex items-center justify-start gap-2 border text-right ${
+                        activeTab === tab.id 
+                          ? 'bg-blue-600 border-blue-600 text-white shadow-xs font-black' 
+                          : darkMode 
+                            ? 'bg-slate-900/80 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white' 
+                            : 'bg-white border-slate-200/80 text-slate-700 hover:bg-slate-100 hover:text-blue-600 hover:border-blue-200 shadow-2xs'
+                      }`}
+                    >
+                      <span className="text-xs shrink-0">{tab.icon}</span>
+                      <span className="truncate">{tab.label}</span>
+                      {(tab as any).isCustom && (
+                        <span className="mr-auto text-[8px] bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-1 py-0.5 rounded font-bold border border-blue-200/60 dark:border-blue-800">سفارشی</span>
+                      )}
+                    </button>
+                  ))
                 );
               })()}
             </div>
           </div>
 
           {/* Column 3: Logistics & Operations */}
-          <div className="space-y-1">
-            <div className={`flex items-center gap-1 px-1 text-[10px] font-black ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
+          <div className="space-y-1.5">
+            <div className={`flex items-center gap-1.5 px-1 text-xs font-bold ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
               <span className="text-xs">🔄</span>
               <span>بخش سوم: عملیات و لجستیک</span>
             </div>
-            <div className={`grid grid-cols-1 gap-1.5 p-1.5 rounded-lg shadow-inner transition-colors ${
-              darkMode ? 'bg-slate-950/40 border border-slate-800/60' : 'bg-slate-50 border border-slate-200/50'
+            <div className={`grid grid-cols-1 gap-1.5 p-2 rounded-xl transition-colors ${
+              darkMode ? 'bg-slate-950/50 border border-slate-800/80' : 'bg-slate-50/70 border border-slate-200/60'
             }`}>
               {(() => {
                 const col3Items = [
@@ -2262,51 +2268,36 @@ export default function App() {
                   { id: 'bulk-qr-tab', label: 'چاپ گروهی بارکد', icon: '🖨️', show: currentUser?.canExport || currentUser?.role === 'admin' }
                 ].filter(t => t.show);
 
-                const visibleItems = col3Expanded ? col3Items : col3Items.slice(0, 3);
                 return (
-                  <>
-                    {visibleItems.map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => { setActiveTab(tab.id); }}
-                        className={`w-full py-1.5 px-2 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-start gap-1.5 border text-right ${
-                          activeTab === tab.id 
-                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs font-black' 
-                            : darkMode 
-                              ? 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
-                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100/85 hover:text-indigo-600 hover:border-indigo-300'
-                        }`}
-                      >
-                        <span className="text-[10px] shrink-0">{tab.icon}</span>
-                        <span className="truncate">{tab.label}</span>
-                      </button>
-                    ))}
-                    {col3Items.length > 3 && (
-                      <button
-                        onClick={() => setCol3Expanded(!col3Expanded)}
-                        className={`w-full mt-1 py-1 px-2 text-[9px] font-black rounded-md border border-dashed text-center flex items-center justify-center gap-1 cursor-pointer transition-all ${
-                          darkMode 
-                            ? 'bg-slate-900/40 border-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white' 
-                            : 'bg-slate-100/70 border-slate-200 text-slate-500 hover:bg-slate-200 hover:text-slate-700'
-                        }`}
-                      >
-                        <span>{col3Expanded ? '🔼 نمایش کمتر' : `🔽 نمایش بیشتر (${col3Items.length - 3})`}</span>
-                      </button>
-                    )}
-                  </>
+                  col3Items.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => { setActiveTab(tab.id); }}
+                      className={`w-full py-1.5 px-2.5 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer flex items-center justify-start gap-2 border text-right ${
+                        activeTab === tab.id 
+                          ? 'bg-blue-600 border-blue-600 text-white shadow-xs font-black' 
+                          : darkMode 
+                            ? 'bg-slate-900/80 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white' 
+                            : 'bg-white border-slate-200/80 text-slate-700 hover:bg-slate-100 hover:text-blue-600 hover:border-blue-200 shadow-2xs'
+                      }`}
+                    >
+                      <span className="text-xs shrink-0">{tab.icon}</span>
+                      <span className="truncate">{tab.label}</span>
+                    </button>
+                  ))
                 );
               })()}
             </div>
           </div>
 
           {/* Column 4: System & Security */}
-          <div className="space-y-1">
-            <div className={`flex items-center gap-1 px-1 text-[10px] font-black ${darkMode ? 'text-rose-400' : 'text-rose-600'}`}>
+          <div className="space-y-1.5">
+            <div className={`flex items-center gap-1.5 px-1 text-xs font-bold ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
               <span className="text-xs">🛡️</span>
               <span>بخش چهارم: امنیت و مدیریت سیستم</span>
             </div>
-            <div className={`grid grid-cols-1 gap-1.5 p-1.5 rounded-lg shadow-inner transition-colors ${
-              darkMode ? 'bg-slate-950/40 border border-slate-800/60' : 'bg-slate-50 border border-slate-200/50'
+            <div className={`grid grid-cols-1 gap-1.5 p-2 rounded-xl transition-colors ${
+              darkMode ? 'bg-slate-950/50 border border-slate-800/80' : 'bg-slate-50/70 border border-slate-200/60'
             }`}>
               {(() => {
                 const col4Items = [
@@ -2316,38 +2307,23 @@ export default function App() {
                   { id: 'backup-tab', label: 'پشتیبان‌گیری پایگاه داده', icon: '💾', show: currentUser?.canBackup || currentUser?.role === 'admin' }
                 ].filter(t => t.show);
 
-                const visibleItems = col4Expanded ? col4Items : col4Items.slice(0, 3);
                 return (
-                  <>
-                    {visibleItems.map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => { setActiveTab(tab.id); }}
-                        className={`w-full py-1.5 px-2 text-[10px] md:text-[11px] font-extrabold rounded-md transition-all duration-150 cursor-pointer flex items-center justify-start gap-1.5 border text-right ${
-                          activeTab === tab.id 
-                            ? 'bg-rose-600 border-rose-600 text-white shadow-xs font-black' 
-                            : darkMode 
-                              ? 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
-                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100/85 hover:text-rose-600 hover:border-rose-300'
-                        }`}
-                      >
-                        <span className="text-[10px] shrink-0">{tab.icon}</span>
-                        <span className="truncate">{tab.label}</span>
-                      </button>
-                    ))}
-                    {col4Items.length > 3 && (
-                      <button
-                        onClick={() => setCol4Expanded(!col4Expanded)}
-                        className={`w-full mt-1 py-1 px-2 text-[9px] font-black rounded-md border border-dashed text-center flex items-center justify-center gap-1 cursor-pointer transition-all ${
-                          darkMode 
-                            ? 'bg-slate-900/40 border-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white' 
-                            : 'bg-slate-100/70 border-slate-200 text-slate-500 hover:bg-slate-200 hover:text-slate-700'
-                        }`}
-                      >
-                        <span>{col4Expanded ? '🔼 نمایش کمتر' : `🔽 نمایش بیشتر (${col4Items.length - 3})`}</span>
-                      </button>
-                    )}
-                  </>
+                  col4Items.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => { setActiveTab(tab.id); }}
+                      className={`w-full py-1.5 px-2.5 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer flex items-center justify-start gap-2 border text-right ${
+                        activeTab === tab.id 
+                          ? 'bg-blue-600 border-blue-600 text-white shadow-xs font-black' 
+                          : darkMode 
+                            ? 'bg-slate-900/80 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white' 
+                            : 'bg-white border-slate-200/80 text-slate-700 hover:bg-slate-100 hover:text-blue-600 hover:border-blue-200 shadow-2xs'
+                      }`}
+                    >
+                      <span className="text-xs shrink-0">{tab.icon}</span>
+                      <span className="truncate">{tab.label}</span>
+                    </button>
+                  ))
                 );
               })()}
             </div>
