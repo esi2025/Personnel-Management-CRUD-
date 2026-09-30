@@ -2666,6 +2666,7 @@ export default function App() {
               onSaveBulk={handleSaveBulkItems} 
               equipmentCategories={equipmentCategories}
               customCategories={customCategories}
+              isLoading={loading}
             />
           )}
         </main>

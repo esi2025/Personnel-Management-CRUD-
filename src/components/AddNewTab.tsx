@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { EquipmentCategory, SharedEquipmentCategories, createEquipmentCategories, findCategory } from '../utils/categories';
 
 interface AddNewTabProps {
@@ -6,14 +6,123 @@ interface AddNewTabProps {
   onSaveBulk: (items: any[]) => Promise<{ success: boolean; savedCount: number; skipped: string[] }>;
   equipmentCategories?: SharedEquipmentCategories | EquipmentCategory[];
   customCategories?: any[];
+  isLoading?: boolean;
+}
+
+export interface AddNewTabSkeletonProps {
+  message?: string;
+  isBulk?: boolean;
+}
+
+/**
+ * Dedicated Skeleton component for AddNewTab: renders during category or field data fetching
+ * to give immediate visual feedback and eliminate layout shifts (Zero Layout Shift).
+ */
+export function AddNewTabSkeleton({ 
+  message = 'در حال واکشی دسته‌بندی‌ها و فیلدهای ثبت سخت‌افزار...',
+  isBulk = false 
+}: AddNewTabSkeletonProps) {
+  return (
+    <div 
+      className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm max-w-2xl mx-auto space-y-6 text-right font-sans transition-all animate-fade-in" 
+      dir="rtl"
+      aria-busy="true"
+      aria-label="در حال بارگذاری فرم ثبت جدید"
+    >
+      {/* Header Skeleton */}
+      <div className="border-b border-slate-100 dark:border-slate-800/80 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-600 dark:bg-blue-400 animate-ping"></span>
+            </div>
+            <div className="h-5 w-48 bg-slate-200 dark:bg-slate-800 rounded-md animate-pulse"></div>
+          </div>
+          <div className="h-3 w-64 bg-slate-100 dark:bg-slate-800/60 rounded-md animate-pulse"></div>
+        </div>
+
+        {/* Mode Toggle Switch Skeleton */}
+        <div className="bg-slate-100 dark:bg-slate-800/60 p-1 rounded-lg flex items-center border border-slate-200 dark:border-slate-700/60 w-fit self-end sm:self-auto gap-1">
+          <div className="h-7 w-24 bg-white dark:bg-slate-900 rounded-md shadow-xs animate-pulse"></div>
+          <div className="h-7 w-32 bg-slate-200/60 dark:bg-slate-700/50 rounded-md animate-pulse"></div>
+        </div>
+      </div>
+
+      {/* Custom Spinner & Status Bar */}
+      <div className="flex items-center justify-between p-3 rounded-lg bg-blue-50/70 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/40 text-blue-900 dark:text-blue-200 text-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="relative w-4 h-4 shrink-0">
+            <div className="w-4 h-4 rounded-full border-2 border-blue-200 dark:border-blue-800 border-t-blue-600 dark:border-t-blue-400 animate-spin"></div>
+          </div>
+          <span className="font-bold">{message}</span>
+        </div>
+        <span className="text-[10px] text-blue-500 dark:text-blue-400 font-mono animate-pulse">لطفاً شکیبا باشید</span>
+      </div>
+
+      {/* Category Pills Selector Grid Skeleton */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2">
+        {Array.from({ length: 8 }).map((_, idx) => (
+          <div
+            key={idx}
+            className={`p-2.5 rounded-lg border flex flex-col items-center justify-center gap-1.5 ${
+              idx === 0 
+                ? 'bg-blue-50/60 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 shadow-xs' 
+                : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200/70 dark:border-slate-800'
+            }`}
+          >
+            <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse"></div>
+            <div className="h-2.5 w-10 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+          </div>
+        ))}
+      </div>
+
+      {/* Form Fields Grid Skeleton */}
+      <div className="border-t border-slate-100/80 dark:border-slate-800/80 pt-4 space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {Array.from({ length: 6 }).map((_, idx) => (
+            <div key={idx} className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <div className="h-3 w-24 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                {idx < 2 && <span className="h-1.5 w-1.5 rounded-full bg-rose-400"></span>}
+              </div>
+              <div className="h-10 w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-md animate-pulse"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* Status Selector Skeleton */}
+        <div className="p-3 bg-blue-50/30 dark:bg-blue-950/20 rounded-lg border border-blue-100/40 dark:border-blue-900/30 space-y-2">
+          <div className="h-3 w-36 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="h-8 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md animate-pulse"></div>
+            <div className="h-8 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md animate-pulse"></div>
+            <div className="h-8 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md animate-pulse"></div>
+          </div>
+        </div>
+
+        {/* Action Buttons Skeleton */}
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div className="h-9 w-20 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md animate-pulse"></div>
+          <div className="h-9 w-32 bg-blue-200 dark:bg-blue-800/60 rounded-md animate-pulse"></div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function AddNewTab({ 
   onSave, 
   onSaveBulk, 
   equipmentCategories, 
-  customCategories = [] 
+  customCategories = [],
+  isLoading = false
 }: AddNewTabProps) {
+  // Mounting state to ensure smooth loading transition and prevent white screen on mount
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Shared equipment categories: single source of truth for standard and custom types
   const categories: SharedEquipmentCategories = useMemo(() => {
     if (equipmentCategories && (equipmentCategories as any).get && (equipmentCategories as any).list) {
@@ -130,6 +239,63 @@ export default function AddNewTab({
 
   // Bulk Pasted Text Method State
   const [pastedText, setPastedText] = useState('');
+
+  // Diagnostic logging mechanism: logs to console if received data or categories are empty
+  useEffect(() => {
+    const list = categories?.list || [];
+    const hasCategories = list.length > 0;
+    const customCount = categories?.custom?.length ?? customCategories.length ?? 0;
+
+    if (!hasCategories) {
+      console.error(
+        '%c[AddNewTab Diagnostics] ❌ دیتای دسته‌بندی‌های تجهیزات خالی است یا هنوز بارگذاری نشده است!',
+        'color: #ef4444; font-weight: bold; font-size: 12px;',
+        '\nعلت عدم رندر شدن فیلدها: شیء equipmentCategories و آرایه customCategories هر دو خالی هستند.',
+        '\nاطلاعات ورودی پراپ‌ها:',
+        { equipmentCategories, customCategories, categories }
+      );
+      return;
+    }
+
+    if (!isBulkMode) {
+      // Single Mode diagnostic checks
+      if (activeType !== 'personnel') {
+        const cat = categories.get ? categories.get(activeType) : findCategory(categories, activeType);
+        if (!cat) {
+          console.warn(
+            `%c[AddNewTab Diagnostics] ⚠️ فیلدهای فرم برای نوع انتخابی "${activeType}" رندر نمی‌شوند!`,
+            'color: #f59e0b; font-weight: bold;',
+            `\nعلت: شناسه "${activeType}" در دیتای دسته‌بندی‌های دریافتی (تعداد ${list.length} دسته) یافت نشد.`,
+            '\nدسته‌های معتبر در دسترس:',
+            list.map(c => ({ id: c.id, name: c.name, isCustom: c.isCustom }))
+          );
+        } else if (cat.isCustom && (!cat.fields || cat.fields.length === 0)) {
+          console.info(
+            `%c[AddNewTab Diagnostics] ℹ️ دسته سفارشی «${cat.name}» فاقد فیلدهای اختصاصی فنی است.`,
+            'color: #3b82f6;',
+            '\nفقط فیلدهای پایه (کد اموال، موقعیت استقرار، وضعیت و توضیحات) رندر می‌شوند.'
+          );
+        }
+      }
+    } else {
+      // Bulk Mode diagnostic checks
+      const cat = categories.get ? categories.get(bulkType) : findCategory(categories, bulkType);
+      if (!cat) {
+        console.warn(
+          `%c[AddNewTab Diagnostics] ⚠️ مشخصات فنی ایمپورت برای نوع "${bulkType}" رندر نمی‌شوند!`,
+          'color: #f59e0b; font-weight: bold;',
+          `\nعلت: شناسه هدف "${bulkType}" در دیتای دسته‌بندی‌های سامانه موجود نیست.`,
+          '\nدسته‌های معتبر در دسترس:',
+          list.map(c => ({ id: c.id, name: c.name }))
+        );
+      } else if (cat.isCustom && (!cat.fields || cat.fields.length === 0)) {
+        console.info(
+          `%c[AddNewTab Diagnostics] ℹ️ در ایمپورت گروهی، دسته سفارشی «${cat.name}» فاقد فیلدهای اختصاصی تعریف‌شده است.`,
+          'color: #3b82f6;'
+        );
+      }
+    }
+  }, [equipmentCategories, customCategories, categories, activeType, isBulkMode, bulkType]);
 
   const handleResetForm = () => {
     setPName(''); setPCode(''); setPTitle(''); setPDept(''); setPLoc(''); setPDocNum(''); setPStatus('active');
@@ -448,6 +614,37 @@ export default function AddNewTab({
     }
   };
 
+  // 1. Loading State Guard: Render AddNewTabSkeleton during data/category fetching
+  const isDataLoading = isLoading || (!isMounted && (!categories || !categories.list || categories.list.length === 0));
+  if (isDataLoading) {
+    return <AddNewTabSkeleton isBulk={isBulkMode} />;
+  }
+
+  // 2. Graceful Empty State: If loading completed but categories list is completely empty
+  if (!categories || !categories.list || categories.list.length === 0) {
+    return (
+      <div className="bg-white rounded-xl border border-amber-200/80 p-8 md:p-10 shadow-sm max-w-2xl mx-auto text-center font-sans space-y-4" dir="rtl">
+        <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-xl">
+          ⚠️
+        </div>
+        <div className="space-y-1">
+          <h4 className="text-base font-black text-slate-800">دسته‌بندی‌های سخت‌افزار در دسترس نیستند</h4>
+          <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+            داده‌های دسته‌بندی تجهیزات هنوز بارگذاری نشده‌اند یا اطلاعات دریافتی خالی است. برای تلاش مجدد صفحه را رفرش کنید.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+        >
+          <span>🔄</span>
+          <span>بارگذاری مجدد صفحه</span>
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm max-w-2xl mx-auto space-y-6 text-right" dir="rtl">
       
@@ -503,7 +700,7 @@ export default function AddNewTab({
               <span className="text-sm">👥</span>
               <span>پرسنل</span>
             </button>
-            {categories.map((cat) => {
+            {(categories.list || categories).map((cat) => {
               const isActive = activeType === cat.id || 
                 (cat.isCustom && (activeType === `custom_${cat.id}` || cat.id === activeType.replace(/^custom_/, '')));
               return (
@@ -902,7 +1099,20 @@ export default function AddNewTab({
 
             {/* Render Form for Custom Hardware Category */}
             {(() => {
+              const isBuiltIn = ['personnel', 'case', 'monitor', 'printer', 'mouse', 'keyboard', 'radio', 'cctv'].includes(activeType);
               const currentCat = categories.get ? categories.get(activeType) : findCategory(categories, activeType);
+              if (!isBuiltIn && !currentCat) {
+                console.warn(`[AddNewTab Diagnostics] عدم رندر فرم دسته: دسته انتخابی "${activeType}" در دیتای تجهیزات موجود نیست.`, {
+                  activeType,
+                  categoriesList: categories.list
+                });
+                return (
+                  <div className="p-4 bg-amber-50/80 border border-amber-200 text-amber-800 rounded-lg text-xs text-center space-y-1">
+                    <p className="font-bold">⚠️ مشخصات سخت‌افزار انتخابی در دسترس نیست.</p>
+                    <p className="text-[11px] text-slate-500">لطفاً یکی از گزینه‌های دیگر را از منوی بالا انتخاب نمایید.</p>
+                  </div>
+                );
+              }
               if (!currentCat || !currentCat.isCustom) return null;
               return (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs md:text-sm animate-fade-in text-right font-sans">
@@ -1325,7 +1535,13 @@ export default function AddNewTab({
                 /* Specs for Custom Hardware Category */
                 (() => {
                   const currentCat = categories.get ? categories.get(bulkType) : findCategory(categories, bulkType);
-                  if (!currentCat) return null;
+                  if (!currentCat) {
+                    console.warn(`[AddNewTab Diagnostics] عدم رندر مشخصات فنی ایمپورت: اطلاعات دسته سفارشی «${bulkType}» خالی است یا یافت نشد.`, {
+                      bulkType,
+                      availableCategories: categories.list
+                    });
+                    return null;
+                  }
                   return (
                     <div className="space-y-3 text-xs">
                       <div className="flex items-center gap-2 p-2 bg-emerald-50 rounded-lg border border-emerald-200 text-emerald-900 font-bold">

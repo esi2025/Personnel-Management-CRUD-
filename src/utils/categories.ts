@@ -142,14 +142,17 @@ export function buildEquipmentCategories(customCategories: any[] = []): Equipmen
 /**
  * Flexible finder for category by ID, tab ID, slug, or name (ignoring custom_ prefix or case).
  */
-export function findCategory(categories: EquipmentCategory[], idOrTypeOrTab: string | null | undefined): EquipmentCategory | undefined {
-  if (!idOrTypeOrTab) return undefined;
+export function findCategory(categories: EquipmentCategory[] | any, idOrTypeOrTab: string | null | undefined): EquipmentCategory | undefined {
+  if (!idOrTypeOrTab || !categories) return undefined;
+  const list: EquipmentCategory[] = Array.isArray(categories) ? categories : (categories?.list || []);
+  if (!Array.isArray(list) || typeof list.find !== 'function') return undefined;
   const clean = String(idOrTypeOrTab).trim().toLowerCase();
   const rawClean = clean.replace(/^custom_/, '').replace(/-tab$/, '');
   
-  return categories.find(cat => {
-    const catId = cat.id.toLowerCase();
-    const catTab = cat.tabId.toLowerCase();
+  return list.find(cat => {
+    if (!cat) return false;
+    const catId = (cat.id || '').toLowerCase();
+    const catTab = (cat.tabId || '').toLowerCase();
     const catRaw = catId.replace(/^custom_/, '');
     
     return (
@@ -158,14 +161,14 @@ export function findCategory(categories: EquipmentCategory[], idOrTypeOrTab: str
       `custom_${catId}` === clean ||
       catRaw === rawClean ||
       catTab === `${clean}-tab` ||
-      cat.name.toLowerCase() === clean
+      (cat.name && cat.name.toLowerCase() === clean)
     );
   });
 }
 
 export interface EquipmentCategoriesState {
   list: EquipmentCategory[];
-  map: Record<string, EquipmentCategory>;
+  byId: Record<string, EquipmentCategory>;
   standard: EquipmentCategory[];
   custom: EquipmentCategory[];
   get: (idOrTypeOrTab: string | null | undefined) => EquipmentCategory | undefined;
@@ -188,19 +191,19 @@ export function createEquipmentCategories(customCategories: any[] = []): SharedE
   const standard = list.filter(c => !c.isCustom);
   const custom = list.filter(c => c.isCustom);
 
-  const map: Record<string, EquipmentCategory> = {};
+  const byId: Record<string, EquipmentCategory> = {};
   for (const cat of list) {
-    map[cat.id] = cat;
-    map[cat.tabId] = cat;
+    byId[cat.id] = cat;
+    byId[cat.tabId] = cat;
     if (cat.isCustom) {
-      map[`custom_${cat.id}`] = cat;
-      map[cat.id.replace(/^custom_/, '')] = cat;
+      byId[`custom_${cat.id}`] = cat;
+      byId[cat.id.replace(/^custom_/, '')] = cat;
     }
   }
 
   const helper: EquipmentCategoriesState = {
     list,
-    map,
+    byId,
     standard,
     custom,
     get: (idOrTypeOrTab: string | null | undefined) => findCategory(list, idOrTypeOrTab),
@@ -228,8 +231,13 @@ export function createEquipmentCategories(customCategories: any[] = []): SharedE
 
   const shared: any = [...list];
   Object.assign(shared, helper);
-  for (const [k, v] of Object.entries(map)) {
-    shared[k] = v;
+  
+  // Safe indexing without clobbering Array prototype methods (e.g. map, filter, find, length, etc.)
+  const reservedKeys = new Set(['map', 'filter', 'find', 'length', 'slice', 'some', 'every', 'reduce', 'forEach', 'concat', 'includes', 'indexOf']);
+  for (const [k, v] of Object.entries(byId)) {
+    if (!reservedKeys.has(k)) {
+      shared[k] = v;
+    }
   }
 
   return shared as SharedEquipmentCategories;
