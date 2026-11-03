@@ -31,8 +31,13 @@ export interface BackupData {
   printers: Printer[];
   mice?: Mouse[];
   keyboards?: Keyboard[];
+  radios?: Radio[];
+  cctvs?: Cctv[];
   partsCatalog?: CatalogItem[];
   assignments: Assignment[];
+  repairs?: Repair[];
+  customCategories?: any[];
+  customEquipment?: any[];
 }
 
 const INITIAL_DEMO_DATA = {
@@ -203,7 +208,18 @@ export default function App() {
   const [col2Expanded, setCol2Expanded] = useState(true);
   const [col3Expanded, setCol3Expanded] = useState(false);
   const [col4Expanded, setCol4Expanded] = useState(false);
-  const [loading, setLoading] = useState(true);
+
+  // Cached DB for instant 0ms initial render (Stale-While-Revalidate pattern)
+  const initialCachedDb = (() => {
+    try {
+      const raw = typeof window !== 'undefined' ? localStorage.getItem('azarestan_ict_db') : null;
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const [loading, setLoading] = useState(!initialCachedDb);
   const [error, setError] = useState<string | null>(null);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
 
@@ -618,20 +634,20 @@ export default function App() {
     }
   }, [currentTheme, darkMode]);
 
-  // Database States
-  const [personnel, setPersonnel] = useState<Personnel[]>([]);
-  const [cases, setCases] = useState<Case[]>([]);
-  const [monitors, setMonitors] = useState<Monitor[]>([]);
-  const [printers, setPrinters] = useState<Printer[]>([]);
-  const [mice, setMice] = useState<Mouse[]>([]);
-  const [keyboards, setKeyboards] = useState<Keyboard[]>([]);
-  const [radios, setRadios] = useState<Radio[]>([]);
-  const [cctvs, setCctvs] = useState<Cctv[]>([]);
-  const [partsCatalog, setPartsCatalog] = useState<CatalogItem[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [repairs, setRepairs] = useState<Repair[]>([]);
-  const [customCategories, setCustomCategories] = useState<any[]>([]);
-  const [customEquipment, setCustomEquipment] = useState<any[]>([]);
+  // Database States (Instant SWR initialization from localStorage cache)
+  const [personnel, setPersonnel] = useState<Personnel[]>(() => initialCachedDb?.personnel || []);
+  const [cases, setCases] = useState<Case[]>(() => initialCachedDb?.cases || []);
+  const [monitors, setMonitors] = useState<Monitor[]>(() => initialCachedDb?.monitors || []);
+  const [printers, setPrinters] = useState<Printer[]>(() => initialCachedDb?.printers || []);
+  const [mice, setMice] = useState<Mouse[]>(() => initialCachedDb?.mice || []);
+  const [keyboards, setKeyboards] = useState<Keyboard[]>(() => initialCachedDb?.keyboards || []);
+  const [radios, setRadios] = useState<Radio[]>(() => initialCachedDb?.radios || []);
+  const [cctvs, setCctvs] = useState<Cctv[]>(() => initialCachedDb?.cctvs || []);
+  const [partsCatalog, setPartsCatalog] = useState<CatalogItem[]>(() => initialCachedDb?.partsCatalog || []);
+  const [assignments, setAssignments] = useState<Assignment[]>(() => initialCachedDb?.assignments || []);
+  const [repairs, setRepairs] = useState<Repair[]>(() => initialCachedDb?.repairs || []);
+  const [customCategories, setCustomCategories] = useState<any[]>(() => initialCachedDb?.customCategories || []);
+  const [customEquipment, setCustomEquipment] = useState<any[]>(() => initialCachedDb?.customEquipment || []);
 
   // Shared Equipment Categories: Single Source of Truth including standard & custom types
   const equipmentCategories = useMemo<SharedEquipmentCategories>(() => {
@@ -717,28 +733,34 @@ export default function App() {
     setQrModalOpen(true);
   };
 
-  // Fetch all databases from Express server imitation with robust localStorage fallback
+  // Fetch all databases from Express server imitation with parallel fetching and robust localStorage fallback
   const loadDatabase = async () => {
     try {
-      if (personnel.length === 0 && cases.length === 0) {
+      if (personnel.length === 0 && cases.length === 0 && !initialCachedDb) {
         setLoading(true);
       }
       setError(null);
-      const res = await fetch(`/api/data?_t=${Date.now()}`, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
-        }
-      });
-      if (!res.ok) throw new Error('NOT_OK');
+
+      // Parallel fetch data and theme for maximum loading speed
+      const [dataRes, themeRes] = await Promise.all([
+        fetch(`/api/data?_t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        }),
+        fetch('/api/theme').catch(() => null)
+      ]);
+
+      if (!dataRes.ok) throw new Error('NOT_OK');
       
-      const contentType = res.headers.get('content-type') || '';
+      const contentType = dataRes.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {
         throw new Error('NOT_JSON'); // Cookie check or SPA HTML fallback returned
       }
 
-      const data = await res.json();
+      const data = await dataRes.json();
       setPersonnel(data.personnel || []);
       setCases(data.cases || []);
       setMonitors(data.monitors || []);
@@ -753,18 +775,17 @@ export default function App() {
       setCustomCategories(data.customCategories || []);
       setCustomEquipment(data.customEquipment || []);
 
-      // Fetch custom corporate layout theme
-      try {
-        const themeRes = await fetch('/api/theme');
-        if (themeRes.ok) {
+      // Process custom theme response if present
+      if (themeRes && themeRes.ok) {
+        try {
           const themeJson = await themeRes.json();
           if (themeJson && themeJson.theme) {
             setCurrentTheme(themeJson.theme);
             localStorage.setItem('custom-theme-config', JSON.stringify(themeJson.theme));
           }
+        } catch (themeErr) {
+          console.warn("Could not retrieve custom theme from server, staying with previous layout config.", themeErr);
         }
-      } catch (themeErr) {
-        console.warn("Could not retrieve custom theme from server, staying with previous layout config.", themeErr);
       }
 
       // Cache locally
@@ -1766,22 +1787,25 @@ export default function App() {
   };
 
   // Restore Entire Database
-  const handleRestoreDatabase = async (backupData: any) => {
+  const handleRestoreDatabase = async (backupData: any): Promise<boolean> => {
     try {
       const res = await fetch('/api/restore', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
+          'Cache-Control': 'no-cache',
+          'x-operator-username': currentUser?.username || 'system',
+          'x-operator-name': encodeURIComponent(currentUser?.name || '')
         },
         body: JSON.stringify(backupData)
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.success) {
         await loadDatabase();
-        return;
+        return true;
       } else {
         alert(data.error || 'خطا در بازیابی نسخه پشتیبان بر روی سرور.');
+        return false;
       }
     } catch (err) {
       console.warn('API restore failed. Fallback to Local restore.', err);
@@ -1789,6 +1813,7 @@ export default function App() {
 
     localStorage.setItem('azarestan_ict_db', JSON.stringify(backupData));
     await loadDatabase();
+    return true;
   };
 
   // Helper callbacks to transition tabs with parameter pre-filling
@@ -2599,8 +2624,13 @@ export default function App() {
                 printers,
                 mice,
                 keyboards,
+                radios,
+                cctvs,
                 partsCatalog,
-                assignments
+                assignments,
+                repairs,
+                customCategories,
+                customEquipment
               }}
             />
           )}

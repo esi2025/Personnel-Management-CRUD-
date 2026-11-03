@@ -521,6 +521,69 @@ async function startServer() {
     res.json({ ip });
   });
 
+  // API: Test Database Connection & System Health
+  app.get("/api/db-status", (req, res) => {
+    const startTime = Date.now();
+    try {
+      // 1. Verify DATA_DIR existence and write permissions
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
+
+      // Test write/read probe file
+      const probeFile = path.join(DATA_DIR, ".db_probe");
+      const probeValue = `probe_${Date.now()}`;
+      fs.writeFileSync(probeFile, probeValue, "utf-8");
+      const readBack = fs.readFileSync(probeFile, "utf-8");
+      fs.unlinkSync(probeFile);
+      const isWritable = readBack === probeValue;
+
+      // 2. Count records in all database tables
+      const tables: Record<string, number> = {
+        personnel: readDb("personnel.json").length,
+        cases: readDb("cases.json").length,
+        monitors: readDb("monitors.json").length,
+        printers: readDb("printers.json").length,
+        mice: readDb("mice.json").length,
+        keyboards: readDb("keyboards.json").length,
+        radios: readDb("radios.json").length,
+        cctvs: readDb("cctvs.json").length,
+        partsCatalog: readDb("parts_catalog.json").length,
+        assignments: readDb("assignments.json").length,
+        repairs: readDb("repairs.json").length,
+        customCategories: readDb("custom_categories.json").length,
+        customEquipment: readDb("custom_equipment.json").length,
+      };
+
+      const totalRecords = Object.values(tables).reduce((a, b) => a + b, 0);
+      const latencyMs = Math.max(1, Date.now() - startTime);
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+      const dateStr = getPersianDateString(now);
+
+      res.json({
+        success: true,
+        status: "connected",
+        databaseType: "پایگاه داده ساختاریافته محلی (JSON Storage)",
+        directory: DATA_DIR,
+        isWritable,
+        latencyMs,
+        totalRecords,
+        tables,
+        serverTime: `${dateStr} ساعت ${timeStr}`,
+        timestamp: Date.now()
+      });
+    } catch (err: any) {
+      const latencyMs = Math.max(1, Date.now() - startTime);
+      res.status(500).json({
+        success: false,
+        status: "disconnected",
+        error: err?.message || "خطا در برقراری ارتباط با فایل‌های پایگاه داده",
+        latencyMs
+      });
+    }
+  });
+
   // API: Secure User Login
   app.post("/api/login", (req, res) => {
     const { username, password } = req.body;
@@ -2111,10 +2174,17 @@ async function startServer() {
 
   // API: Restore Backup (Replace completely with requested payload)
   app.post("/api/restore", (req, res) => {
-    const data = req.body;
+    let data = req.body;
 
     if (!data || typeof data !== "object") {
       return res.status(400).json({ error: "فایل پشتیبان نامعتبر است." });
+    }
+
+    // Support nested container if exported with { database: {...} } or { data: {...} }
+    if (data.database && typeof data.database === "object") {
+      data = data.database;
+    } else if (data.data && typeof data.data === "object" && !Array.isArray(data.data)) {
+      data = data.data;
     }
 
     const keysMap: { [key: string]: string } = {
@@ -2128,24 +2198,39 @@ async function startServer() {
       cctvs: "cctvs.json",
       partsCatalog: "parts_catalog.json",
       parts_catalog: "parts_catalog.json",
-      assignments: "assignments.json"
+      assignments: "assignments.json",
+      repairs: "repairs.json",
+      customCategories: "custom_categories.json",
+      custom_categories: "custom_categories.json",
+      customEquipment: "custom_equipment.json",
+      custom_equipment: "custom_equipment.json"
     };
+
     let restoredCount = 0;
+    let totalItems = 0;
 
     Object.keys(keysMap).forEach((key) => {
       if (Array.isArray(data[key])) {
         writeDb(keysMap[key], data[key]);
         restoredCount++;
+        totalItems += data[key].length;
       }
     });
 
     if (restoredCount === 0) {
-      return res.status(400).json({ error: "ساختار فایل پشتیبان معقول نیست." });
+      return res.status(400).json({ error: "ساختار فایل پشتیبان معقول نیست یا هیچ جدولی پیدا نشد." });
     }
+
+    const opUser = req.headers['x-operator-username'] as string || 'admin';
+    const opName = req.headers['x-operator-name'] as string || 'مدیر سیستم';
+    const clientIp = getClientIp(req);
+    addAuditLog(opUser, opName, clientIp, "restore_database", "database", "all", `بازیابی کامل پایگاه داده شامل ${restoredCount} جدول و ${totalItems} رکورد`);
 
     return res.json({
       success: true,
-      message: "بازیابی اطلاعات به طور کامل در سرور شبیه‌ساز صورت پذیرفت.",
+      restoredTables: restoredCount,
+      totalItems,
+      message: `بازیابی اطلاعات شامل ${restoredCount} جدول و ${totalItems} رکورد با موفقیت صورت پذیرفت.`,
     });
   });
 
