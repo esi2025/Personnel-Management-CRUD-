@@ -22,21 +22,21 @@ export function StatusBadge({ status }: { status?: 'working' | 'repair' | 'retir
   switch (currentStatus) {
     case 'working':
       return (
-        <span className="inline-flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-lg text-xs font-semibold shrink-0">
+        <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-xs font-semibold shrink-0 select-none">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           سالم
         </span>
       );
     case 'repair':
       return (
-        <span className="inline-flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-lg text-xs font-semibold shrink-0">
+        <span className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400 text-xs font-semibold shrink-0 select-none">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
           نیاز به تعمیر
         </span>
       );
     case 'retired':
       return (
-        <span className="inline-flex items-center gap-1.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded-lg text-xs font-semibold shrink-0">
+        <span className="inline-flex items-center gap-1.5 text-rose-600 dark:text-rose-400 text-xs font-semibold shrink-0 select-none">
           <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
           اسقاط شده
         </span>
@@ -117,41 +117,49 @@ export function CasesSubTab({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-fade-in">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <h3 className="text-lg font-bold text-slate-800">🖥️ لیست کیس‌های رایانه‌ای</h3>
+        <div className="flex items-center gap-2">
+          <span className="text-xl">🖥️</span>
+          <div>
+            <h3 className="text-base md:text-lg font-black text-slate-900 dark:text-white">لیست کیس‌های رایانه‌ای کارگاه بوشهر</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">مشخصات فنی مادربورد، پردازنده، حافظه رم، شبکه ریموت و وضعیت استقرار</p>
+          </div>
+        </div>
         <button 
           onClick={() => onTabChange('add-new-tab')}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer"
+          type="button"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs hover:shadow cursor-pointer flex items-center gap-1.5 shrink-0 select-none"
         >
-          ➕ ثبت کیس جدید
+          <span>➕</span>
+          <span>ثبت کیس جدید</span>
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+      <div className="bg-white/95 dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-2xs backdrop-blur-md">
         <div className="overflow-x-auto">
           <table className="w-full text-right border-collapse text-[11px] md:text-xs">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 whitespace-nowrap">
-                <th onClick={() => handleSort('code')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کد کیس (شماره اموال) {renderSortIndicator('code')}</th>
-                <th onClick={() => handleSort('motherboard')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">مادربورد {renderSortIndicator('motherboard')}</th>
-                <th onClick={() => handleSort('cpu')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">پردازنده (CPU) {renderSortIndicator('cpu')}</th>
-                <th onClick={() => handleSort('ram')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">رم (RAM) {renderSortIndicator('ram')}</th>
-                <th onClick={() => handleSort('vga')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کارت گرافیک {renderSortIndicator('vga')}</th>
-                <th onClick={() => handleSort('hdd')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">فضای هارد (HDD/SSD) {renderSortIndicator('hdd')}</th>
-                <th onClick={() => handleSort('power')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">پاور (منبع تغذیه) {renderSortIndicator('power')}</th>
-                <th className="p-2.5 font-bold text-right select-none">مشخصات شبکه و ریموت</th>
-                <th onClick={() => handleSort('status')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
-                <th className="p-2.5 font-bold text-right select-none">توضیحات</th>
-                <th onClick={() => handleSort('assignedTo')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">تحویل به {renderSortIndicator('assignedTo')}</th>
-                <th className="p-2.5 font-bold text-center select-none">عملیات</th>
+              <tr className="bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                <th onClick={() => handleSort('code')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">کد کیس (اموال) {renderSortIndicator('code')}</th>
+                <th onClick={() => handleSort('motherboard')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">مادربورد {renderSortIndicator('motherboard')}</th>
+                <th onClick={() => handleSort('cpu')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">پردازنده (CPU) {renderSortIndicator('cpu')}</th>
+                <th onClick={() => handleSort('ram')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">رم (RAM) {renderSortIndicator('ram')}</th>
+                <th onClick={() => handleSort('vga')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">کارت گرافیک {renderSortIndicator('vga')}</th>
+                <th onClick={() => handleSort('hdd')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">فضای ذخیره‌سازی {renderSortIndicator('hdd')}</th>
+                <th onClick={() => handleSort('power')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">پاور {renderSortIndicator('power')}</th>
+                <th className="p-3 font-bold text-right select-none">مشخصات شبکه و ریموت</th>
+                <th onClick={() => handleSort('status')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
+                <th className="p-3 font-bold text-right select-none">توضیحات</th>
+                <th onClick={() => handleSort('assignedTo')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">موقعیت استقرار {renderSortIndicator('assignedTo')}</th>
+                <th className="p-3 font-bold text-center select-none">عملیات مدیریت</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {sortedCases.length === 0 ? (
                 <tr>
-                   <td colSpan={12} className="p-6 text-center text-slate-400">
-                    کیسی در سامانه ثبت نگردیده است. نسبت به افزودن از تب ثبت جدید اقدام فرمایید.
+                   <td colSpan={12} className="p-8 text-center text-slate-400">
+                    کیسی در سامانه ثبت نگردیده است. جهت افزودن، از دکمه «ثبت کیس جدید» استفاده فرمایید.
                   </td>
                 </tr>
               ) : (
@@ -160,13 +168,13 @@ export function CasesSubTab({
                   return (
                     <tr 
                       key={c.code} 
-                      className="border-b border-slate-100 hover:bg-slate-50/80 transition cursor-pointer group whitespace-nowrap"
+                      className="hover:bg-blue-50/30 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group whitespace-nowrap"
                       onClick={() => onShowQR(c.code, 'case', c)}
                       title="کلیک روی سطر جهت مشاهده و چاپ برچسب بارکد اموال"
                     >
-                      <td className="p-2.5 font-mono font-bold text-slate-900 font-sans">
-                        <div className="flex items-center gap-1.5 justify-start font-mono">
-                          <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none font-sans">
+                      <td className="p-3 font-mono font-bold text-slate-900 dark:text-white">
+                        <div className="flex items-center gap-1.5 justify-start font-mono tabular-nums">
+                          <span className="text-[10px] text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/80 border border-blue-200/80 dark:border-blue-800/80 px-1.5 py-0.5 rounded-md font-sans font-bold flex items-center gap-0.5 shrink-0 select-none">
                              📸 QR
                           </span>
                           <span>{c.code}</span>
@@ -182,31 +190,32 @@ export function CasesSubTab({
                           </div>
                         )}
                       </td>
-                      <td className="p-2.5 text-slate-600">{c.motherboard}</td>
-                      <td className="p-2.5 text-slate-600">{c.cpu}</td>
-                      <td className="p-2.5">
-                        <span className="bg-slate-100 text-slate-800 px-2 py-0.5 rounded text-[10px] md:text-xs font-mono inline-block whitespace-nowrap">
+                      <td className="p-3 text-slate-700 dark:text-slate-300 font-medium">{c.motherboard}</td>
+                      <td className="p-3 text-slate-700 dark:text-slate-300 font-medium">{c.cpu}</td>
+                      <td className="p-3">
+                        <span className="font-mono text-xs tabular-nums font-semibold text-slate-800 dark:text-slate-200">
                           {c.ramType} - {c.ramQty}
                         </span>
                       </td>
-                      <td className="p-2.5 text-slate-600">{c.vga}</td>
-                      <td className="p-2.5 text-slate-500 font-mono text-[10px] md:text-[11px]">{c.hdd1} | {c.hdd2}</td>
-                      <td className="p-2.5 text-slate-600 font-mono text-[10px] md:text-[11px]">{c.power || "—"}</td>
-                      <td className="p-2.5 text-right font-sans" onClick={(e) => e.stopPropagation()}>
-                        <div className="space-y-0.5 max-w-[180px]">
-                          {c.hostName && <div className="text-[11px] font-bold text-slate-800">🖥️ {c.hostName}</div>}
-                          {c.ipAddress && <div className="text-[11px] text-blue-600 font-mono" dir="ltr">{c.ipAddress}</div>}
-                          {c.macAddress && <div className="text-[10px] text-slate-400 font-mono" dir="ltr">{c.macAddress}</div>}
+                      <td className="p-3 text-slate-600 dark:text-slate-400">{c.vga}</td>
+                      <td className="p-3 text-slate-600 dark:text-slate-400 font-mono text-[11px] tabular-nums">{c.hdd1} {c.hdd2 && c.hdd2 !== '-' ? `| ${c.hdd2}` : ''}</td>
+                      <td className="p-3 text-slate-600 dark:text-slate-400 font-mono text-[11px] tabular-nums">{c.power || "—"}</td>
+                      <td className="p-3 text-right font-sans" onClick={(e) => e.stopPropagation()}>
+                        <div className="space-y-0.5 max-w-[190px]">
+                          {c.hostName && <div className="text-[11px] font-bold text-slate-800 dark:text-slate-200">🖥️ {c.hostName}</div>}
+                          {c.ipAddress && <div className="text-[11px] text-blue-600 dark:text-blue-400 font-mono tabular-nums" dir="ltr">{c.ipAddress}</div>}
+                          {c.macAddress && <div className="text-[10px] text-slate-400 font-mono tabular-nums" dir="ltr">{c.macAddress}</div>}
                           {!c.hostName && !c.ipAddress && !c.macAddress && <span className="text-slate-400">—</span>}
                           
                           {(c.ipAddress || c.hostName) && (
-                            <div className="flex items-center gap-1 mt-1">
+                            <div className="flex items-center gap-1.5 mt-1">
                               <button
                                 onClick={() => downloadRdpFile(c.ipAddress || '', c.hostName || '')}
                                 title="دانلود فایل RDP برای اتصال ریموت"
-                                className="bg-blue-50 hover:bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-medium border border-blue-200 transition cursor-pointer"
+                                type="button"
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-0.5 rounded-lg text-[10px] font-bold transition cursor-pointer"
                               >
-                                📥 فایل RDP
+                                📥 RDP
                               </button>
                               <button
                                 onClick={() => {
@@ -214,50 +223,60 @@ export function CasesSubTab({
                                   alert('دستور ریموت کپی شد! می‌توانید با فشردن Win+R و وارد کردن آن ریموت بزنید:\n' + `mstsc /v:${c.ipAddress || c.hostName}`);
                                 }}
                                 title="کپی دستور ریموت (mstsc)"
-                                className="bg-slate-50 hover:bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] border border-slate-200 transition cursor-pointer font-mono"
+                                type="button"
+                                className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-lg text-[10px] transition cursor-pointer font-mono"
                               >
-                                📋 دستور RDP
+                                📋 دستور
                               </button>
                             </div>
                           )}
                         </div>
                       </td>
-                      <td className="p-2.5">
+                      <td className="p-3">
                         <StatusBadge status={c.status} />
                       </td>
-                      <td className="p-2.5 text-slate-500 max-w-[150px] truncate" title={c.description || undefined}>
+                      <td className="p-3 text-slate-500 dark:text-slate-400 max-w-[160px] truncate" title={c.description || undefined}>
                         {c.description || '—'}
                       </td>
-                      <td className="p-2.5">
+                      <td className="p-3">
                         {owner ? (
-                          <span className="bg-blue-50 border border-blue-200 text-blue-800 px-2 py-0.5 rounded-full text-[10px] md:text-xs font-semibold">
-                            👥 {owner.name} ({owner.code})
-                          </span>
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
+                            <span className="text-slate-400">👤</span>
+                            <span>{owner.name}</span>
+                            <span className="font-mono text-[10px] text-slate-400 tabular-nums">({owner.code})</span>
+                          </div>
                         ) : (
-                          <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full text-[10px] md:text-xs">
-                            {c.location ? `📍 ${c.location}` : '📦 مستقر در انبار کارگاه'}
-                          </span>
+                          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                            <span className="text-slate-400">📍</span>
+                            <span>{c.location || 'مستقر در انبار کارگاه'}</span>
+                          </div>
                         )}
                       </td>
-                      <td className="p-2.5 text-center" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-center gap-1">
+                      <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
                           <button 
                             onClick={() => onEdit(c)}
-                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
+                            type="button"
+                            className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-lg text-[11px] font-bold border border-slate-200/80 dark:border-slate-700 transition cursor-pointer"
+                            title="ویرایش مشخصات کیس"
                           >
                             ✏️ ویرایش
                           </button>
                           <button 
-                            onClick={() => onDelete(c.code)}
-                            className="bg-red-50 hover:bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
-                          >
-                            🗑️ حذف
-                          </button>
-                          <button 
                             onClick={() => onTransfer(c.code)}
-                            className="bg-indigo-650 hover:bg-indigo-700 text-white px-2 py-0.5 rounded text-[10px] md:text-xs transition font-semibold cursor-pointer"
+                            type="button"
+                            className="bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-lg text-[11px] font-bold border border-blue-200/80 dark:border-blue-800/80 transition cursor-pointer"
+                            title="انتقال یا تخصیص کیس"
                           >
                             🔄 جابجایی
+                          </button>
+                          <button 
+                            onClick={() => onDelete(c.code)}
+                            type="button"
+                            className="bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 px-2 py-1 rounded-lg text-[11px] font-bold border border-rose-200/70 dark:border-rose-900/50 transition cursor-pointer"
+                            title="حذف کیس از موجودی"
+                          >
+                            🗑️ حذف
                           </button>
                         </div>
                       </td>
@@ -338,35 +357,43 @@ export function MonitorsSubTab({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-fade-in">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <h3 className="text-lg font-bold text-slate-800">📺 لیست مانیتورهای موجود</h3>
+        <div className="flex items-center gap-2">
+          <span className="text-xl">📺</span>
+          <div>
+            <h3 className="text-base md:text-lg font-black text-slate-900 dark:text-white">فهرست مانیتورهای کارگاه بوشهر</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">اطلاعات مدل، ابعاد صفحه، وضعیت سلامت و مشخصات تحویل‌گیرنده</p>
+          </div>
+        </div>
         <button 
           onClick={() => onTabChange('add-new-tab')}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer"
+          type="button"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs hover:shadow cursor-pointer flex items-center gap-1.5 shrink-0 select-none"
         >
-          ➕ ثبت مانیتور جدید
+          <span>➕</span>
+          <span>ثبت مانیتور جدید</span>
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+      <div className="bg-white/95 dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-2xs backdrop-blur-md">
         <div className="overflow-x-auto">
           <table className="w-full text-right border-collapse text-[11px] md:text-xs">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 whitespace-nowrap">
-                <th onClick={() => handleSort('code')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کد مانیتور (اموال) {renderSortIndicator('code')}</th>
-                <th onClick={() => handleSort('model')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">نام مدل و مشخصات فنی {renderSortIndicator('model')}</th>
-                <th onClick={() => handleSort('status')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
-                <th className="p-2.5 font-bold text-right select-none">توضیحات</th>
-                <th onClick={() => handleSort('assignedTo')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کاربر تحویل گیرنده {renderSortIndicator('assignedTo')}</th>
-                <th className="p-2.5 text-center font-bold select-none">عملیات</th>
+              <tr className="bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                <th onClick={() => handleSort('code')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">کد مانیتور (اموال) {renderSortIndicator('code')}</th>
+                <th onClick={() => handleSort('model')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">نام مدل و ابعاد {renderSortIndicator('model')}</th>
+                <th onClick={() => handleSort('status')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
+                <th className="p-3 font-bold text-right select-none">توضیحات</th>
+                <th onClick={() => handleSort('assignedTo')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">موقعیت استقرار {renderSortIndicator('assignedTo')}</th>
+                <th className="p-3 text-center font-bold select-none">عملیات مدیریت</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {sortedMonitors.length === 0 ? (
                 <tr>
-                   <td colSpan={6} className="p-6 text-center text-slate-400">
-                    مانیتوری در سامانه ثبت نگردیده است.
+                   <td colSpan={6} className="p-8 text-center text-slate-400">
+                    مانیتوری در سامانه ثبت نگردیده است. جهت افزودن، روی دکمه «ثبت مانیتور جدید» کلیک فرمایید.
                   </td>
                 </tr>
               ) : (
@@ -375,13 +402,13 @@ export function MonitorsSubTab({
                   return (
                     <tr 
                       key={m.code} 
-                      className="border-b border-slate-100 hover:bg-slate-50/80 transition cursor-pointer group whitespace-nowrap"
+                      className="hover:bg-blue-50/30 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group whitespace-nowrap"
                       onClick={() => onShowQR(m.code, 'monitor', m)}
                       title="کلیک روی سطر جهت مشاهده و چاپ برچسب بارکد اموال"
                     >
-                      <td className="p-2.5 font-mono font-bold text-slate-900 font-sans">
-                        <div className="flex items-center gap-1.5 justify-start font-mono">
-                          <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none font-sans">
+                      <td className="p-3 font-mono font-bold text-slate-900 dark:text-white">
+                        <div className="flex items-center gap-1.5 justify-start font-mono tabular-nums">
+                          <span className="text-[10px] text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/80 border border-blue-200/80 dark:border-blue-800/80 px-1.5 py-0.5 rounded-md font-sans font-bold flex items-center gap-0.5 shrink-0 select-none">
                             📸 QR
                           </span>
                           <span>{m.code}</span>
@@ -397,43 +424,52 @@ export function MonitorsSubTab({
                           </div>
                         )}
                       </td>
-                      <td className="p-2.5 text-slate-600">{m.model}</td>
-                      <td className="p-2.5">
+                      <td className="p-3 text-slate-700 dark:text-slate-300 font-medium">{m.model}</td>
+                      <td className="p-3">
                         <StatusBadge status={m.status} />
                       </td>
-                      <td className="p-2.5 text-slate-500 max-w-[150px] truncate" title={m.description || undefined}>
+                      <td className="p-3 text-slate-500 dark:text-slate-400 max-w-[160px] truncate" title={m.description || undefined}>
                         {m.description || '—'}
                       </td>
-                      <td className="p-2.5">
+                      <td className="p-3">
                         {owner ? (
-                          <span className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-2 py-0.5 rounded-full text-[10px] md:text-xs font-semibold">
-                            👥 {owner.name} ({owner.code})
-                          </span>
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
+                            <span className="text-slate-400">👤</span>
+                            <span>{owner.name}</span>
+                            <span className="font-mono text-[10px] text-slate-400 tabular-nums">({owner.code})</span>
+                          </div>
                         ) : (
-                          <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full text-[10px] md:text-xs">
-                            {m.location ? `📍 ${m.location}` : '📦 مستقر در انبار کارگاه'}
-                          </span>
+                          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                            <span className="text-slate-400">📍</span>
+                            <span>{m.location ? m.location : 'مستقر در انبار کارگاه'}</span>
+                          </div>
                         )}
                       </td>
-                      <td className="p-2.5 text-center" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-center gap-1">
+                      <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
                           <button 
                             onClick={() => onEdit(m)}
-                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
+                            type="button"
+                            className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-lg text-[11px] font-bold border border-slate-200/80 dark:border-slate-700 transition cursor-pointer"
+                            title="ویرایش مشخصات مانیتور"
                           >
                             ✏️ ویرایش
                           </button>
                           <button 
-                            onClick={() => onDelete(m.code)}
-                            className="bg-red-50 hover:bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
-                          >
-                            🗑️ حذف
-                          </button>
-                          <button 
                             onClick={() => onTransfer(m.code)}
-                            className="bg-indigo-650 hover:bg-indigo-700 text-white px-2 py-0.5 rounded text-[10px] md:text-xs transition font-semibold cursor-pointer"
+                            type="button"
+                            className="bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-lg text-[11px] font-bold border border-blue-200/80 dark:border-blue-800/80 transition cursor-pointer"
+                            title="انتقال یا تخصیص مانیتور"
                           >
                             🔄 جابجایی
+                          </button>
+                          <button 
+                            onClick={() => onDelete(m.code)}
+                            type="button"
+                            className="bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 px-2 py-1 rounded-lg text-[11px] font-bold border border-rose-200/70 dark:border-rose-900/50 transition cursor-pointer"
+                            title="حذف مانیتور از سیستم"
+                          >
+                            🗑️ حذف
                           </button>
                         </div>
                       </td>
@@ -514,36 +550,44 @@ export function PrintersSubTab({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-fade-in">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <h3 className="text-lg font-bold text-slate-800">🖨️ لیست پرینترها و چاپگرها</h3>
+        <div className="flex items-center gap-2">
+          <span className="text-xl">🖨️</span>
+          <div>
+            <h3 className="text-base md:text-lg font-black text-slate-900 dark:text-white">فهرست پرینترها و تجهیزات چاپ کارگاه بوشهر</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">اطلاعات مدل، آدرس IP تحت شبکه، پورت مدیریت وب و وضعیت تخصیص</p>
+          </div>
+        </div>
         <button 
           onClick={() => onTabChange('add-new-tab')}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer"
+          type="button"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs hover:shadow cursor-pointer flex items-center gap-1.5 shrink-0 select-none"
         >
-          ➕ ثبت پرینتر جدید
+          <span>➕</span>
+          <span>ثبت پرینتر جدید</span>
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+      <div className="bg-white/95 dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-2xs backdrop-blur-md">
         <div className="overflow-x-auto">
           <table className="w-full text-right border-collapse text-[11px] md:text-xs">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 whitespace-nowrap">
-                <th onClick={() => handleSort('code')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کده پرینتر (اموال) {renderSortIndicator('code')}</th>
-                <th onClick={() => handleSort('model')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">مدل و سازنده {renderSortIndicator('model')}</th>
-                <th onClick={() => handleSort('status')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
-                <th onClick={() => handleSort('ipAddress')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">مشخصات شبکه و ریموت {renderSortIndicator('ipAddress')}</th>
-                <th className="p-2.5 font-bold text-right select-none">توضیحات</th>
-                <th onClick={() => handleSort('assignedTo')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">تحویل به کاربر کارگاه {renderSortIndicator('assignedTo')}</th>
-                <th className="p-2.5 text-center font-bold select-none">عملیات</th>
+              <tr className="bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                <th onClick={() => handleSort('code')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">کد پرینتر (اموال) {renderSortIndicator('code')}</th>
+                <th onClick={() => handleSort('model')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">مدل و سازنده {renderSortIndicator('model')}</th>
+                <th onClick={() => handleSort('status')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
+                <th onClick={() => handleSort('ipAddress')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">مشخصات شبکه و وب {renderSortIndicator('ipAddress')}</th>
+                <th className="p-3 font-bold text-right select-none">توضیحات</th>
+                <th onClick={() => handleSort('assignedTo')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">موقعیت استقرار {renderSortIndicator('assignedTo')}</th>
+                <th className="p-3 text-center font-bold select-none">عملیات مدیریت</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {sortedPrinters.length === 0 ? (
                 <tr>
-                   <td colSpan={7} className="p-6 text-center text-slate-400">
-                    پرینتری در سیستم ثبت نگردیده است.
+                   <td colSpan={7} className="p-8 text-center text-slate-400">
+                    پرینتری در سیستم ثبت نگردیده است. جهت افزودن، از دکمه «ثبت پرینتر جدید» استفاده فرمایید.
                   </td>
                 </tr>
               ) : (
@@ -552,13 +596,13 @@ export function PrintersSubTab({
                   return (
                     <tr 
                       key={pr.code} 
-                      className="border-b border-slate-100 hover:bg-slate-50/80 transition cursor-pointer group whitespace-nowrap"
+                      className="hover:bg-blue-50/30 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group whitespace-nowrap"
                       onClick={() => onShowQR(pr.code, 'printer', pr)}
                       title="کلیک روی سطر جهت مشاهده و چاپ برچسب بارکد اموال"
                     >
-                      <td className="p-2.5 font-mono font-bold text-slate-900 font-sans">
-                        <div className="flex items-center gap-1.5 justify-start font-mono">
-                          <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none font-sans">
+                      <td className="p-3 font-mono font-bold text-slate-900 dark:text-white">
+                        <div className="flex items-center gap-1.5 justify-start font-mono tabular-nums">
+                          <span className="text-[10px] text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/80 border border-blue-200/80 dark:border-blue-800/80 px-1.5 py-0.5 rounded-md font-sans font-bold flex items-center gap-0.5 shrink-0 select-none">
                             📸 QR
                           </span>
                           <span>{pr.code}</span>
@@ -574,20 +618,20 @@ export function PrintersSubTab({
                           </div>
                         )}
                       </td>
-                      <td className="p-2.5 text-slate-600">{pr.model}</td>
-                      <td className="p-2.5">
+                      <td className="p-3 text-slate-700 dark:text-slate-300 font-medium">{pr.model}</td>
+                      <td className="p-3">
                         <StatusBadge status={pr.status} />
                       </td>
-                      <td className="p-2.5">
+                      <td className="p-3">
                         {pr.ipAddress || pr.macAddress || pr.accessLink ? (
                           <div className="flex flex-col gap-1 items-start font-mono text-[10px] md:text-xs" onClick={(e) => e.stopPropagation()}>
                             {pr.ipAddress && (
-                              <span className="text-[10px] text-blue-600 bg-blue-50/70 border border-blue-100 px-1.5 py-0.5 rounded font-bold" dir="ltr" title="آدرس IP">
+                              <span className="font-mono text-blue-600 dark:text-blue-400 tabular-nums font-bold" dir="ltr" title="آدرس IP">
                                 IP: {pr.ipAddress}
                               </span>
                             )}
                             {pr.macAddress && (
-                              <span className="text-[9px] text-slate-500" dir="ltr" title="آدرس فیزیکی مک کارت شبکه">
+                              <span className="text-[10px] text-slate-400 font-mono tabular-nums" dir="ltr" title="آدرس فیزیکی مک کارت شبکه">
                                 MAC: {pr.macAddress}
                               </span>
                             )}
@@ -596,10 +640,10 @@ export function PrintersSubTab({
                                 href={pr.accessLink || `http://${pr.ipAddress}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-[9px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-1 py-0.5 rounded flex items-center gap-1 font-sans font-bold transition select-none"
+                                className="text-[10px] text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 border border-emerald-200/80 dark:border-emerald-800/60 px-2 py-0.5 rounded-lg flex items-center gap-1 font-sans font-bold transition select-none mt-0.5"
                                 title="کلیک جهت ورود به صفحه وب مدیریت پرینتر"
                               >
-                                🌐 ریموت وب
+                                🌐 پنل وب
                               </a>
                             )}
                           </div>
@@ -607,39 +651,48 @@ export function PrintersSubTab({
                           <span className="text-slate-400">—</span>
                         )}
                       </td>
-                      <td className="p-2.5 text-slate-500 max-w-[150px] truncate" title={pr.description || undefined}>
+                      <td className="p-3 text-slate-500 dark:text-slate-400 max-w-[160px] truncate" title={pr.description || undefined}>
                         {pr.description || '—'}
                       </td>
-                      <td className="p-2.5">
+                      <td className="p-3">
                         {owner ? (
-                          <span className="bg-amber-50 border border-amber-200 text-amber-800 px-2 py-0.5 rounded-full text-[10px] md:text-xs font-semibold">
-                            👥 {owner.name} ({owner.code})
-                          </span>
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
+                            <span className="text-slate-400">👤</span>
+                            <span>{owner.name}</span>
+                            <span className="font-mono text-[10px] text-slate-400 tabular-nums">({owner.code})</span>
+                          </div>
                         ) : (
-                          <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full text-[10px] md:text-xs">
-                            {pr.location ? `📍 ${pr.location}` : '📦 مستقر در انبار کارگاه'}
-                          </span>
+                          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                            <span className="text-slate-400">📍</span>
+                            <span>{pr.location ? pr.location : 'مستقر در انبار کارگاه'}</span>
+                          </div>
                         )}
                       </td>
-                      <td className="p-2.5 text-center" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-center gap-1">
+                      <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
                           <button 
                             onClick={() => onEdit(pr)}
-                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
+                            type="button"
+                            className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-lg text-[11px] font-bold border border-slate-200/80 dark:border-slate-700 transition cursor-pointer"
+                            title="ویرایش مشخصات پرینتر"
                           >
                             ✏️ ویرایش
                           </button>
                           <button 
-                            onClick={() => onDelete(pr.code)}
-                            className="bg-red-50 hover:bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
-                          >
-                            🗑️ حذف
-                          </button>
-                          <button 
                             onClick={() => onTransfer(pr.code)}
-                            className="bg-indigo-650 hover:bg-indigo-700 text-white px-2 py-0.5 rounded text-[10px] md:text-xs transition font-semibold cursor-pointer"
+                            type="button"
+                            className="bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-lg text-[11px] font-bold border border-blue-200/80 dark:border-blue-800/80 transition cursor-pointer"
+                            title="انتقال یا تخصیص پرینتر"
                           >
                             🔄 جابجایی
+                          </button>
+                          <button 
+                            onClick={() => onDelete(pr.code)}
+                            type="button"
+                            className="bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 px-2 py-1 rounded-lg text-[11px] font-bold border border-rose-200/70 dark:border-rose-900/50 transition cursor-pointer"
+                            title="حذف پرینتر از سیستم"
+                          >
+                            🗑️ حذف
                           </button>
                         </div>
                       </td>
@@ -720,35 +773,43 @@ export function MiceSubTab({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-fade-in">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <h3 className="text-lg font-bold text-slate-800">🖱️ لیست ماوس‌ها</h3>
+        <div className="flex items-center gap-2">
+          <span className="text-xl">🖱️</span>
+          <div>
+            <h3 className="text-base md:text-lg font-black text-slate-900 dark:text-white">فهرست ماوس‌های کارگاه بوشهر</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">کدهای اموال، وضعیت اتصال، مشخصات سلامت و موقعیت استقرار</p>
+          </div>
+        </div>
         <button 
           onClick={() => onTabChange('add-new-tab')}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer"
+          type="button"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs hover:shadow cursor-pointer flex items-center gap-1.5 shrink-0 select-none"
         >
-          ➕ ثبت ماوس جدید
+          <span>➕</span>
+          <span>ثبت ماوس جدید</span>
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+      <div className="bg-white/95 dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-2xs backdrop-blur-md">
         <div className="overflow-x-auto">
           <table className="w-full text-right border-collapse text-[11px] md:text-xs">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 whitespace-nowrap">
-                <th onClick={() => handleSort('code')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کد ماوس (اموال) {renderSortIndicator('code')}</th>
-                <th onClick={() => handleSort('model')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">مدل و برند {renderSortIndicator('model')}</th>
-                <th onClick={() => handleSort('status')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
-                <th className="p-2.5 font-bold text-right select-none">توضیحات</th>
-                <th onClick={() => handleSort('assignedTo')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کاربر تحویل گیرنده {renderSortIndicator('assignedTo')}</th>
-                <th className="p-2.5 text-center font-bold select-none">عملیات</th>
+              <tr className="bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                <th onClick={() => handleSort('code')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">کد ماوس (اموال) {renderSortIndicator('code')}</th>
+                <th onClick={() => handleSort('model')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">مدل و سازنده {renderSortIndicator('model')}</th>
+                <th onClick={() => handleSort('status')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
+                <th className="p-3 font-bold text-right select-none">توضیحات</th>
+                <th onClick={() => handleSort('assignedTo')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">موقعیت استقرار {renderSortIndicator('assignedTo')}</th>
+                <th className="p-3 text-center font-bold select-none">عملیات مدیریت</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {sortedMice.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-6 text-center text-slate-400">
-                    ماوسی در سیستم ثبت نگردیده است.
+                  <td colSpan={6} className="p-8 text-center text-slate-400">
+                    ماوسی در سیستم ثبت نگردیده است. جهت افزودن، از دکمه «ثبت ماوس جدید» استفاده فرمایید.
                   </td>
                 </tr>
               ) : (
@@ -757,18 +818,18 @@ export function MiceSubTab({
                   return (
                     <tr 
                       key={m.code} 
-                      className="border-b border-slate-100 hover:bg-slate-50/80 transition cursor-pointer group whitespace-nowrap"
+                      className="hover:bg-blue-50/30 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group whitespace-nowrap"
                       onClick={() => onShowQR(m.code, 'mouse', m)}
                       title="کلیک روی سطر جهت مشاهده و چاپ برچسب بارکد اموال"
                     >
-                      <td className="p-2.5 font-mono font-bold text-slate-900 font-sans">
-                        <div className="flex items-center gap-1.5 justify-start font-mono font-sans">
-                          <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none font-sans">
+                      <td className="p-3 font-mono font-bold text-slate-900 dark:text-white">
+                        <div className="flex items-center gap-1.5 justify-start font-mono tabular-nums">
+                          <span className="text-[10px] text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/80 border border-blue-200/80 dark:border-blue-800/80 px-1.5 py-0.5 rounded-md font-sans font-bold flex items-center gap-0.5 shrink-0 select-none">
                             📸 QR
                           </span>
                           <span>{m.code}</span>
                           {isServiceOverdue(m.lastServiced) && (
-                            <span className="text-amber-500 text-sm animate-pulse select-none inline-block ml-1 font-sans" title={`⚠️ نیاز به سرویس: بیش از ۶ ماه از آخرین سرویس گذشته است (${m.lastServiced})`}>
+                            <span className="text-amber-500 text-sm animate-pulse select-none inline-block ml-1" title={`⚠️ نیاز به سرویس: بیش از ۶ ماه از آخرین سرویس گذشته است (${m.lastServiced})`}>
                               ⚠️
                             </span>
                           )}
@@ -779,43 +840,52 @@ export function MiceSubTab({
                           </div>
                         )}
                       </td>
-                      <td className="p-2.5 text-slate-600">{m.model}</td>
-                      <td className="p-2.5">
+                      <td className="p-3 text-slate-700 dark:text-slate-300 font-medium">{m.model}</td>
+                      <td className="p-3">
                         <StatusBadge status={m.status} />
                       </td>
-                      <td className="p-2.5 text-slate-500 max-w-[150px] truncate" title={m.description || undefined}>
+                      <td className="p-3 text-slate-500 dark:text-slate-400 max-w-[160px] truncate" title={m.description || undefined}>
                         {m.description || '—'}
                       </td>
-                      <td className="p-2.5">
+                      <td className="p-3">
                         {owner ? (
-                          <span className="bg-pink-50 border border-pink-200 text-pink-800 px-2 py-0.5 rounded-full text-[10px] md:text-xs font-semibold">
-                            👥 {owner.name} ({owner.code})
-                          </span>
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
+                            <span className="text-slate-400">👤</span>
+                            <span>{owner.name}</span>
+                            <span className="font-mono text-[10px] text-slate-400 tabular-nums">({owner.code})</span>
+                          </div>
                         ) : (
-                          <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full text-[10px] md:text-xs">
-                            {m.location ? `📍 ${m.location}` : '📦 مستقر در انبار کارگاه'}
-                          </span>
+                          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                            <span className="text-slate-400">📍</span>
+                            <span>{m.location ? m.location : 'مستقر در انبار کارگاه'}</span>
+                          </div>
                         )}
                       </td>
-                      <td className="p-2.5 text-center" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-center gap-1">
+                      <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
                           <button 
                             onClick={() => onEdit(m)}
-                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
+                            type="button"
+                            className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-lg text-[11px] font-bold border border-slate-200/80 dark:border-slate-700 transition cursor-pointer"
+                            title="ویرایش مشخصات ماوس"
                           >
                             ✏️ ویرایش
                           </button>
                           <button 
-                            onClick={() => onDelete(m.code)}
-                            className="bg-red-50 hover:bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
-                          >
-                            🗑️ حذف
-                          </button>
-                          <button 
                             onClick={() => onTransfer(m.code)}
-                            className="bg-indigo-650 hover:bg-indigo-700 text-white px-2 py-0.5 rounded text-[10px] md:text-xs transition font-semibold cursor-pointer"
+                            type="button"
+                            className="bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-lg text-[11px] font-bold border border-blue-200/80 dark:border-blue-800/80 transition cursor-pointer"
+                            title="انتقال یا تخصیص ماوس"
                           >
                             🔄 جابجایی
+                          </button>
+                          <button 
+                            onClick={() => onDelete(m.code)}
+                            type="button"
+                            className="bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 px-2 py-1 rounded-lg text-[11px] font-bold border border-rose-200/70 dark:border-rose-900/50 transition cursor-pointer"
+                            title="حذف ماوس از سیستم"
+                          >
+                            🗑️ حذف
                           </button>
                         </div>
                       </td>
@@ -896,35 +966,43 @@ export function KeyboardsSubTab({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-fade-in">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <h3 className="text-lg font-bold text-slate-800">⌨️ لیست کیبوردها</h3>
+        <div className="flex items-center gap-2">
+          <span className="text-xl">⌨️</span>
+          <div>
+            <h3 className="text-base md:text-lg font-black text-slate-900 dark:text-white">فهرست کیبوردهای کارگاه بوشهر</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">کدهای اموال، وضعیت سلامت کلیدها و موقعیت استقرار</p>
+          </div>
+        </div>
         <button 
           onClick={() => onTabChange('add-new-tab')}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer"
+          type="button"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs hover:shadow cursor-pointer flex items-center gap-1.5 shrink-0 select-none"
         >
-          ➕ ثبت کیبورد جدید
+          <span>➕</span>
+          <span>ثبت کیبورد جدید</span>
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+      <div className="bg-white/95 dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-2xs backdrop-blur-md">
         <div className="overflow-x-auto">
           <table className="w-full text-right border-collapse text-[11px] md:text-xs">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 whitespace-nowrap">
-                <th onClick={() => handleSort('code')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کد کیبورد (اموال) {renderSortIndicator('code')}</th>
-                <th onClick={() => handleSort('model')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">مدل و برند {renderSortIndicator('model')}</th>
-                <th onClick={() => handleSort('status')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
-                <th className="p-2.5 font-bold text-right select-none">توضیحات</th>
-                <th onClick={() => handleSort('assignedTo')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کاربر تحویل گیرنده {renderSortIndicator('assignedTo')}</th>
-                <th className="p-2.5 text-center font-bold select-none">عملیات</th>
+              <tr className="bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                <th onClick={() => handleSort('code')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">کد کیبورد (اموال) {renderSortIndicator('code')}</th>
+                <th onClick={() => handleSort('model')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">مدل و سازنده {renderSortIndicator('model')}</th>
+                <th onClick={() => handleSort('status')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
+                <th className="p-3 font-bold text-right select-none">توضیحات</th>
+                <th onClick={() => handleSort('assignedTo')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">موقعیت استقرار {renderSortIndicator('assignedTo')}</th>
+                <th className="p-3 text-center font-bold select-none">عملیات مدیریت</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {sortedKeyboards.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-6 text-center text-slate-400">
-                    کیبوردی در سیستم ثبت نگردیده است.
+                  <td colSpan={6} className="p-8 text-center text-slate-400">
+                    کیبوردی در سیستم ثبت نگردیده است. جهت افزودن، از دکمه «ثبت کیبورد جدید» استفاده فرمایید.
                   </td>
                 </tr>
               ) : (
@@ -933,18 +1011,18 @@ export function KeyboardsSubTab({
                   return (
                     <tr 
                       key={k.code} 
-                      className="border-b border-slate-100 hover:bg-slate-50/80 transition cursor-pointer group whitespace-nowrap"
+                      className="hover:bg-blue-50/30 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group whitespace-nowrap"
                       onClick={() => onShowQR(k.code, 'keyboard', k)}
                       title="کلیک روی سطر جهت مشاهده و چاپ برچسب بارکد اموال"
                     >
-                      <td className="p-2.5 font-mono font-bold text-slate-900 font-sans">
-                        <div className="flex items-center gap-1.5 justify-start font-mono">
-                          <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none font-sans">
+                      <td className="p-3 font-mono font-bold text-slate-900 dark:text-white">
+                        <div className="flex items-center gap-1.5 justify-start font-mono tabular-nums">
+                          <span className="text-[10px] text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/80 border border-blue-200/80 dark:border-blue-800/80 px-1.5 py-0.5 rounded-md font-sans font-bold flex items-center gap-0.5 shrink-0 select-none">
                             📸 QR
                           </span>
                           <span>{k.code}</span>
                           {isServiceOverdue(k.lastServiced) && (
-                            <span className="text-amber-500 text-sm animate-pulse select-none inline-block ml-1 font-sans" title={`⚠️ نیاز به سرویس: بیش از ۶ ماه از آخرین سرویس گذشته است (${k.lastServiced})`}>
+                            <span className="text-amber-500 text-sm animate-pulse select-none inline-block ml-1" title={`⚠️ نیاز به سرویس: بیش از ۶ ماه از آخرین سرویس گذشته است (${k.lastServiced})`}>
                               ⚠️
                             </span>
                           )}
@@ -955,43 +1033,52 @@ export function KeyboardsSubTab({
                           </div>
                         )}
                       </td>
-                      <td className="p-2.5 text-slate-600">{k.model}</td>
-                      <td className="p-2.5">
+                      <td className="p-3 text-slate-700 dark:text-slate-300 font-medium">{k.model}</td>
+                      <td className="p-3">
                         <StatusBadge status={k.status} />
                       </td>
-                      <td className="p-2.5 text-slate-500 max-w-[150px] truncate" title={k.description || undefined}>
+                      <td className="p-3 text-slate-500 dark:text-slate-400 max-w-[160px] truncate" title={k.description || undefined}>
                         {k.description || '—'}
                       </td>
-                      <td className="p-2.5">
+                      <td className="p-3">
                         {owner ? (
-                          <span className="bg-purple-50 border border-purple-200 text-purple-800 px-2 py-0.5 rounded-full text-[10px] md:text-xs font-semibold">
-                            👥 {owner.name} ({owner.code})
-                          </span>
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
+                            <span className="text-slate-400">👤</span>
+                            <span>{owner.name}</span>
+                            <span className="font-mono text-[10px] text-slate-400 tabular-nums">({owner.code})</span>
+                          </div>
                         ) : (
-                          <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full text-[10px] md:text-xs">
-                            {k.location ? `📍 ${k.location}` : '📦 مستقر در انبار کارگاه'}
-                          </span>
+                          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                            <span className="text-slate-400">📍</span>
+                            <span>{k.location ? k.location : 'مستقر در انبار کارگاه'}</span>
+                          </div>
                         )}
                       </td>
-                      <td className="p-2.5 text-center" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-center gap-1">
+                      <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
                           <button 
                             onClick={() => onEdit(k)}
-                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
+                            type="button"
+                            className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-lg text-[11px] font-bold border border-slate-200/80 dark:border-slate-700 transition cursor-pointer"
+                            title="ویرایش مشخصات کیبورد"
                           >
                             ✏️ ویرایش
                           </button>
                           <button 
-                            onClick={() => onDelete(k.code)}
-                            className="bg-red-50 hover:bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
-                          >
-                            🗑️ حذف
-                          </button>
-                          <button 
                             onClick={() => onTransfer(k.code)}
-                            className="bg-indigo-650 hover:bg-indigo-700 text-white px-2 py-0.5 rounded text-[10px] md:text-xs transition font-semibold cursor-pointer"
+                            type="button"
+                            className="bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-lg text-[11px] font-bold border border-blue-200/80 dark:border-blue-800/80 transition cursor-pointer"
+                            title="انتقال یا تخصیص کیبورد"
                           >
                             🔄 جابجایی
+                          </button>
+                          <button 
+                            onClick={() => onDelete(k.code)}
+                            type="button"
+                            className="bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 px-2 py-1 rounded-lg text-[11px] font-bold border border-rose-200/70 dark:border-rose-900/50 transition cursor-pointer"
+                            title="حذف کیبورد از سیستم"
+                          >
+                            🗑️ حذف
                           </button>
                         </div>
                       </td>
@@ -1139,10 +1226,11 @@ export function RadiosSubTab({
           </button>
           <button
             onClick={() => setSubView('delivery_stats')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+            type="button"
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               subView === 'delivery_stats'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-indigo-50/70 hover:bg-indigo-100/50 border border-indigo-100 text-indigo-700'
+                : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
             }`}
           >
             📜 آمار تحویل مجزای افراد اجرایی ({stats.assigned})
@@ -1151,46 +1239,46 @@ export function RadiosSubTab({
       </div>
 
       {subView === 'inventory' ? (
-        <div className="space-y-4">
+        <div className="space-y-4 animate-fade-in">
           {/* Grid Mini Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-slate-50/50 border border-slate-150 p-3 rounded-xl">
-              <span className="text-[10px] text-slate-400 font-bold block">کل دستگاه‌ها</span>
-              <span className="text-sm font-black text-slate-800 block mt-0.5">{stats.total} دستگاه</span>
+            <div className="bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 p-3 rounded-2xl shadow-2xs">
+              <span className="text-[11px] text-slate-400 font-medium block">کل بی‌سیم‌ها</span>
+              <span className="text-base font-black font-mono tabular-nums text-slate-900 dark:text-white block mt-0.5">{stats.total} دستگاه</span>
             </div>
-            <div className="bg-emerald-50/30 border border-emerald-100 p-3 rounded-xl text-emerald-800">
-              <span className="text-[10px] text-emerald-500 font-bold block">تحویل فعال</span>
-              <span className="text-sm font-black block mt-0.5">{stats.assigned} دستگاه</span>
+            <div className="bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 p-3 rounded-2xl shadow-2xs">
+              <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium block">تحویل فعال</span>
+              <span className="text-base font-black font-mono tabular-nums text-emerald-700 dark:text-emerald-400 block mt-0.5">{stats.assigned} دستگاه</span>
             </div>
-            <div className="bg-amber-50/30 border border-amber-100 p-3 rounded-xl text-amber-800">
-              <span className="text-[10px] text-amber-500 font-bold block">در انتظار تعمیر / تعمیرگاه</span>
-              <span className="text-sm font-black block mt-0.5">{stats.inRepair} دستگاه</span>
+            <div className="bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 p-3 rounded-2xl shadow-2xs">
+              <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium block">در انتظار تعمیر</span>
+              <span className="text-base font-black font-mono tabular-nums text-amber-700 dark:text-amber-400 block mt-0.5">{stats.inRepair} دستگاه</span>
             </div>
-            <div className="bg-slate-50/50 border border-slate-150 p-3 rounded-xl text-blue-800">
-              <span className="text-[10px] text-blue-500/85 font-bold block">موجود در انبار</span>
-              <span className="text-sm font-black block mt-0.5">{stats.warehouse} دستگاه</span>
+            <div className="bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 p-3 rounded-2xl shadow-2xs">
+              <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium block">موجود در انبار</span>
+              <span className="text-base font-black font-mono tabular-nums text-blue-700 dark:text-blue-400 block mt-0.5">{stats.warehouse} دستگاه</span>
             </div>
           </div>
 
           {/* MAIN INVENTORY TABLE */}
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <div className="bg-white/95 dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-2xs backdrop-blur-md">
             <div className="overflow-x-auto">
               <table className="w-full text-right border-collapse text-[11px] md:text-xs">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 whitespace-nowrap">
-                    <th onClick={() => handleSort('code')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کد اموال بی‌سیم {renderSortIndicator('code')}</th>
-                    <th onClick={() => handleSort('model')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">برند و مدل دستگاه {renderSortIndicator('model')}</th>
-                    <th onClick={() => handleSort('status')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
-                    <th className="p-2.5 font-bold text-right select-none">یادداشت فنی / توضیحات</th>
-                    <th onClick={() => handleSort('assignedTo')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">تحویل‌گیرنده فعال {renderSortIndicator('assignedTo')}</th>
-                    <th className="p-2.5 text-center font-bold select-none">عملیات کنترلی</th>
+                  <tr className="bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                    <th onClick={() => handleSort('code')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">کد بی‌سیم (اموال) {renderSortIndicator('code')}</th>
+                    <th onClick={() => handleSort('model')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">مدل و سازنده {renderSortIndicator('model')}</th>
+                    <th onClick={() => handleSort('status')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">وضعیت سلامت {renderSortIndicator('status')}</th>
+                    <th className="p-3 font-bold text-right select-none">توضیحات</th>
+                    <th onClick={() => handleSort('assignedTo')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">موقعیت استقرار {renderSortIndicator('assignedTo')}</th>
+                    <th className="p-3 text-center font-bold select-none">عملیات مدیریت</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {sortedRadios.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="p-6 text-center text-slate-400">
-                         هیچ دستگاه بی‌سیمی در انبار ثبت نگردیده است.
+                      <td colSpan={6} className="p-8 text-center text-slate-400">
+                         هیچ دستگاه بی‌سیمی در انبار ثبت نگردیده است. جهت افزودن، از دکمه «ثبت بی‌سیم جدید» استفاده فرمایید.
                       </td>
                     </tr>
                   ) : (
@@ -1199,65 +1287,74 @@ export function RadiosSubTab({
                       return (
                         <tr 
                           key={r.code} 
-                          className="border-b border-slate-100 hover:bg-slate-50/80 transition cursor-pointer group whitespace-nowrap"
+                          className="hover:bg-blue-50/30 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group whitespace-nowrap"
                           onClick={() => onShowQR(r.code, 'radio', r)}
                           title="کلیک روی سطر جهت مشاهده برچسب بارکد اموال بی‌سیم"
                         >
-                          <td className="p-2.5 font-mono font-bold text-slate-900 font-sans font-bold">
-                            <div className="flex items-center gap-1.5 justify-start font-mono">
-                              <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none font-sans">
+                          <td className="p-3 font-mono font-bold text-slate-900 dark:text-white">
+                            <div className="flex items-center gap-1.5 justify-start font-mono tabular-nums">
+                              <span className="text-[10px] text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/80 border border-blue-200/80 dark:border-blue-800/80 px-1.5 py-0.5 rounded-md font-sans font-bold flex items-center gap-0.5 shrink-0 select-none">
                                 📸 QR
                               </span>
                               <span>{r.code}</span>
                               {isServiceOverdue(r.lastServiced) && (
-                                <span className="text-amber-500 text-sm animate-pulse select-none inline-block ml-1 font-sans" title={`⚠️ نیاز به سرویس: بیش از ۶ ماه از آخرین سرویس گذشته است (${r.lastServiced})`}>
+                                <span className="text-amber-500 text-sm animate-pulse select-none inline-block ml-1" title={`⚠️ نیاز به سرویس: بیش از ۶ ماه از آخرین سرویس گذشته است (${r.lastServiced})`}>
                                   ⚠️
                                 </span>
                               )}
                             </div>
                             {r.lastServiced && (
-                              <div className="text-[10px] font-sans text-slate-400 mt-0.5 font-sans font-normal" title="تاریخ آخرین سرویس دوره‌ای">
+                              <div className="text-[10px] font-sans text-slate-400 mt-0.5" title="تاریخ آخرین سرویس دوره‌ای">
                                 📅 سرویس: {r.lastServiced}
                               </div>
                             )}
                           </td>
-                          <td className="p-2.5 text-slate-600 font-bold">{r.model}</td>
-                          <td className="p-2.5">
+                          <td className="p-3 text-slate-700 dark:text-slate-300 font-medium">{r.model}</td>
+                          <td className="p-3">
                             <StatusBadge status={r.status} />
                           </td>
-                          <td className="p-2.5 text-slate-500 max-w-[150px] truncate" title={r.description || undefined}>
+                          <td className="p-3 text-slate-500 dark:text-slate-400 max-w-[160px] truncate" title={r.description || undefined}>
                             {r.description || '—'}
                           </td>
-                          <td className="p-2.5">
+                          <td className="p-3">
                             {owner ? (
-                              <span className="bg-indigo-50 border border-indigo-200 text-indigo-800 px-2.5 py-1 rounded-lg text-[10px] md:text-xs font-semibold">
-                                👥 {owner.name} ({owner.code})
-                              </span>
+                              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
+                                <span className="text-slate-400">👤</span>
+                                <span>{owner.name}</span>
+                                <span className="font-mono text-[10px] text-slate-400 tabular-nums">({owner.code})</span>
+                              </div>
                             ) : (
-                              <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full text-[10px] md:text-xs font-medium">
-                                {r.location ? `📍 ${r.location}` : '📦 مستقر در انبار مرکزی سخت‌افزار'}
-                              </span>
+                              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                                <span className="text-slate-400">📍</span>
+                                <span>{r.location ? r.location : 'مستقر در انبار مرکزی سخت‌افزار'}</span>
+                              </div>
                             )}
                           </td>
-                          <td className="p-2.5 text-center" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-center gap-1">
+                          <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-center gap-1.5 flex-wrap">
                               <button 
                                 onClick={() => onEdit(r)}
-                                className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
+                                type="button"
+                                className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-lg text-[11px] font-bold border border-slate-200/80 dark:border-slate-700 transition cursor-pointer"
+                                title="ویرایش مشخصات بی‌سیم"
                               >
                                 ✏️ ویرایش
                               </button>
                               <button 
-                                onClick={() => onDelete(r.code)}
-                                className="bg-red-50 hover:bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
-                              >
-                                🗑️ حذف
-                              </button>
-                              <button 
                                 onClick={() => onTransfer(r.code)}
-                                className="bg-indigo-650 hover:bg-indigo-700 text-white px-2 py-0.5 rounded text-[10px] md:text-xs transition font-semibold cursor-pointer"
+                                type="button"
+                                className="bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-lg text-[11px] font-bold border border-blue-200/80 dark:border-blue-800/80 transition cursor-pointer"
+                                title="انتقال یا تخصیص بی‌سیم"
                               >
                                 🔄 انتقال / تحویل
+                              </button>
+                              <button 
+                                onClick={() => onDelete(r.code)}
+                                type="button"
+                                className="bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 px-2 py-1 rounded-lg text-[11px] font-bold border border-rose-200/70 dark:border-rose-900/50 transition cursor-pointer"
+                                title="حذف بی‌سیم از موجودی"
+                              >
+                                🗑️ حذف
                               </button>
                             </div>
                           </td>
@@ -1426,26 +1523,26 @@ export function CctvsSubTab({
   }, [cctvs]);
 
   return (
-    <div className="space-y-5 text-right font-sans" dir="rtl">
-      
+    <div className="space-y-4 animate-fade-in text-right font-sans" dir="rtl">
       {/* Upper header */}
-      <div className="bg-slate-100/50 p-4 rounded-xl border border-slate-200">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h4 className="text-sm md:text-base font-black text-slate-800 flex items-center gap-1.5">
-              <span>🎥 مدیریت و نظارت بر دوربین‌های مداربسته کارگاه</span>
-            </h4>
-            <p className="text-[11px] text-slate-500 mt-1">
-              ثبت مشخصات فنی دوربین‌های مداربسته کارگاه، مارک، مدل، تعیین دقیق موقعیت استقرار و رصد وضعیت فعالیت آن‌ها به همراه چاپ بارکد QR اختصاصی.
-            </p>
+      <div className="bg-white/95 dark:bg-slate-900/90 p-4 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xs backdrop-blur-md">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🎥</span>
+            <div>
+              <h3 className="text-base md:text-lg font-black text-slate-900 dark:text-white">نظارت و مدیریت دوربین‌های مداربسته کارگاه بوشهر</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">مشخصات فنی دوربین‌ها، تفکیک موقعیت‌های استقرار، لینک پخش زنده تحت شبکه و پایش آنلاین</p>
+            </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button 
               onClick={() => onTabChange('add-new-tab')}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap cursor-pointer shadow-sm scale-100 hover:scale-[1.02]"
+              type="button"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs hover:shadow cursor-pointer flex items-center gap-1.5 select-none"
             >
-              ➕ ثبت دوربین مداربسته جدید
+              <span>➕</span>
+              <span>ثبت دوربین جدید</span>
             </button>
           </div>
         </div>
@@ -1453,25 +1550,25 @@ export function CctvsSubTab({
 
       <div className="space-y-4">
         {/* Stats & Pie Chart Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           <div className="lg:col-span-2 flex flex-col justify-between">
             {/* Grid Mini Stats */}
             <div className="grid grid-cols-2 gap-3 h-full">
-              <div className="bg-slate-50/50 border border-slate-150 p-4 rounded-xl flex flex-col justify-center">
-                <span className="text-[10px] text-slate-400 font-bold block">کل دوربین‌ها</span>
-                <span className="text-base md:text-lg font-black text-slate-800 block mt-1">{stats.total} دستگاه</span>
+              <div className="bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 p-3.5 rounded-2xl shadow-2xs flex flex-col justify-center">
+                <span className="text-[11px] text-slate-400 font-medium block">کل دوربین‌ها</span>
+                <span className="text-base md:text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white block mt-0.5">{stats.total} دستگاه</span>
               </div>
-              <div className="bg-emerald-50/30 border border-emerald-100 p-4 rounded-xl text-emerald-800 flex flex-col justify-center">
-                <span className="text-[10px] text-emerald-500 font-bold block">فعال / سالم</span>
-                <span className="text-base md:text-lg font-black block mt-1">{stats.working} دستگاه</span>
+              <div className="bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 p-3.5 rounded-2xl shadow-2xs flex flex-col justify-center">
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium block">فعال و سالم</span>
+                <span className="text-base md:text-lg font-black font-mono tabular-nums text-emerald-700 dark:text-emerald-400 block mt-0.5">{stats.working} دستگاه</span>
               </div>
-              <div className="bg-amber-50/30 border border-amber-100 p-4 rounded-xl text-amber-800 flex flex-col justify-center">
-                <span className="text-[10px] text-amber-500 font-bold block">در انتظار تعمیر / خراب</span>
-                <span className="text-base md:text-lg font-black block mt-1">{stats.inRepair} دستگاه</span>
+              <div className="bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 p-3.5 rounded-2xl shadow-2xs flex flex-col justify-center">
+                <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium block">در انتظار تعمیر</span>
+                <span className="text-base md:text-lg font-black font-mono tabular-nums text-amber-700 dark:text-amber-400 block mt-0.5">{stats.inRepair} دستگاه</span>
               </div>
-              <div className="bg-red-50/30 border border-red-100 p-4 rounded-xl text-red-800 flex flex-col justify-center">
-                <span className="text-[10px] text-red-500 font-bold block">غیرفعال / اسقاط شده</span>
-                <span className="text-base md:text-lg font-black block mt-1">{stats.retired} دستگاه</span>
+              <div className="bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 p-3.5 rounded-2xl shadow-2xs flex flex-col justify-center">
+                <span className="text-[11px] text-rose-600 dark:text-rose-400 font-medium block">غیرفعال و اسقاط</span>
+                <span className="text-base md:text-lg font-black font-mono tabular-nums text-rose-700 dark:text-rose-400 block mt-0.5">{stats.retired} دستگاه</span>
               </div>
             </div>
           </div>
@@ -1485,25 +1582,27 @@ export function CctvsSubTab({
         </div>
 
         {/* VIEW MODE TOGGLE */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-2">
-          <span className="text-xs font-bold text-slate-550">🛠️ انتخاب نحوه نمایش دوربین‌ها:</span>
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-200/80 dark:border-slate-800 pb-2">
+          <span className="text-xs font-bold text-slate-600 dark:text-slate-400">نحوه نمایش دوربین‌ها:</span>
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
             <button
               onClick={() => setViewMode('table')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black transition cursor-pointer flex items-center gap-1 ${
+              type="button"
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
                 viewMode === 'table'
-                  ? 'bg-white text-slate-800 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <span>📋</span> لیست یکپارچه جدول
             </button>
             <button
               onClick={() => setViewMode('location')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black transition cursor-pointer flex items-center gap-1 ${
+              type="button"
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
                 viewMode === 'location'
-                  ? 'bg-white text-slate-800 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <span>🗂️</span> دسته‌بندی بر اساس موقعیت کارگاه
@@ -1514,40 +1613,35 @@ export function CctvsSubTab({
         {viewMode === 'location' ? (
           <div className="space-y-4">
             {Object.keys(groupedCctvs).length === 0 ? (
-              <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400">
+              <div className="bg-white/95 dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-8 text-center text-slate-400">
                 هیچ دوربین مداربسته‌ای در سامانه کارگاه ثبت نگردیده است.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {(Object.entries(groupedCctvs) as [string, Cctv[]][]).map(([locName, list]) => (
-                  <div key={locName} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs flex flex-col">
-                    <div className="bg-slate-50/80 border-b border-slate-150 px-4 py-3 flex justify-between items-center">
-                      <h5 className="text-xs md:text-sm font-black text-slate-800 flex items-center gap-1.5">
-                        <span className="text-blue-600">📍</span>
+                  <div key={locName} className="bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-2xl overflow-hidden shadow-2xs flex flex-col">
+                    <div className="bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700/80 px-4 py-3 flex justify-between items-center">
+                      <h5 className="text-xs md:text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span className="text-blue-600 dark:text-blue-400">📍</span>
                         <span>{locName}</span>
                       </h5>
-                      <span className="bg-blue-550/10 text-blue-700 border border-blue-100 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                      <span className="bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/80 px-2.5 py-0.5 rounded-lg text-[10px] font-bold tabular-nums">
                         {list.length} دستگاه
                       </span>
                     </div>
-                    <div className="p-4 space-y-3 flex-1">
+                    <div className="p-3.5 space-y-2.5 flex-1">
                       {list.map((c) => {
-                        const isInactive = c.status === 'retired';
                         return (
                           <div 
                             key={c.code} 
-                            className={`border rounded-lg p-3 transition cursor-pointer group ${
-                              isInactive 
-                                ? 'bg-red-50/70 border-red-150/70 hover:bg-red-100/50' 
-                                : 'border-slate-100 hover:bg-slate-50/50'
-                            }`}
+                            className="border border-slate-100 dark:border-slate-800 hover:bg-blue-50/20 dark:hover:bg-slate-800/30 rounded-xl p-3 transition cursor-pointer group"
                             onClick={() => onShowQR(c.code, 'cctv', c)}
                             title="کلیک جهت مشاهده برچسب بارکد اموال دوربین"
                           >
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                               <div className="space-y-1 text-right">
-                                <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-slate-900">
-                                  <span className="text-[9px] text-blue-600 bg-blue-50 px-1 rounded select-none">📸 QR</span>
+                                <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-slate-900 dark:text-white tabular-nums">
+                                  <span className="text-[10px] text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/80 border border-blue-200/80 dark:border-blue-800/80 px-1.5 py-0.5 rounded-md font-sans font-bold select-none">📸 QR</span>
                                   <span>{c.code}</span>
                                   {isServiceOverdue(c.lastServiced) && (
                                     <span className="text-amber-500 text-sm animate-pulse inline-block" title={`⚠️ نیاز به سرویس: بیش از ۶ ماه از آخرین سرویس گذشته است (${c.lastServiced})`}>
@@ -1555,7 +1649,7 @@ export function CctvsSubTab({
                                     </span>
                                   )}
                                 </div>
-                                <div className="text-[11px] font-bold text-slate-700">
+                                <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
                                   {c.brand} - {c.model}
                                 </div>
                                 {c.accessLink && (
@@ -1565,14 +1659,14 @@ export function CctvsSubTab({
                                       target="_blank" 
                                       rel="noopener noreferrer"
                                       onClick={(e) => e.stopPropagation()}
-                                      className="inline-flex items-center gap-1 text-[10px] text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-150 px-1.5 py-0.5 rounded font-black transition"
+                                      className="inline-flex items-center gap-1 text-[10px] text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 border border-indigo-200/80 dark:border-indigo-800/60 px-2 py-0.5 rounded-lg font-bold transition"
                                     >
                                       🌐 پخش زنده ({c.accessLink})
                                     </a>
                                   </div>
                                 )}
                                 {c.description && (
-                                  <p className="text-[10px] text-slate-500 max-w-xs truncate" title={c.description}>
+                                  <p className="text-[10px] text-slate-500 dark:text-slate-400 max-w-xs truncate" title={c.description}>
                                     {c.description}
                                   </p>
                                 )}
@@ -1584,24 +1678,27 @@ export function CctvsSubTab({
                               </div>
                               <div className="flex flex-col items-start sm:items-end gap-2 self-stretch sm:self-auto shrink-0">
                                 <StatusBadge status={c.status} />
-                                <div className="flex gap-1 mt-1" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex gap-1.5 mt-1" onClick={(e) => e.stopPropagation()}>
                                   <button 
                                     onClick={() => onEdit(c)}
-                                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] transition cursor-pointer"
+                                    type="button"
+                                    className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-lg text-[11px] font-bold border border-slate-200/80 dark:border-slate-700 transition cursor-pointer"
                                   >
                                     ✏️ ویرایش
                                   </button>
                                   <button 
-                                    onClick={() => onDelete(c.code)}
-                                    className="bg-red-50 hover:bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] transition cursor-pointer"
-                                  >
-                                    🗑️ حذف
-                                  </button>
-                                  <button 
                                     onClick={() => onTransfer(c.code)}
-                                    className="bg-indigo-650 hover:bg-indigo-700 text-white px-2 py-0.5 rounded text-[10px] transition font-semibold cursor-pointer"
+                                    type="button"
+                                    className="bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-lg text-[11px] font-bold border border-blue-200/80 dark:border-blue-800/80 transition cursor-pointer"
                                   >
                                     🔄 انتقال
+                                  </button>
+                                  <button 
+                                    onClick={() => onDelete(c.code)}
+                                    type="button"
+                                    className="bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 px-2 py-1 rounded-lg text-[11px] font-bold border border-rose-200/70 dark:border-rose-900/50 transition cursor-pointer"
+                                  >
+                                    🗑️ حذف
                                   </button>
                                 </div>
                               </div>
@@ -1617,45 +1714,40 @@ export function CctvsSubTab({
           </div>
         ) : (
           /* MAIN INVENTORY TABLE */
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <div className="bg-white/95 dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-2xs backdrop-blur-md">
             <div className="overflow-x-auto">
               <table className="w-full text-right border-collapse text-[11px] md:text-xs">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 whitespace-nowrap">
-                    <th onClick={() => handleSort('code')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">کد اموال {renderSortIndicator('code')}</th>
-                    <th onClick={() => handleSort('brand')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">مارک دوربین {renderSortIndicator('brand')}</th>
-                    <th onClick={() => handleSort('model')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">مدل دوربین {renderSortIndicator('model')}</th>
-                    <th onClick={() => handleSort('location')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">موقعیت استقرار {renderSortIndicator('location')}</th>
-                    <th className="p-2.5 font-bold text-right select-none">لینک دسترسی</th>
-                    <th onClick={() => handleSort('status')} className="p-2.5 font-bold text-right cursor-pointer hover:bg-slate-100 select-none transition">وضعیت فعالیت {renderSortIndicator('status')}</th>
-                    <th className="p-2.5 font-bold text-right select-none">توضیحات تکمیلی</th>
-                    <th className="p-2.5 text-center font-bold select-none">عملیات کنترلی</th>
+                  <tr className="bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                    <th onClick={() => handleSort('code')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">کد دوربین (اموال) {renderSortIndicator('code')}</th>
+                    <th onClick={() => handleSort('brand')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">مارک سازنده {renderSortIndicator('brand')}</th>
+                    <th onClick={() => handleSort('model')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">مدل فنی {renderSortIndicator('model')}</th>
+                    <th onClick={() => handleSort('location')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">موقعیت استقرار {renderSortIndicator('location')}</th>
+                    <th className="p-3 font-bold text-right select-none">پخش زنده شبکه</th>
+                    <th onClick={() => handleSort('status')} className="p-3 font-bold text-right cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 select-none transition">وضعیت فعالیت {renderSortIndicator('status')}</th>
+                    <th className="p-3 font-bold text-right select-none">توضیحات تکمیلی</th>
+                    <th className="p-3 text-center font-bold select-none">عملیات مدیریت</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {sortedCctvs.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="p-6 text-center text-slate-400">
-                         هیچ دوربین مداربسته‌ای در سامانه کارگاه ثبت نگردیده است.
+                      <td colSpan={8} className="p-8 text-center text-slate-400">
+                         هیچ دوربین مداربسته‌ای در سامانه کارگاه ثبت نگردیده است. جهت افزودن، از دکمه «ثبت دوربین جدید» استفاده فرمایید.
                       </td>
                     </tr>
                   ) : (
                     sortedCctvs.map((c) => {
-                      const isInactive = c.status === 'retired';
                       return (
                         <tr 
                           key={c.code} 
-                          className={`border-b transition cursor-pointer group whitespace-nowrap ${
-                            isInactive 
-                              ? 'bg-red-50/70 border-red-100/50 hover:bg-red-100/60' 
-                              : 'border-slate-100 hover:bg-slate-50/80'
-                          }`}
+                          className="hover:bg-blue-50/30 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group whitespace-nowrap"
                           onClick={() => onShowQR(c.code, 'cctv', c)}
                           title="کلیک روی سطر جهت مشاهده برچسب بارکد اموال دوربین"
                         >
-                          <td className="p-2.5 font-mono font-bold text-slate-900">
-                            <div className="flex items-center gap-1.5 justify-start font-mono">
-                              <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-sans font-bold flex items-center gap-0.5 shrink-0 select-none">
+                          <td className="p-3 font-mono font-bold text-slate-900 dark:text-white">
+                            <div className="flex items-center gap-1.5 justify-start font-mono tabular-nums">
+                              <span className="text-[10px] text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/80 border border-blue-200/80 dark:border-blue-800/80 px-1.5 py-0.5 rounded-md font-sans font-bold select-none">
                                 📸 QR
                               </span>
                               <span>{c.code}</span>
@@ -1671,52 +1763,56 @@ export function CctvsSubTab({
                               </div>
                             )}
                           </td>
-                          <td className="p-2.5 text-slate-600 font-bold">{c.brand}</td>
-                          <td className="p-2.5 text-slate-600 font-bold">{c.model}</td>
-                          <td className="p-2.5">
-                            <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-medium border border-slate-200">
-                              📍 {c.location || 'نامعلوم'}
-                            </span>
+                          <td className="p-3 text-slate-700 dark:text-slate-300 font-medium">{c.brand}</td>
+                          <td className="p-3 text-slate-700 dark:text-slate-300 font-medium">{c.model}</td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                              <span className="text-slate-400">📍</span>
+                              <span>{c.location || 'کارگاه بوشهر'}</span>
+                            </div>
                           </td>
-                          <td className="p-2.5" onClick={(e) => e.stopPropagation()}>
+                          <td className="p-3" onClick={(e) => e.stopPropagation()}>
                             {c.accessLink ? (
                               <a 
                                 href={c.accessLink.startsWith('http') ? c.accessLink : `http://${c.accessLink}`} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-[10px] text-indigo-650 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-150 px-2 py-0.5 rounded font-black transition"
+                                className="inline-flex items-center gap-1 text-[10px] text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 border border-indigo-200/80 dark:border-indigo-800/60 px-2 py-0.5 rounded-lg font-bold transition"
                               >
-                                🌐 پخش زنده ({c.accessLink})
+                                🌐 پخش زنده
                               </a>
                             ) : (
                               <span className="text-slate-400">—</span>
                             )}
                           </td>
-                          <td className="p-2.5">
+                          <td className="p-3">
                             <StatusBadge status={c.status} />
                           </td>
-                          <td className="p-2.5 text-slate-500 max-w-[150px] truncate" title={c.description || undefined}>
+                          <td className="p-3 text-slate-500 dark:text-slate-400 max-w-[160px] truncate" title={c.description || undefined}>
                             {c.description || '—'}
                           </td>
-                          <td className="p-2.5 text-center" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-center gap-1">
+                          <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-center gap-1.5 flex-wrap">
                               <button 
                                 onClick={() => onEdit(c)}
-                                className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
+                                type="button"
+                                className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-lg text-[11px] font-bold border border-slate-200/80 dark:border-slate-700 transition cursor-pointer"
                               >
                                 ✏️ ویرایش
                               </button>
                               <button 
-                                onClick={() => onDelete(c.code)}
-                                className="bg-red-50 hover:bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] md:text-xs transition cursor-pointer"
-                              >
-                                🗑️ حذف
-                              </button>
-                              <button 
                                 onClick={() => onTransfer(c.code)}
-                                className="bg-indigo-650 hover:bg-indigo-700 text-white px-2 py-0.5 rounded text-[10px] md:text-xs transition font-semibold cursor-pointer"
+                                type="button"
+                                className="bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-lg text-[11px] font-bold border border-blue-200/80 dark:border-blue-800/80 transition cursor-pointer"
                               >
                                 🔄 انتقال
+                              </button>
+                              <button 
+                                onClick={() => onDelete(c.code)}
+                                type="button"
+                                className="bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 px-2 py-1 rounded-lg text-[11px] font-bold border border-rose-200/70 dark:border-rose-900/50 transition cursor-pointer"
+                              >
+                                🗑️ حذف
                               </button>
                             </div>
                           </td>

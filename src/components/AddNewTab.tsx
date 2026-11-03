@@ -646,21 +646,21 @@ export default function AddNewTab({
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm max-w-2xl mx-auto space-y-6 text-right" dir="rtl">
+    <div className="bg-white/95 dark:bg-slate-900/95 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-6 md:p-8 shadow-sm max-w-3xl mx-auto space-y-6 text-right backdrop-blur-md animate-fade-in" dir="rtl">
       
-      <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div className="border-b border-slate-100 dark:border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h3 className="text-base md:text-lg font-bold text-slate-800">➕ ورود و ثبت تجهیزات و پرسنل کارگاه</h3>
-          <p className="text-xs text-slate-500 mt-0.5">ثبت تکی پرسنل و سخت‌افزار یا ایمپورت گروهی و تعداد زیاد اقلام کارگاهی به حساب انبار</p>
+          <h3 className="text-base md:text-lg font-black text-slate-900 dark:text-slate-100">➕ ورود و ثبت تجهیزات و پرسنل کارگاه</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">ثبت تکی پرسنل و سخت‌افزار یا ایمپورت گروهی و تعداد زیاد اقلام کارگاهی به حساب انبار</p>
         </div>
 
         {/* Mode Toggle Switch */}
-        <div className="bg-slate-100 p-1 rounded-lg flex items-center border border-slate-200 w-fit self-end sm:self-auto">
+        <div className="bg-slate-100/90 dark:bg-slate-800/70 p-1 rounded-xl flex items-center border border-slate-200/90 dark:border-slate-700/80 w-fit self-end sm:self-auto">
           <button
             type="button"
             onClick={() => setIsBulkMode(false)}
-            className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
-              !isBulkMode ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-800'
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              !isBulkMode ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200/60 dark:border-slate-700' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             📋 ثبت واحد (تکی)
@@ -673,8 +673,8 @@ export default function AddNewTab({
               setBulkType(targetType);
               handleSelectBulkType(targetType);
             }}
-            className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
-              isBulkMode ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              isBulkMode ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             ⚡ ایمپورت گروهی (تعداد زیاد)

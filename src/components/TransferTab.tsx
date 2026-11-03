@@ -436,23 +436,23 @@ export default function TransferTab({
       `}</style>
 
       {/* Mode selectors */}
-      <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 w-full max-w-xl mx-auto shadow-inner no-print">
+      <div className="flex bg-slate-100/90 dark:bg-slate-800/70 p-1.5 rounded-2xl border border-slate-200/90 dark:border-slate-700/80 w-full max-w-xl mx-auto shadow-inner no-print">
         <button
           onClick={() => { setTransferMode('ownership'); setShowPermit(false); }}
-          className={`flex-1 transition duration-150 py-2.5 rounded-lg text-xs md:text-sm font-bold flex items-center justify-center gap-1.5 cursor-pointer ${
+          className={`flex-1 transition duration-150 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center justify-center gap-1.5 cursor-pointer ${
             transferMode === 'ownership'
-              ? 'bg-white text-blue-700 shadow-sm border border-slate-200/50'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-sm border border-slate-200/60 dark:border-slate-700'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
           }`}
         >
           <span>👤</span> ۱. جابجایی مالکیت و تحویل سخت‌افزار
         </button>
         <button
           onClick={() => { setTransferMode('location'); setShowPermit(false); }}
-          className={`flex-1 transition duration-150 py-2.5 rounded-lg text-xs md:text-sm font-bold flex items-center justify-center gap-1.5 cursor-pointer ${
+          className={`flex-1 transition duration-150 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center justify-center gap-1.5 cursor-pointer ${
             transferMode === 'location'
-              ? 'bg-white text-emerald-800 shadow-sm border border-slate-200/50'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-400 shadow-sm border border-slate-200/60 dark:border-slate-700'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
           }`}
         >
           <span>📍</span> ۲. جابجایی موقعیت فیزیکی و مکانی
@@ -462,27 +462,28 @@ export default function TransferTab({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start no-print">
         
         {/* Left Form Panel */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-5">
-          <div className="border-b border-slate-100 pb-3 flex justify-between items-center">
+        <div className="lg:col-span-2 bg-white/95 dark:bg-slate-900/95 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-6 shadow-sm space-y-5 backdrop-blur-md">
+          <div className="border-b border-slate-100 dark:border-slate-800 pb-3 flex justify-between items-center">
             <div>
-              <h3 className="text-base font-bold text-slate-900">
+              <h3 className="text-base font-black text-slate-900 dark:text-slate-100">
                 {transferMode === 'ownership' ? '🔄 سند انتقال مالکیت و واگذاری تجهیز' : '📍 سند جابجایی فیزیکی موقعیت کالا'}
               </h3>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 {transferMode === 'ownership' 
                   ? 'ثبت و واگذاری تجهیزات بین پرسنل آذرستان همراه با صدور برگه ترخیص محلی' 
                   : 'اصلاح موقعیت فیزیکی استقرار کالا در سطح کارگاه و ثبت مجوز تردد فیزیکی'}
               </p>
             </div>
-            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-              transferMode === 'ownership' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+            <span className={`inline-flex items-center gap-1.5 text-xs font-bold ${
+              transferMode === 'ownership' ? 'text-blue-700 dark:text-blue-400' : 'text-emerald-700 dark:text-emerald-400'
             }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${transferMode === 'ownership' ? 'bg-blue-600' : 'bg-emerald-500'}`}></span>
               {transferMode === 'ownership' ? 'تغییر مالکیت' : 'تغییر موقعیت'}
             </span>
           </div>
 
           <div className="space-y-2">
-              <label className="text-xs md:text-sm font-semibold text-slate-700 block">
+              <label className="text-xs md:text-sm font-semibold text-slate-700 dark:text-slate-300 block">
                 کد اموال سخت‌افزار مورد جابجایی:
               </label>
               <AutocompleteInput 
@@ -495,21 +496,21 @@ export default function TransferTab({
 
             {/* Live Preview Equipment */}
             {matchedEquip && (
-              <div className="bg-slate-50 border border-slate-200/80 rounded-lg p-4 text-xs md:text-sm space-y-2.5">
-                <div className="text-blue-700 font-bold flex items-center gap-1">
+              <div className="bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 text-xs md:text-sm space-y-2.5 animate-fade-in">
+                <div className="text-blue-700 dark:text-blue-400 font-bold flex items-center gap-1">
                   <span>🖥️</span> مشخصات سخت‌افزار شناسایی شده:
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-slate-600">
-                  <div>کد اموال: <span className="font-mono font-bold text-slate-900">{matchedEquip.code}</span></div>
-                  <div>نوع در شناسایی: <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold">{matchedEquip.typeNameFa}</span></div>
-                  <div className="col-span-2">مشخصات/مدل فنی: <span className="text-slate-900 font-medium">{matchedEquip.info}</span></div>
-                  <div className="col-span-2 border-t border-slate-200/50 pt-2 flex flex-col gap-1 text-[11px] md:text-xs">
+                <div className="grid grid-cols-2 gap-2 text-slate-600 dark:text-slate-300">
+                  <div>کد اموال: <span className="font-mono font-bold text-slate-900 dark:text-slate-100 tabular-nums">{matchedEquip.code}</span></div>
+                  <div>نوع در شناسایی: <span className="font-bold text-blue-700 dark:text-blue-400">{matchedEquip.typeNameFa}</span></div>
+                  <div className="col-span-2">مشخصات/مدل فنی: <span className="text-slate-900 dark:text-slate-100 font-medium">{matchedEquip.info}</span></div>
+                  <div className="col-span-2 border-t border-slate-200/60 dark:border-slate-700/60 pt-2 flex flex-col gap-1 text-[11px] md:text-xs">
                     <div>👤 دارنده فعلی: {matchedEquip.owner ? (
-                      <span className="text-red-600 font-bold">👤 {personnel.find(p => p.code === matchedEquip.owner)?.name || matchedEquip.owner} ({matchedEquip.owner})</span>
+                      <span className="text-rose-600 dark:text-rose-400 font-bold">👤 {personnel.find(p => p.code === matchedEquip.owner)?.name || matchedEquip.owner} ({matchedEquip.owner})</span>
                     ) : (
-                      <span className="text-emerald-600 font-bold">📦 مستقر در انبار کارگاه (بدون مالک فردی)</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">📦 مستقر در انبار کارگاه (بدون مالک فردی)</span>
                     )}</div>
-                    <div className="mt-1">📍 موقعیت فیزیکی فعلی کالا: <span className="bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded font-bold">{currentPhysLoc}</span></div>
+                    <div className="mt-1">📍 موقعیت فیزیکی فعلی کالا: <span className="font-bold text-amber-700 dark:text-amber-400">{currentPhysLoc}</span></div>
                   </div>
                 </div>
               </div>
@@ -612,25 +613,25 @@ export default function TransferTab({
           </div>
 
         {/* Right Info Box */}
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 self-start space-y-4 shadow-sm no-print">
-          <h4 className="font-bold text-sm text-slate-800 flex items-center gap-1">
-             دستورالعمل نظارتی نقل و انتقالات کارگاه بوشهر
+        <div className="bg-white/80 dark:bg-slate-900/80 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-6 self-start space-y-4 shadow-sm backdrop-blur-md no-print">
+          <h4 className="font-black text-sm text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+            <span>📋</span> دستورالعمل نظارتی نقل و انتقالات کارگاه بوشهر
           </h4>
-          <div className="text-xs text-slate-600 leading-relaxed space-y-3">
-            <div className="p-2.5 bg-white rounded-lg border border-slate-100">
-              <span className="font-bold text-blue-700 block mb-0.5">১. مجوز تردد گیت نگهبانی:</span>
+          <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed space-y-3">
+            <div className="p-3 bg-slate-50/80 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700/60">
+              <span className="font-bold text-blue-700 dark:text-blue-400 block mb-0.5">۱. مجوز تردد گیت نگهبانی:</span>
               خروج هرگونه کالای رایانه‌ای، بی‌سیم یا اداری از محدوده و فنس‌های فیزیکی کارگاه منوط به رویت برگه پرینت شده این سیستم ممهور به امضای سرپرست ICT می‌باشد.
             </div>
-            <div className="p-2.5 bg-white rounded-lg border border-slate-100">
-              <span className="font-bold text-orange-700 block mb-0.5">۲. تعیین توالی اسناد:</span>
+            <div className="p-3 bg-slate-50/80 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700/60">
+              <span className="font-bold text-amber-700 dark:text-amber-400 block mb-0.5">۲. تعیین توالی اسناد:</span>
               شماره مجوزها به صورت خودکار و بر اساس الگوی ایمن شرکت عمران آذرستان تنظیم می‌شوند؛ از ویرایش سلیقه‌ای شماره‌ها مگر طبق دستورالعمل خودداری کنید.
             </div>
-            <div className="p-2.5 bg-white rounded-lg border border-slate-100">
-              <span className="font-bold text-emerald-800 block mb-0.5">۳. جابجایی ترابری و ابزار آلات:</span>
+            <div className="p-3 bg-slate-50/80 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700/60">
+              <span className="font-bold text-emerald-700 dark:text-emerald-400 block mb-0.5">۳. جابجایی ترابری و ابزار آلات:</span>
               در جابجایی مکانی، فیلد لوکیشن کالا تغییر کرده و در تمامی خروجی‌ها و لیست‌ها قابل پیگیری است.
             </div>
           </div>
-          <div className="pt-3 border-t border-slate-200 text-[10px] text-slate-400 text-center font-semibold">
+          <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800 text-[10px] text-slate-400 text-center font-semibold">
             مدیریت لجستیک شناسنامه ICT - شرکت عمران آذرستان
           </div>
         </div>

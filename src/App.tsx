@@ -266,7 +266,7 @@ export default function App() {
       headingColor: '#f8fafc',
       cardBackground: 'rgba(15, 23, 42, 0.75)',
       buttonBackground: '#3b82f6',
-      buttonTextColor: '#111827',
+      buttonTextColor: '#ffffff',
       baseFontSize: 'base',
       lightTextColor: '#334155',
       lightHeadingColor: '#0f172a',
@@ -348,7 +348,7 @@ export default function App() {
       : (lightButtonBackground || accentColor);
       
     const actualButtonTextColor = darkMode 
-      ? (buttonTextColor || '#111827') 
+      ? (buttonTextColor || '#ffffff') 
       : (lightButtonTextColor || '#ffffff');
     
     const cardBorder = darkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(226, 232, 240, 0.9)';
@@ -382,169 +382,38 @@ export default function App() {
         --theme-font-size: ${fontSizePx};
       }
 
-      body, html, #root, #app-root-container {
+      body, html, #root {
         font-family: var(--theme-font-family) !important;
-        font-size: var(--theme-font-size) !important;
+        font-size: var(--theme-font-size);
         background-color: var(--theme-container-bg) !important;
-        color: var(--theme-text-color) !important;
+        color: var(--theme-text-color);
       }
 
-      /* Heading typography colors and structural labels override with Ultimate Specificity */
-      html body h1, html body h2, html body h3, html body h4, html body h5, html body h6, html body strong, html body th,
-      html.dark body h1, html.dark body h2, html.dark body h3, html.dark body h4, html.dark body h5, html.dark body h6, html.dark body strong, html.dark body th,
-      html.light body h1, html.light body h2, html.light body h3, html.light body h4, html.light body h5, html.light body h6, html.light body strong, html.light body th,
-      html body .font-black, html body .font-bold, html body .font-extrabold,
-      html.dark body .font-black, html.dark body .font-bold, html.dark body .font-extrabold,
-      html.light body .font-black, html.light body .font-bold, html.light body .font-extrabold,
-      html body .text-slate-900, html body .dark\\:text-slate-900,
-      html body .text-slate-800, html body .dark\\:text-slate-800,
-      html body .text-slate-100, html body .dark\\:text-slate-100,
-      html body .text-white, html body .dark\\:text-white,
-      html.dark body .text-slate-900, html.dark body .text-slate-800, html.dark body .text-slate-100, html.dark body .text-white,
-      html.light body .text-slate-900, html.light body .text-slate-800, html.light body .text-white,
+      /* Heading typography colors */
       .heading-themed {
         color: var(--theme-heading-color) !important;
       }
 
-      /* Text and descriptive body styling with Ultimate Specificity and Hierarchy */
-      html body p, html body label, html body li, html body td,
-      html body .text-slate-750, html body .text-slate-700, html body .text-slate-650, html body .text-slate-600, html body .dark\\:text-slate-350, html body .dark\\:text-slate-300,
-      html body .dark\\:text-slate-400, html body .text-gray-700, html body .text-gray-650, html body .text-gray-600,
-      html.dark body p, html.dark body label, html.dark body li, html.dark body td,
-      html.dark body .text-slate-700, html.dark body .text-slate-600, html.dark body .text-slate-500, html.dark body .text-slate-400, html.dark body .text-slate-300,
-      html.light body p, html.light body label, html.light body li, html.light body td,
-      html.light body .text-slate-700, html.light body .text-slate-600, html.light body .text-slate-500, html.light body .text-slate-400 {
-        color: var(--theme-text-color) !important;
-      }
-
-      /* Secondary/dimmed descriptions / meta info */
-      html body .text-slate-505, html body .text-slate-500, html body .text-slate-400, html body .text-gray-500, html body .text-gray-400,
-      html.dark body .text-slate-500, html.dark body .text-slate-400,
-      html.light body .text-slate-500, html.light body .text-slate-400 {
-        color: var(--theme-text-color) !important;
-        opacity: 0.8 !important;
-      }
-
-      /* Buttons & active UI actions background and text colors (excl. naked button tags to prevent action button clashes) */
-      html body .bg-indigo-600, html body .bg-indigo-505, html body .bg-indigo-500, html body .bg-indigo-650, html body .bg-indigo-700,
-      html body .bg-blue-600, html body .bg-blue-500, html body .bg-blue-700, html body .bg-blue-800, html body .bg-blue-650,
+      /* Buttons & active UI actions accent branding */
       html body .btn-gradient,
-      html body button.bg-gradient-to-r, html body button.bg-gradient-to-l, 
-      html body a.bg-gradient-to-r, html body a.bg-gradient-to-l,
-      html.dark body .bg-indigo-600, html.dark body .bg-indigo-500, html.dark body .bg-indigo-650, html.dark body .bg-indigo-700,
-      html.dark body .bg-blue-600, html.dark body .bg-blue-500, html.dark body .bg-blue-700, html.dark body .bg-blue-800, html.dark body .bg-blue-650,
-      html.dark body button.bg-gradient-to-r, html.dark body button.bg-gradient-to-l,
-      html.light body .bg-indigo-600, html.light body .bg-indigo-500,
-      html.light body .bg-blue-600, html.light body .bg-blue-500, html.light body .bg-blue-700, html.light body .bg-blue-855, html.light body .bg-blue-650,
-      html body button.bg-blue-600, html body button.bg-indigo-600, html.light body button.bg-blue-600, html.light body button.bg-indigo-600 {
-        background-color: var(--theme-button-bg) !important;
-        color: var(--theme-button-text) !important;
-        border-color: var(--theme-button-bg) !important;
-      }
-
-      /* Hover States */
-      html body .bg-indigo-600:hover, html body .bg-indigo-500:hover, html body .bg-indigo-650:hover, html body .bg-indigo-700:hover,
-      html body .bg-blue-600:hover, html body .bg-blue-500:hover, html body .bg-blue-700:hover, html body .bg-blue-800:hover, html body .bg-blue-650:hover,
-      html.dark body .bg-indigo-600:hover, html.dark body .bg-indigo-500:hover, html.dark body .bg-indigo-650:hover, html.dark body .bg-indigo-700:hover,
-      html.light body .bg-indigo-600:hover, html.light body .bg-indigo-500:hover, html.light body .bg-indigo-650:hover, html.light body .bg-indigo-700:hover {
-        background-color: var(--theme-button-bg) !important;
-        filter: brightness(1.15) !important;
-        color: var(--theme-button-text) !important;
-      }
-
-      /* Make sure nested spans, icons, text utilities inside themed backgrounds perfectly match their text color */
-      html body .bg-indigo-600 *, html body .bg-indigo-500 *, html body .bg-indigo-650 *, html body .bg-indigo-700 *,
-      html body .bg-blue-600 *, html body .bg-blue-500 *, html body .bg-blue-700 *, html body .bg-blue-800 *, html body .bg-blue-650 *,
-      html body .btn-gradient *,
-      html body button.bg-gradient-to-r *, html body button.bg-gradient-to-l *, 
-      html body a.bg-gradient-to-r *, html body a.bg-gradient-to-l *,
-      html.dark body .bg-indigo-600 *, html.dark body .bg-indigo-500 *, html.dark body .bg-indigo-650 *, html.dark body .bg-indigo-700 *,
-      html.dark body button.bg-gradient-to-r *, html.dark body button.bg-gradient-to-l *,
-      html.light body .bg-indigo-600 *, html.light body .bg-indigo-500 *, html.light body .bg-indigo-650 *, html.light body .bg-indigo-700 *,
-      html.light body .bg-indigo-600 * span, html.light body .bg-indigo-500 * span {
-        color: var(--theme-button-text) !important;
-      }
-
-      html body .text-blue-600, html body .text-blue-500, html body .text-blue-400, html body .text-indigo-600, html body .text-indigo-500, html body .text-blue-655, html body .text-indigo-650, html body .text-indigo-655,
-      html.dark body .text-blue-500, html.dark body .text-indigo-500, html.light body .text-blue-600, html.light body .text-indigo-600 {
-        color: var(--theme-accent-color) !important;
-      }
-
-      html body .border-blue-600, html body .border-blue-500, html body .border-indigo-600, html body .border-indigo-500 {
-        border-color: var(--theme-accent-color) !important;
-      }
-
-      /* Box, Card, panels backgrounds & shadow effect styling */
-      html body .bg-white, html body .dark\\:bg-slate-950, html body .bg-slate-950, 
-      html body .bg-slate-900\\/50, html body .bg-slate-900\\/60, html body .bg-slate-900\\/80, 
-      html body .bg-slate-950\\/80, html body .bg-slate-900, html body .bg-slate-950, html body .bg-slate-900\\/40, html body .bg-slate-900\\/90,
-      html.dark body .bg-white, html.dark body .bg-slate-950, html.dark body .bg-slate-900, html.light body .bg-white, html.light body .bg-slate-50 {
-        background-color: var(--theme-card-bg) !important;
-        border-color: ${cardBorder} !important;
-        box-shadow: ${cardShadow} !important;
-        backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
-      }
-
-      /* Consistent styling for sub-boxes, alert boxes and dynamic badges */
-      html body .bg-indigo-50\\/45, html body .bg-indigo-50\\/30, html body .bg-indigo-50\\/60, html body .bg-indigo-50, html body .bg-blue-50, html body .bg-slate-50,
-      html body .dark\\:bg-indigo-950\\/20, html body .dark\\:bg-indigo-950\\/40, html body .dark\\:bg-slate-900\\/50, html body .bg-indigo-50\\/70, html body .bg-indigo-100\\/50,
-      html.dark body .bg-indigo-50, html.dark body .bg-indigo-950\\/20, html.dark body .bg-indigo-950\\/40, html.light body .bg-indigo-50, html.light body .bg-slate-50 {
-        background-color: ${darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'} !important;
-        border-color: ${cardBorder} !important;
-      }
-
-      /* Consistent badges or highlights */
-      html body .text-indigo-700, html body .text-indigo-800, html body .text-indigo-300, html body .text-indigo-400, 
-      html body .dark\\:text-indigo-300, html body .dark\\:text-indigo-400, html body .text-emerald-800, html body .text-emerald-705,
-      html.dark body .text-indigo-700, html.dark body .text-indigo-800, html.dark body .text-indigo-300, html.dark body .text-indigo-400,
-      html.light body .text-indigo-700, html.light body .text-indigo-800, html.light body .text-indigo-300, html.light body .text-indigo-400 {
-        color: var(--theme-accent-color) !important;
-      }
-
-      /* Overwrite background indigo and slate gradients to match the card and container look */
-      body .from-indigo-900, body .to-slate-900, body .from-blue-900, body .to-indigo-950, body .to-blue-950, body .from-slate-900 {
-        --tw-gradient-from: var(--theme-card-bg) !important;
-        --tw-gradient-to: var(--theme-card-bg) !important;
-        background-color: var(--theme-card-bg) !important;
-      }
-      
-      /* Pure gradient elements overrides for buttons and container divisions */
-      body button.bg-gradient-to-r, body button.bg-gradient-to-l, 
-      body a.bg-gradient-to-r, body a.bg-gradient-to-l,
-      body .btn-gradient {
+      html body button.btn-gradient {
         background-image: linear-gradient(135deg, var(--theme-button-bg) 0%, var(--theme-accent-color, var(--theme-button-bg)) 100%) !important;
         color: var(--theme-button-text) !important;
         border-color: var(--theme-button-bg) !important;
       }
-      body button.bg-gradient-to-r:hover, body button.bg-gradient-to-l:hover, 
-      body a.bg-gradient-to-r:hover, body a.bg-gradient-to-l:hover {
-        filter: brightness(1.15) !important;
-      }
       
-      body div.bg-gradient-to-r, body div.bg-gradient-to-l {
-        background-image: linear-gradient(135deg, var(--theme-card-bg) 0%, var(--theme-card-bg) 100%) !important;
-        border: 1px solid ${cardBorder} !important;
-      }
-
-      /* Borders theme unification */
-      body .border-indigo-100, body .border-indigo-150, body .border-indigo-200, body .border-indigo-300,
-      body .border-slate-200, body .border-slate-300, body .border-slate-800, body .border-slate-850, body .border-slate-700, body .border-slate-900,
-      body .border-indigo-850, body .border-indigo-900\\/40, body .border-indigo-200\\/80, body .border-indigo-150\\/40,
-      .dark .border-slate-800, .dark .border-slate-700, .light .border-slate-200, .light .border-slate-300 {
-        border-color: ${cardBorder} !important;
-      }   .border-indigo-850, .border-indigo-900\\/40, .border-indigo-200\\/80, .border-indigo-150\\/40 {
-        border-color: ${cardBorder} !important;
+      html body .btn-gradient:hover {
+        filter: brightness(1.1) !important;
       }
 
       /* Border radius override */
-      .rounded-xl, .rounded-lg, .rounded-2xl, .rounded-3xl, .rounded-md {
-        border-radius: var(--theme-border-radius) !important;
+      .rounded-xl, .rounded-lg, .rounded-2xl {
+        border-radius: var(--theme-border-radius);
       }
 
-      /* Theme the dynamic workspace wrapper too */
+      /* Dynamic workspace wrapper background & glow */
       #application-workspace-wrapper {
-        background-color: var(--theme-container-bg) !important;
+        background-color: var(--theme-container-bg);
         background-image: ${workspaceGlowStyle === 'aurora' 
           ? (darkMode 
               ? `radial-gradient(circle at 12% 18%, ${actualButtonBg}1c 0%, transparent 45%), radial-gradient(circle at 88% 82%, ${actualButtonBg}24 0%, transparent 48%)` 
@@ -557,38 +426,15 @@ export default function App() {
           ? (darkMode 
               ? `radial-gradient(circle at 50% 50%, ${actualButtonBg}0e 0%, transparent 80%)` 
               : `radial-gradient(circle at 50% 50%, ${actualButtonBg}04 0%, transparent 80%)`)
-          : 'none'} !important;
+          : 'none'};
         transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
-      /* Inputs, Select elements, Textareas style override */
-      input[type="text"], input[type="password"], select, textarea {
-        background-color: ${inputBg} !important;
-        border-color: ${inputBorder} !important;
-        color: var(--theme-heading-color) !important;
-        font-family: inherit;
-        border-radius: var(--theme-border-radius) !important;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
-      }
-
+      /* Inputs and form controls */
       input[type="text"]:focus, select:focus, textarea:focus, input[type="password"]:focus {
-        border-color: var(--theme-accent-color) !important;
-        box-shadow: 0 0 0 3px ${actualButtonBg}2c !important;
-        outline: none !important;
-      }
-
-      th {
-        background-color: ${darkMode ? 'rgba(15, 23, 42, 0.9)' : '#f8fafc'} !important;
-        color: var(--theme-heading-color) !important;
-      }
-
-      td {
-        border-color: ${cardBorder} !important;
-        color: var(--theme-text-color) !important;
-      }
-
-      tr:hover td {
-        background-color: ${darkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)'} !important;
+        border-color: var(--theme-accent-color);
+        box-shadow: 0 0 0 3px ${actualButtonBg}2c;
+        outline: none;
       }
 
       /* Custom system scrollbar */
@@ -600,7 +446,7 @@ export default function App() {
         background: ${darkMode ? '#090d16' : '#f1f5f9'};
       }
       ::-webkit-scrollbar-thumb {
-        background: ${darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'};
+        background: ${darkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.15)'};
         border-radius: 9999px;
       }
       ::-webkit-scrollbar-thumb:hover {
@@ -609,15 +455,6 @@ export default function App() {
 
       .family-estedad {
         font-family: "Estedad", "Vazirmatn", sans-serif !important;
-      }
-
-      /* Specific focused elements dynamic override instead of constant #0f172a hardcoded */
-      div#root:nth-of-type(1) > div#application-workspace-wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) {
-        background-color: var(--theme-card-bg) !important;
-      }
-
-      div#root:nth-of-type(1) > div#application-workspace-wrapper:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) {
-        background-color: var(--theme-card-bg) !important;
       }
     `;
 
@@ -1971,80 +1808,93 @@ export default function App() {
       {/* 1. System Header component */}
       <Header isDark={darkMode} onToggleTheme={() => setDarkMode(!darkMode)} customTitle={currentTheme.welcomeTitle} />
 
-      {/* Welcome & logout bar */}
-      <div className="no-print mt-4 mb-2 flex flex-col md:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs shadow-sm">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-sm">🗣️</span>
-            <span>
-              کاربر جاری سیستم: <strong className="text-indigo-655 dark:text-indigo-400 font-bold">{currentUser.name}</strong> 
-              <span className="text-slate-500 dark:text-slate-400 font-medium mr-2">({currentUser.role === 'admin' ? 'مدير ارشد سیستم (ادمین)' : currentUser.role === 'editor_equipment' ? 'اپراتور سخت‌افزار' : 'ناظر سیستم'})</span>
-            </span>
+      {/* Welcome & User Session Command Bar */}
+      <div className="no-print mb-3 flex flex-col md:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900/95 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs shadow-2xs backdrop-blur-md">
+        <div className="flex flex-wrap items-center gap-3 flex-1 w-full md:w-auto justify-between md:justify-start">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/80 border border-blue-200/80 dark:border-blue-800/80 text-blue-700 dark:text-blue-300 font-black text-xs flex items-center justify-center select-none shrink-0 shadow-2xs">
+              {currentUser.name ? currentUser.name.trim().charAt(0) : 'ک'}
+            </div>
+            <div className="leading-tight">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-slate-500 dark:text-slate-400 text-[11px]">کاربر فعال:</span>
+                <strong className="text-slate-900 dark:text-white font-bold text-xs">{currentUser.name}</strong>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 select-none">
+                  {currentUser.role === 'admin' ? 'مدیر ارشد سامانه' : currentUser.role === 'editor_equipment' ? 'اپراتور سخت‌افزار' : 'ناظر سیستم'}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-400 px-2.5 py-1 rounded-lg border border-emerald-200/50">
-            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shrink-0" />
-            <span className="font-bold">تعداد کاربران آنلاین: {onlineUsersData.count} نفر</span>
+          <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 px-3 py-1.5 rounded-xl border border-emerald-200/80 dark:border-emerald-800/60 select-none">
+            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shrink-0 shadow-xs" />
+            <span className="font-bold text-[11px] tabular-nums">کاربران حاضر: {onlineUsersData.count} نفر</span>
             {currentUser.role === 'admin' && onlineUsersData.users.length > 0 && (
-              <span className="border-r border-emerald-300 dark:border-emerald-800/80 pr-2 mr-2 text-[10px] font-medium">
-                اسامی: {onlineUsersData.users.map(u => u.name).join('، ')}
+              <span className="border-r border-emerald-300/80 dark:border-emerald-800/80 pr-2 mr-1 text-[10px] text-emerald-700 dark:text-emerald-400 font-medium hidden sm:inline-block">
+                ({onlineUsersData.users.map(u => u.name).join('، ')})
               </span>
             )}
           </div>
         </div>
+
         <button 
           onClick={handleLogout}
-          className="bg-red-50 hover:bg-red-100 dark:bg-red-950/20 text-red-650 hover:text-red-750 text-[11px] font-black px-3 py-1 rounded-lg border border-red-200/50 cursor-pointer transition flex items-center gap-1"
-          style={{ color: '#dc2626' }}
+          type="button"
+          className="w-full md:w-auto text-rose-700 hover:text-rose-800 dark:text-rose-400 dark:hover:text-rose-300 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/50 text-[11px] font-bold px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/50 cursor-pointer transition-all flex items-center justify-center gap-1.5 select-none"
         >
-          🚪 خروج امن از سیستم
+          <span className="text-xs">🚪</span>
+          <span>خروج امن از سیستم</span>
         </button>
       </div>
 
-      {/* 2. Global search bar (hides in print mode) */}
-      {/* 2. Executive Search & Metrics Strip */}
-      <div className="no-print bg-white dark:bg-slate-900 px-4 py-2 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xs flex flex-col md:flex-row justify-between items-center gap-3 mb-3 text-right transition-colors">
-        <div className="relative flex-1 w-full max-w-md">
+      {/* 2. Executive Search & Live Metrics Strip */}
+      <div className="no-print bg-white dark:bg-slate-900/95 px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs flex flex-col md:flex-row justify-between items-center gap-3 mb-3 text-right transition-colors backdrop-blur-md">
+        <div className="relative flex-1 w-full max-w-lg">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="جستجوی سریع پرسنل، شماره اموال، مدل سخت‌افزار، IP..."
-            className="w-full text-right py-2 pr-9 pl-8 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 focus:outline-none placeholder-slate-400 dark:text-slate-100 transition-all font-sans"
+            placeholder="جستجوی سریع پرسنل، شماره اموال، مدل سخت‌افزار، آدرس شبکه IP..."
+            className="w-full text-right py-2 pr-9 pl-12 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none placeholder-slate-400 text-slate-900 dark:text-slate-100 transition-all font-sans"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm select-none pointer-events-none">🔍</span>
-          {searchQuery && (
+          {searchQuery ? (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center text-[10px] font-bold cursor-pointer transition"
-              title="پاک کردن جستجو"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center justify-center text-[11px] font-bold cursor-pointer transition"
+              title="پاک کردن عبارت جستجو"
             >
               ✕
             </button>
+          ) : (
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-200/60 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400 select-none pointer-events-none hidden sm:inline-block">
+              جستجو
+            </span>
           )}
         </div>
         
-        {/* Real-time Summary Indicator */}
-        <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-3 font-medium select-none">
+        {/* Real-time Summary Indicator with Zero-Pill Typography */}
+        <div className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-3 font-medium select-none flex-wrap justify-center">
           <div className="flex items-center gap-1.5">
-            <span className="text-slate-400">کل تجهیزات:</span>
-            <span className="font-mono font-bold text-slate-800 dark:text-slate-100 tabular-nums">
+            <span className="text-slate-500 dark:text-slate-400 text-[11px]">موجودی تجهیزات:</span>
+            <span className="font-mono font-black text-slate-900 dark:text-slate-100 tabular-nums text-sm">
               {cases.length + monitors.length + printers.length + keyboards.length + mice.length + radios.length + cctvs.length + customEquipment.length}
             </span>
-            <span className="text-[11px] text-slate-400">دستگاه</span>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400">دستگاه</span>
           </div>
           <span className="text-slate-300 dark:text-slate-700">·</span>
           <div className="flex items-center gap-1.5">
-            <span className="text-slate-400">پرسنل کارگاه:</span>
-            <span className="font-mono font-bold text-slate-800 dark:text-slate-100 tabular-nums">
+            <span className="text-slate-500 dark:text-slate-400 text-[11px]">پرسنل کارگاه:</span>
+            <span className="font-mono font-black text-slate-900 dark:text-slate-100 tabular-nums text-sm">
               {personnel.length}
             </span>
-            <span className="text-[11px] text-slate-400">نفر</span>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400">نفر</span>
           </div>
           {searchQuery.trim() && (
             <>
               <span className="text-slate-300 dark:text-slate-700">·</span>
-              <span className="text-blue-600 dark:text-blue-400 font-bold text-[11px] animate-fade-in">
+              <span className="text-blue-600 dark:text-blue-400 font-bold text-[11px] animate-fade-in flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
                 فیلتر جستجو فعال
               </span>
             </>
@@ -2052,7 +1902,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Dynamic Summary Cards Grid (Interactive KPI Tiles) */}
+      {/* Dynamic Summary Cards Grid (Interactive KPI Tiles with Zero-Pill Discipline) */}
       <div className="no-print grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 mb-4">
         {equipmentCategories.list.map((cat) => {
           let count = 0;
@@ -2100,34 +1950,38 @@ export default function App() {
               key={cat.id}
               type="button"
               onClick={() => setActiveTab(cat.tabId)}
-              className={`text-right group py-2 px-2.5 rounded-xl border flex items-center justify-between transition-all duration-150 cursor-pointer ${
+              className={`text-right group py-2.5 px-3 rounded-2xl border flex flex-col justify-between transition-all duration-150 cursor-pointer relative overflow-hidden ${
                 isSelected
-                  ? 'bg-blue-50/90 dark:bg-blue-950/40 border-blue-500/80 shadow-xs ring-1 ring-blue-500/40'
-                  : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs hover:-translate-y-0.5'
+                  ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-500 shadow-xs ring-1 ring-blue-500/30'
+                  : 'bg-white dark:bg-slate-900/90 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs hover:-translate-y-0.5'
               }`}
               title={`مشاهده فهرست و مدیریت ${cat.name}`}
             >
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-base shrink-0 transition-transform group-hover:scale-110 duration-150">{cat.icon}</span>
-                <div className="min-w-0 flex flex-col justify-center leading-tight">
-                  <div className="text-[11px] font-bold text-slate-600 dark:text-slate-400 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    {cat.shortName || cat.name}
-                  </div>
-                  <div className="text-xs font-black font-mono tabular-nums text-slate-900 dark:text-slate-100 flex items-baseline gap-0.5">
-                    <span>{count}</span>
-                    <span className="text-[9px] text-slate-400 font-sans font-normal">عدد</span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-1 shrink-0 select-none">
-                <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800/50 leading-none">
-                  {active} سالم
+              <div className="flex items-center justify-between gap-1.5 w-full mb-1">
+                <span className="text-base shrink-0 transition-transform group-hover:scale-110 duration-150 select-none">{cat.icon}</span>
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {cat.shortName || cat.name}
                 </span>
-                {repair > 0 && (
-                  <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-200/60 dark:border-amber-800/50 leading-none">
-                    {repair} تعمیر
+              </div>
+
+              <div className="flex items-baseline justify-between w-full mt-0.5">
+                <div className="text-sm font-black font-mono tabular-nums text-slate-900 dark:text-white flex items-baseline gap-0.5">
+                  <span>{count}</span>
+                  <span className="text-[9px] text-slate-500 dark:text-slate-400 font-sans font-normal">عدد</span>
+                </div>
+
+                <div className="flex items-center gap-1.5 text-[10px] select-none font-medium">
+                  <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    <span className="tabular-nums font-mono">{active}</span>
                   </span>
-                )}
+                  {repair > 0 && (
+                    <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                      <span className="tabular-nums font-mono">{repair}</span>
+                    </span>
+                  )}
+                </div>
               </div>
             </button>
           );

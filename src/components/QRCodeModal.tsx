@@ -69,20 +69,20 @@ export default function QRCodeModal({
   return (
     <div
       id="qr-code-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 font-sans"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md transition-opacity duration-300 font-sans animate-fade-in"
       onClick={onClose}
     >
       {/* Modal Dialog Card */}
       <div
         id="qr-modal-dialog"
-        className="bg-white rounded-2xl max-w-md w-full border border-slate-200/80 shadow-2xl overflow-hidden relative transition-all transform scale-100 flex flex-col no-print"
+        className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden relative transition-all transform scale-100 flex flex-col no-print"
         onClick={(e) => e.stopPropagation()}
         dir="rtl"
       >
         {/* Header decor */}
-        <div className="bg-slate-900 text-white p-4 flex justify-between items-center border-b border-slate-800">
+        <div className="bg-slate-900/95 dark:bg-slate-950 text-white p-4 flex justify-between items-center border-b border-slate-800">
           <div className="flex items-center gap-2">
-            <div className="bg-blue-600 p-1.5 rounded-lg text-white">
+            <div className="bg-blue-600/90 p-1.5 rounded-lg text-white">
               <Tag size={16} />
             </div>
             <div>
@@ -100,10 +100,10 @@ export default function QRCodeModal({
         </div>
 
         {/* Content Body */}
-        <div className="p-6 overflow-y-auto space-y-6">
+        <div className="p-6 overflow-y-auto space-y-5">
           {/* Main Visual interactive QR code center card */}
-          <div className="flex flex-col items-center justify-center bg-slate-50 p-6 rounded-xl border border-slate-100 shadow-inner relative">
-            <div className="bg-white p-4 rounded-xl border border-slate-200/50 shadow-md">
+          <div className="flex flex-col items-center justify-center bg-slate-50/80 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200/70 dark:border-slate-800 relative">
+            <div className="bg-white p-4 rounded-xl border border-slate-200/60 shadow-md">
               <QRCodeSVG
                 value={qrString}
                 size={160}
@@ -112,7 +112,7 @@ export default function QRCodeModal({
                 fgColor="#0f172a" // Deep slate
               />
             </div>
-            <span className="text-[11px] font-mono font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 border border-slate-200/50 px-3 py-1 rounded-full mt-3.5 tracking-wider select-all transition">
+            <span className="text-xs font-mono font-black text-slate-800 dark:text-slate-200 tabular-nums border-b border-slate-300 dark:border-slate-700 pb-0.5 mt-3.5 tracking-wider select-all">
               {equipmentCode}
             </span>
           </div>

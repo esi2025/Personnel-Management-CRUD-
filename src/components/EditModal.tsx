@@ -171,18 +171,25 @@ export default function EditModal({ item, type, onClose, onSave, onDelete }: Edi
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-50 backdrop-blur-xs font-sans text-right">
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 z-50 font-sans text-right animate-fade-in">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xl max-w-xl w-full overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Title */}
-        <div className="p-4 bg-slate-900 text-white flex justify-between items-center">
-          <h3 className="font-bold text-sm md:text-base">
-            ✏️ ویرایش مشخصات {type === 'personnel' ? 'پرسنل' : type === 'case' ? 'کیس کامپیوتر' : type === 'monitor' ? 'مانیتور' : type === 'printer' ? 'پرینتر' : type === 'mouse' ? 'ماوس' : type === 'keyboard' ? 'کیبورد' : type === 'radio' ? 'بی‌سیم' : 'دوربین مداربسته'}
-          </h3>
+        <div className="p-4 bg-slate-900/95 dark:bg-slate-950/95 text-white flex justify-between items-center border-b border-slate-800">
+          <div className="flex items-center gap-2">
+            <span className="text-base">✏️</span>
+            <div>
+              <h3 className="font-black text-sm md:text-base">
+                ویرایش مشخصات {type === 'personnel' ? 'پرونده پرسنل' : type === 'case' ? 'کیس کامپیوتر' : type === 'monitor' ? 'نمایشگر (مانیتور)' : type === 'printer' ? 'پرینتر شبکه' : type === 'mouse' ? 'ماوس' : type === 'keyboard' ? 'صفحه‌کلید' : type === 'radio' ? 'بی‌سیم کارگاهی' : 'دوربین مداربسته'}
+              </h3>
+              <p className="text-[11px] text-slate-400">سامانه جامع اموال و دارایی‌های ICT کارگاه بوشهر</p>
+            </div>
+          </div>
           <button 
             type="button" 
             onClick={onClose}
-            className="text-slate-200 hover:text-white text-base font-bold bg-slate-800 h-8 w-8 rounded-full flex items-center justify-center cursor-pointer"
+            className="text-slate-400 hover:text-white text-sm font-bold bg-slate-800/80 hover:bg-slate-800 h-8 w-8 rounded-full flex items-center justify-center transition cursor-pointer"
+            title="بستن پنجره"
           >
             ✕
           </button>
@@ -469,9 +476,9 @@ export default function EditModal({ item, type, onClose, onSave, onDelete }: Edi
           {/* Status Dropdown - Show for all types except personnel */}
           {type !== 'personnel' && (
             <>
-              <div className="space-y-1.5 p-3 bg-blue-50/45 rounded-lg border border-blue-100/60 text-xs md:text-sm animate-fade-in">
-                <label className="font-semibold text-slate-800 flex items-center gap-1.5">
-                  <span>🩺 وضعیت سلامت تغییر یافته:</span>
+              <div className="space-y-2 p-3.5 bg-slate-50/80 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-800 text-xs md:text-sm animate-fade-in">
+                <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <span>🩺 وضعیت سلامت تجهیز:</span>
                 </label>
                 <div className="grid grid-cols-3 gap-2 mt-1">
                   {(['working', 'repair', 'retired'] as const).map((st) => (
@@ -479,31 +486,26 @@ export default function EditModal({ item, type, onClose, onSave, onDelete }: Edi
                       key={st}
                       type="button"
                       onClick={() => setEquipStatus(st)}
-                      className={`p-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer border ${
-                        equipStatus === st
-                          ? 'text-white font-black'
-                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                      }`}
-                      style={
+                      className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer border ${
                         equipStatus === st
                           ? st === 'working'
-                            ? { backgroundColor: '#10b981', borderColor: '#10b981' }
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                             : st === 'repair'
-                            ? { backgroundColor: '#d97706', borderColor: '#d97706' }
-                            : { backgroundColor: '#dc2626', borderColor: '#dc2626' }
-                          : {}
-                      }
+                            ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                            : 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                          : 'bg-white dark:bg-slate-850 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100/70'
+                      }`}
                     >
-                      {st === 'working' && <span>🟢 سالم</span>}
-                      {st === 'repair' && <span>🟡 تعمیر</span>}
-                      {st === 'retired' && <span>🔴 اسقاط</span>}
+                      {st === 'working' && <span className="inline-flex items-center gap-1">🟢 سالم</span>}
+                      {st === 'repair' && <span className="inline-flex items-center gap-1">🟡 نیاز به تعمیر</span>}
+                      {st === 'retired' && <span className="inline-flex items-center gap-1">🔴 اسقاط شده</span>}
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="space-y-1.5 p-3 bg-slate-50/50 dark:bg-slate-800/40 rounded-lg border border-slate-200 dark:border-slate-700/60 text-xs md:text-sm animate-fade-in">
-                <label className="font-semibold text-slate-800 dark:text-slate-200">
+              <div className="space-y-1.5 p-3.5 bg-slate-50/80 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-800 text-xs md:text-sm animate-fade-in">
+                <label className="font-bold text-slate-800 dark:text-slate-200">
                   📝 توضیحات تکمیلی و ضمیمه:
                 </label>
                 <textarea
@@ -511,12 +513,12 @@ export default function EditModal({ item, type, onClose, onSave, onDelete }: Edi
                   onChange={(e) => setEquipDesc(e.target.value)}
                   placeholder="مثال: تخصیص مجدد داده شده، دارای ایراد جزئی در پورت‌ها، مشخصات فن یا هرگونه یادداشت دفتری دیگر..."
                   rows={3}
-                  className="w-full text-right p-2.5 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none dark:bg-slate-900 dark:border-slate-700 dark:text-white"
+                  className="w-full text-right p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:text-white"
                 />
               </div>
 
-              <div className="space-y-1.5 p-3 bg-slate-50/50 dark:bg-slate-800/40 rounded-lg border border-slate-200 dark:border-slate-700/60 text-xs md:text-sm animate-fade-in">
-                <label className="font-semibold text-slate-800 dark:text-slate-200">
+              <div className="space-y-1.5 p-3.5 bg-slate-50/80 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-800 text-xs md:text-sm animate-fade-in">
+                <label className="font-bold text-slate-800 dark:text-slate-200">
                   ⚠️ تاریخ آخرین سرویس (خورشیدی YYYY/MM/DD):
                 </label>
                 <input
@@ -524,26 +526,26 @@ export default function EditModal({ item, type, onClose, onSave, onDelete }: Edi
                   value={lastServiced}
                   onChange={(e) => setLastServiced(e.target.value)}
                   placeholder="مثال: 1404/03/15"
-                  className="w-full text-right p-2.5 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none dark:bg-slate-900 dark:border-slate-700 dark:text-white font-mono"
+                  className="w-full text-right p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:text-white font-mono tabular-nums"
                 />
               </div>
             </>
           )}
 
           {/* Action Row */}
-          <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center gap-3">
+          <div className="pt-4 border-t border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center gap-3">
             <button
               type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold p-2.5 rounded text-xs md:text-sm shadow transition cursor-pointer"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs md:text-sm shadow-xs transition cursor-pointer active:scale-[0.98]"
             >
               💾 ثبت تغییرات جدید
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded text-xs md:text-sm transition cursor-pointer font-medium"
+              className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-4 py-2.5 rounded-xl text-xs md:text-sm transition cursor-pointer font-bold active:scale-[0.98]"
             >
-              لغو ویرایش
+              انصراف
             </button>
             {onDelete && type && (
               <button
@@ -560,11 +562,11 @@ export default function EditModal({ item, type, onClose, onSave, onDelete }: Edi
                     onClose();
                   }
                 }}
-                className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 hover:border-red-300 px-3.5 py-2.5 rounded text-xs md:text-sm font-bold transition cursor-pointer flex items-center gap-1.5"
+                className="bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/60 px-3.5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition cursor-pointer flex items-center gap-1.5 active:scale-[0.98]"
                 title="حذف کامل و دائمی از سیستم"
               >
                 <span>🗑️</span>
-                <span>حذف کامل {type === 'personnel' ? 'پرسنل' : 'تجهیز'}</span>
+                <span>حذف {type === 'personnel' ? 'پرسنل' : 'تجهیز'}</span>
               </button>
             )}
           </div>
